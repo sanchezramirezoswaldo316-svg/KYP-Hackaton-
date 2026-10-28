@@ -11,7 +11,7 @@ import { estadoPago } from "@/lib/servicios.ts";
 
 export const dynamic = "force-dynamic";
 
-const TEXTO = { liberada: "✅ Lista para pago", pausada: "⏸️ Congelada", bloqueada: "⛔ Bloqueada" } as const;
+const TEXTO = { liberada: "Lista para pago", pausada: "En pausa", bloqueada: "Bloqueada" } as const;
 
 export default async function Erp() {
   await listo();
@@ -31,17 +31,17 @@ export default async function Erp() {
         <DatoClave etiqueta="Bloqueado" valor={pesos(totales.bloqueada)} />
       </div>
       {filas.length === 0 ? <EstadoVacio titulo="No hay facturas" texto="Las facturas aparecerán aquí cuando se carguen proveedores de ejemplo." /> : <Tabla>
-          <thead className="bg-lienzo text-left text-xs font-medium text-tinta-2"><tr><th className="px-4 py-3">Factura</th><th className="px-4 py-3">Proveedor</th><th className="px-4 py-3">Vencimiento</th><th className="px-4 py-3 text-right">Monto</th><th className="px-4 py-3">Estado</th></tr></thead>
+          <thead className="border-y border-borde text-left text-xs font-medium text-tinta-3"><tr><th className="px-4 py-3">Factura</th><th className="px-4 py-3">Proveedor</th><th className="px-4 py-3">Vencimiento</th><th className="px-4 py-3 text-right">Monto</th><th className="px-4 py-3">Estado</th></tr></thead>
           <tbody>
             {filas.sort((a, b) => b.f.monto - a.f.monto).slice(0, 300).map(({ f, p }) => {
               const e = estadoPago(p);
               return (
-                <tr key={f.id} className="border-t border-borde hover:bg-slate-50">
+                <tr key={f.id} className="h-12 border-b border-borde hover:bg-hover">
                   <td className="px-4 py-3"><span className="font-mono text-xs">{f.folio}</span><span className="mt-0.5 block text-xs text-tinta-3">{fecha(f.fecha)}</span></td>
                   <td className="px-4 py-3"><Link href={`/expediente/${p.id}`} className="font-medium text-marca hover:underline">{p.razon_social}</Link></td>
                   <td className="px-4 py-3 text-tinta-2">{f.vence ? fecha(f.vence) : "—"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{pesos(f.monto)}</td>
-                  <td className="px-4 py-3"><Chip tono={e === "liberada" ? "ok" : e === "pausada" ? "medio" : "alto"}>{TEXTO[e].replace(/^[^ ]+ /, "")}</Chip></td>
+                  <td className="px-4 py-3"><Chip tono={e === "liberada" ? "ok" : e === "pausada" ? "medio" : "alto"}>{TEXTO[e]}</Chip></td>
                 </tr>
               );
             })}

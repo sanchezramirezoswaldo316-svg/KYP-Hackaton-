@@ -60,7 +60,7 @@ export default async function Bandeja() {
         <EstadoVacio titulo="No hay casos pendientes" texto="Los proveedores con riesgo bajo se aprueban automáticamente." />
       ) : (
         <Tabla>
-          <thead className="bg-lienzo text-left text-xs font-medium text-tinta-2"><tr><th className="px-4 py-3">Caso</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Riesgo</th><th className="px-4 py-3 text-right">Monto anual</th><th className="px-4 py-3">Motivo principal</th><th className="px-4 py-3">Antigüedad</th><th className="px-4 py-3" /></tr></thead>
+          <thead className="border-y border-borde text-left text-xs font-medium text-tinta-3"><tr><th className="px-4 py-3">Caso</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Riesgo</th><th className="px-4 py-3 text-right">Monto anual</th><th className="px-4 py-3">Motivo principal</th><th className="px-4 py-3">Antigüedad</th><th className="px-4 py-3" /></tr></thead>
           <tbody data-tour="bandeja">
           {abiertos.map((c) => {
             const p = porId.get(c.proveedor_id);
@@ -71,9 +71,9 @@ export default async function Bandeja() {
             const pago = pagos.get(p.id);
             const doc = docPorProveedor.get(p.id);
             return (
-              <tr key={c.id} className={`border-t border-borde align-middle hover:bg-slate-50 ${c.tipo === "clabe" ? "border-l-4 border-l-alto" : ""}`}>
+              <tr key={c.id} className={`h-12 border-b border-borde align-middle hover:bg-hover ${c.tipo === "clabe" ? "border-l-2 border-l-acento" : ""}`}>
                 <td className="px-4 py-3"><Link href={`/expediente/${c.proveedor_id}`} className="font-medium text-marca hover:underline">{p.razon_social}</Link><div className="mt-0.5 text-xs text-tinta-3">{p.rfc}</div></td>
-                <td className="px-4 py-3">{c.tipo === "clabe" ? <Chip tono="alto">Cambio de CLABE · Pago en pausa</Chip> : <Chip tono="info">Alta</Chip>}</td>
+                <td className="px-4 py-3">{c.tipo === "clabe" ? <Chip tono="medio">Pago en pausa</Chip> : <Chip tono="info">Alta</Chip>}</td>
                 <td className="px-4 py-3"><div className="flex items-center gap-2"><Semaforo decision={c.decision_sugerida} /><span className="tabular-nums text-xs text-tinta-3">{v?.puntaje ?? "—"}</span></div></td>
                 <td className="px-4 py-3 text-right tabular-nums">{pesos(p.monto_anual)}</td>
                 <td className="max-w-[220px] truncate px-4 py-3 text-tinta-2" title={razon}>{razon}{doc && <span className="ml-2"><EstadoDocumento d={doc} /></span>}</td>
