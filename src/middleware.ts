@@ -7,7 +7,9 @@ export function middleware(req: NextRequest) {
   // Mantener los accesos del equipo: webhook firmado, portal con token y cron con su secreto.
   const webhook = ruta.startsWith("/api/webhooks/");
   const publica = webhook || ruta.startsWith("/portal/") || ruta.startsWith("/api/portal/") || (ruta === "/api/tareas/diaria" && req.method === "GET");
-  if (!clave && (process.env.ELEVENLABS_PHONE_NUMBER_ID || process.env.SUPABASE_SERVICE_ROLE_KEY) && !publica) {
+  // Igual que el almacén: Supabase solo está activo con URL y clave a la vez.
+  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!clave && (process.env.ELEVENLABS_PHONE_NUMBER_ID || supabase) && !publica) {
     return new NextResponse("Servicio temporalmente no disponible. Falta configurar el acceso seguro.", { status: 503 });
   }
   if (webhook) return NextResponse.next();
