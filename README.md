@@ -115,3 +115,7 @@ Para la demo de 500 proveedores, sube `public/demo/proveedores-demo.csv` en **Ca
 1. Crea tu rama: `git checkout -b tu-nombre/tema`.
 2. Abre un pull request hacia `main`. Vercel genera un enlace de prueba.
 3. `main` se publica automáticamente.
+
+## Demo local sin telefonía (Axel)
+
+Ejecuta `npm run demo:local` y abre `http://localhost:3000/clabe`. Mantiene las integraciones externas configuradas, usa memoria y simula solo la telefonía. Instrucciones y límites en [voz/DEMO-LOCAL.md](voz/DEMO-LOCAL.md).

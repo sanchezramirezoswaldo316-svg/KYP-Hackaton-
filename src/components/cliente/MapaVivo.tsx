@@ -114,7 +114,7 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
       case "fin":
         lanzar("reglas", "veredicto", COLOR[NIVEL_DECISION[e.verificacion.decision]]);
         nodo("veredicto", { estado: "listo", nivel: NIVEL_DECISION[e.verificacion.decision], texto: SEMAFORO[e.verificacion.decision].texto });
-        log(null, `🏁 Veredicto: ${SEMAFORO[e.verificacion.decision].emoji} ${SEMAFORO[e.verificacion.decision].texto} · guardado en el expediente`, NIVEL_DECISION[e.verificacion.decision]);
+        log(null, `🏁 Veredicto: ${SEMAFORO[e.verificacion.decision].texto} · guardado en el expediente`, NIVEL_DECISION[e.verificacion.decision]);
         setTimeout(() => setFinal(e), VIAJE_MS);
         alTerminar?.();
         break;

@@ -86,7 +86,7 @@ export async function recibirDocumento(token: string, nombre: string, bytes: Uin
     : !analisis.es_opinion_32d
       ? "no parece una opinión 32-D"
       : `opinión ${analisis.sentido}${rfcCoincide === false ? ", pero de OTRO RFC" : ""}`;
-  await db.alertas.crear({ tipo: "documento_recibido", proveedor_id: proveedor.id, mensaje: `📄 ${proveedor.razon_social} subió su opinión 32-D (${resumen})`, creado_en: new Date().toISOString(), leida: false });
+  await db.alertas.crear({ tipo: "documento_recibido", proveedor_id: proveedor.id, mensaje: `${proveedor.razon_social} subió su opinión 32-D (${resumen})`, creado_en: new Date().toISOString(), leida: false });
   await registrar("Proveedor (portal)", "documento_recibido", "proveedor", proveedor.id, { sha256: actualizada.archivo_sha256, analisis_ia: !!analisis });
   return actualizada;
 }
@@ -102,7 +102,7 @@ export async function procesarRecordatorios(ahora = new Date()) {
     if (!p) continue;
     if (d.recordatorios >= MAX_RECORDATORIOS) {
       await db.documentos.actualizar(d.id, { estado: "vencida" });
-      await db.alertas.crear({ tipo: "solicitud_vencida", proveedor_id: p.id, mensaje: `⏰ ${p.razon_social} no entregó su opinión 32-D tras ${d.recordatorios} recordatorios`, creado_en: ahora.toISOString(), leida: false });
+      await db.alertas.crear({ tipo: "solicitud_vencida", proveedor_id: p.id, mensaje: `${p.razon_social} no entregó su opinión 32-D tras ${d.recordatorios} recordatorios`, creado_en: ahora.toISOString(), leida: false });
       await registrar("Tarea diaria", "solicitud_vencida", "proveedor", p.id, null);
       vencidas++;
       continue;

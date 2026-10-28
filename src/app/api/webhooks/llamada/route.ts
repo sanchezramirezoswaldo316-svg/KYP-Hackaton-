@@ -9,7 +9,8 @@ export async function POST(req: Request) {
   if (!secretoValido(req)) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   try {
     await listo();
-    const b = (await req.json()) as WebhookLlamada;
+    let b: WebhookLlamada;
+    try { b = await req.json(); } catch { return NextResponse.json({ error: "JSON inválido" }, { status: 400 }); }
     return NextResponse.json(await registrarResultadoLlamada({ ...b, simulada: false }));
   } catch (error) {
     return manejarError(error);

@@ -39,7 +39,7 @@ export async function ejecutarMonitoreo(actor: string) {
     const antes = describir(previa.hallazgos), ahora = describir(r.verificacion.hallazgos);
     const pago = pagos.get(p.id);
     const extra = pago && r.verificacion.decision !== "liberar" ? ` Tienes ${pesos(pago.monto)} por pagarle ${enDias(pago.dias)}: el pago queda retenido.` : "";
-    const etiqueta = simulada ? "🧪 [Simulación de demo] " : "⚠️ ";
+    const etiqueta = simulada ? "[Simulación de demo] " : "";
     await db.alertas.crear({ tipo: "cambio_lista", proveedor_id: p.id, mensaje: `${etiqueta}${p.razon_social} cambió en las listas oficiales. Ahora: ${ahora}.${extra}`, creado_en: new Date().toISOString(), leida: false });
     cambios.push({ proveedor_id: p.id, razon_social: p.razon_social, antes, ahora });
   }
@@ -91,11 +91,11 @@ export async function generarResumen(ahora = new Date()) {
   const lineas = [
     `Resumen KYP · ${datos.fecha}`,
     `• ${plural(datos.casos_abiertos, "caso espera", "casos esperan")} decisión (${plural(datos.urgentes, "urgente")}, ${plural(datos.cambios_de_cuenta, "cambio", "cambios")} de cuenta).`,
-    datos.casos_antiguos ? `• ⏰ ${plural(datos.casos_antiguos, "caso lleva", "casos llevan")} más de ${HORAS_CASO_ANTIGUO} h sin decisión.` : null,
-    datos.cambios_en_listas ? `• ⚠️ ${plural(datos.cambios_en_listas, "proveedor cambió", "proveedores cambiaron")} en las listas oficiales.` : null,
-    datos.pagos_retenidos_7_dias ? `• 💸 ${plural(datos.pagos_retenidos_7_dias, "pago", "pagos")} de proveedores con alerta ${datos.pagos_retenidos_7_dias === 1 ? "vence" : "vencen"} esta semana (${pesos(datos.monto_retenido_7_dias)}).` : null,
-    `• 📄 ${plural(datos.documentos_recibidos, "documento recibido", "documentos recibidos")}; ${plural(datos.documentos_pendientes, "pendiente")}.`,
-    datos.resueltos_por_politicas_24h ? `• 🤖 ${plural(datos.resueltos_por_politicas_24h, "caso resuelto", "casos resueltos")} por políticas automáticas.` : null,
+    datos.casos_antiguos ? `• ${plural(datos.casos_antiguos, "caso lleva", "casos llevan")} más de ${HORAS_CASO_ANTIGUO} h sin decisión.` : null,
+    datos.cambios_en_listas ? `• ${plural(datos.cambios_en_listas, "proveedor cambió", "proveedores cambiaron")} en las listas oficiales.` : null,
+    datos.pagos_retenidos_7_dias ? `• ${plural(datos.pagos_retenidos_7_dias, "pago", "pagos")} de proveedores con alerta ${datos.pagos_retenidos_7_dias === 1 ? "vence" : "vencen"} esta semana (${pesos(datos.monto_retenido_7_dias)}).` : null,
+    `• ${plural(datos.documentos_recibidos, "documento recibido", "documentos recibidos")}; ${plural(datos.documentos_pendientes, "pendiente")}.`,
+    datos.resueltos_por_politicas_24h ? `• ${plural(datos.resueltos_por_politicas_24h, "caso resuelto", "casos resueltos")} por políticas automáticas.` : null,
   ].filter(Boolean) as string[];
   return { datos, texto: lineas.join("\n") };
 }

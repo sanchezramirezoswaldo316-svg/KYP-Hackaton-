@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { enviar } from "./peticion.ts";
 
-export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string }) {
+export function FormularioClabe({ proveedores, seleccionado, simulada: _simulada }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string; simulada?: boolean }) {
+  void _simulada;
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
@@ -16,7 +17,7 @@ export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { 
     setOcupado(true);
     setMensaje(null);
     try {
-      const r = await enviar<{ llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos);
+      const r = await enviar<{ solicitud?: { id: string }; llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos);
       setMensaje(
         r.llamada.iniciada
           ? { tipo: "ok", texto: "Pago en pausa. El agente de voz está llamando al teléfono registrado en el alta." }
@@ -25,7 +26,8 @@ export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { 
             : { tipo: "ok", texto: "Pago congelado. La voz real no está conectada: abajo puedes simular qué responde el proveedor." },
       );
       form.reset();
-      router.refresh();
+      if (r.solicitud?.id) router.push(`/clabe/${r.solicitud.id}`);
+      else router.refresh();
     } catch (e) {
       setMensaje({ tipo: "error", texto: (e as Error).message });
     } finally {
