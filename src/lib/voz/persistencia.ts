@@ -10,7 +10,7 @@ export async function registrarResultadoPersistente(datos: {
   const { data, error } = await db.rpc("registrar_resultado_voz", { entrada: datos });
   if (error) {
     if (error.code === "22023") throw new ErrorValidacion("Resultado incompatible o conversación no correlacionada");
-    throw new Error("No se pudo persistir la evidencia de voz; verificar migración 0002");
+    throw new Error("No se pudo persistir la evidencia de voz; verificar migración 0003");
   }
   return data as Llamada;
 }

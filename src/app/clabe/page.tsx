@@ -27,13 +27,22 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
         <h1 className="text-2xl font-semibold">Cambios de cuenta bancaria</h1>
         <p className="text-slate-600">
           Un fraude común: alguien se hace pasar por un proveedor y pide cambiar su <Termino t="CLABE" /> para quedarse con el pago.
-          Cuando llega una solicitud, <strong>el pago se congela</strong> y nuestro agente de voz <strong>llama al teléfono que el proveedor registró desde el principio</strong>, nunca al número que viene en la solicitud.
+          Cuando llega una solicitud, <strong>el pago se congela</strong>. {simular
+            ? "En esta demo simulamos la verificación y guardamos el resultado como evidencia de prueba; no se realiza una llamada telefónica."
+            : "El agente llama al teléfono registrado desde el alta, nunca al número que viene en la solicitud."}
         </p>
       </div>
+      {simular && <details className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+        <summary className="cursor-pointer font-medium">Escuchar demostración de voz pregrabada</summary>
+        <p className="my-2 text-sm">Audio sintético con datos ficticios generado con ElevenLabs. No es una llamada real ni evidencia de esta solicitud.</p>
+        <audio controls preload="none" src="/api/voz/demo/audio" aria-label="Demostración pregrabada y sintética" />
+        <a className="mt-2 block text-sm text-blue-800 underline" href="/api/voz/demo/audio" download="DEMO-PREGRABADA-SINTETICA.mp3">Descargar audio de respaldo</a>
+      </details>}
       <Tarjeta titulo="📩 Registrar una solicitud recibida">
         <div data-tour="form-clabe">
           <FormularioClabe
             seleccionado={proveedor}
+            simulada={simular}
             proveedores={proveedores.filter((p) => p.estado !== "bloqueado").sort((a, b) => a.razon_social.localeCompare(b.razon_social)).map(({ id, razon_social, rfc }) => ({ id, razon_social, rfc }))}
           />
         </div>

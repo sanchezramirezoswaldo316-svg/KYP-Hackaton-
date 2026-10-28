@@ -1,5 +1,7 @@
 # Verificación por voz — Axel
 
+**Demo local sin Twilio:** ejecutar `npm run demo:local` y abrir `http://localhost:3000/clabe`. Ver [DEMO-LOCAL.md](DEMO-LOCAL.md) para integraciones, límites y ensayo.
+
 ## Estado y alcance
 
 Agente `agent_2601m61t00pbefrvh4ntd0a613bd` creado y leído de vuelta el 28/10/2026: idioma `es`, instrucciones de español de México, grabación activada, retención de 30 días y extracción `resultado`. Voz multilingüe Sarah; acento y naturalidad pendientes de escucha por Axel. Configuración reproducible en `agente-config.json`, generada desde `guion-agente.md`.
@@ -20,7 +22,7 @@ Se conserva la política existente: `confirmado` aplica la CLABE nueva y recuper
 
 ## Oswaldo: despliegue
 
-- Aplicar `supabase/migrations/0001_inicial.sql`, luego `0002_resultado_voz.sql` y `0003_solicitud_voz_atomica.sql`. La segunda agrega un RPC exclusivo de `service_role`; no cambia tablas ni tipos compartidos. Las pruebas ejecutan ambas con PostgreSQL embebido. Verificar también en el Supabase de staging antes de la demo.
+- Aplicar `supabase/migrations/0001_inicial.sql`, `0002_automatizacion.sql`, luego `0003_resultado_voz.sql` y `0004_solicitud_voz_atomica.sql`. Las migraciones de voz agregan RPC exclusivos de `service_role`; no cambian tablas ni tipos compartidos. Las pruebas ejecutan las cuatro con PostgreSQL embebido. Verificar también en el Supabase de staging antes de la demo.
 - Configurar `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`. No usar memoria en Vercel para recibir callbacks: se pierde entre instancias/reinicios.
 - Configurar `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `ELEVENLABS_WEBHOOK_SECRET`, `EMPRESA_NOMBRE` y `VOZ_TELEFONOS_AUTORIZADOS`. No usar prefijo `NEXT_PUBLIC` para secretos.
 - Importar el número Twilio autorizado en ElevenLabs y asociarlo al agente. Copiar el ID interno de ElevenLabs, no el SID de Twilio, a `ELEVENLABS_PHONE_NUMBER_ID`. Confirmar permisos de llamadas a México y destinos verificados si Twilio está en trial.
@@ -74,4 +76,4 @@ Fuentes oficiales: [webhooks post-llamada](https://elevenlabs.io/docs/eleven-age
 
 Ver [AUDITORIA.md](AUDITORIA.md) para hallazgos, pruebas y límites. Ver [VALIDAR-LLAMADA-REAL.md](VALIDAR-LLAMADA-REAL.md) para conectar Twilio y completar la matriz real.
 
-APP_PASSWORD es obligatorio si hay ELEVENLABS_PHONE_NUMBER_ID o SUPABASE_SERVICE_ROLE_KEY: sin él el sitio devuelve 503. Tener número configurado impide simular aunque falten otras variables. La migración 0003 hace atómicos el registro de solicitud, pausa del pago y bitácora. La pantalla muestra fallos de llamada persistidos, espera de webhook mayor a diez minutos y errores al descargar audio. No vuelve a marcar automáticamente.
+APP_PASSWORD es obligatorio si hay ELEVENLABS_PHONE_NUMBER_ID o SUPABASE_SERVICE_ROLE_KEY: sin él el sitio devuelve 503. Tener número configurado impide simular aunque falten otras variables. La migración 0004 hace atómicos el registro de solicitud, pausa del pago y bitácora. La pantalla muestra fallos de llamada persistidos, espera de webhook mayor a diez minutos y errores al descargar audio. No vuelve a marcar automáticamente.

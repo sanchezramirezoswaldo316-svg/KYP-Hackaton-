@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "node --test \"src/**/*.test.ts\"",
     "listas": "node scripts/actualizar-listas.mjs",
-    "demo": "node scripts/generar-demo.mjs"
+    "demo": "node scripts/generar-demo.mjs",
+    "demo:local": "node scripts/demo-local.mjs",
+    "test:local": "node voz/probar-demo-local.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

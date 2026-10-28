@@ -14,7 +14,7 @@ test('flujo de voz aislado: cuatro resultados, duplicados concurrentes, correlac
   const db=almacen();
   for (const resultado of ['confirmado','no_reconoce','datos_no_coinciden','sin_respuesta'] as const) {
     const p=await db.proveedores.crear({rfc:'ZZZ010101AB1',razon_social:'DEMO',sitio_web:null,telefono_registrado:'+525500000001',clabe:'002010077777777771',giro_declarado:null,monto_anual:1000,estado:'aprobado',creado_en:new Date().toISOString()});
-    await db.facturas.crear({proveedor_id:p.id,folio:'DEMO-42',monto:1000,fecha:'2026-10-28'});
+    await db.facturas.crear({proveedor_id:p.id,folio:'DEMO-42',monto:1000,fecha:'2026-10-28',vence:null});
     const cid='conv-'+p.id;
     t.mock.method(globalThis,'fetch',async (_url: unknown, init: RequestInit) => {
       assert.equal((await db.proveedores.obtener(p.id))?.estado,'pausado');

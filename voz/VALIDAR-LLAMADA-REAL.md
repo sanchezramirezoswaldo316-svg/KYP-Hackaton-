@@ -12,7 +12,7 @@ Fuentes: [integración oficial ElevenLabs/Twilio](https://elevenlabs.io/docs/ele
 
 ## 2. Preparar staging (Oswaldo, con Axel)
 
-1. Revisar e integrar el PR #4. Aplicar migraciones 0001, 0002 y 0003 en orden en Supabase de pruebas.
+1. Revisar e integrar el PR #4. Aplicar migraciones 0001, 0002_automatizacion, 0003_resultado_voz y 0004_solicitud_voz_atomica en orden en Supabase de pruebas.
 2. Configurar las variables del README y APP_PASSWORD. El teléfono del equipo debe estar normalizado en `VOZ_TELEFONOS_AUTORIZADOS` con `+52` seguido de diez dígitos. Esta lista debe contener solo destinos autorizados.
 3. Crear webhook de ElevenLabs hacia `https://<staging>/api/webhooks/elevenlabs`, eventos `post_call_transcription` y `call_initiation_failure`, firma HMAC y reintentos. Configurar su secreto en ELEVENLABS_WEBHOOK_SECRET y volver a desplegar.
 4. No habilitar post_call_audio: esta integración usa el proxy autenticado de descarga. No desactivar Basic Auth para que “pase” el webhook: la ruta ya se autentica por firma y está excluida del middleware de contraseña.

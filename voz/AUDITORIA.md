@@ -6,7 +6,7 @@ Alcance: rama `codex/axel-verificacion-voz`, servicios de CLABE, callbacks, evid
 
 | Severidad | Hallazgo | Corrección / evidencia |
 | --- | --- | --- |
-| Alta | Supabase podía guardar solicitud sin completar la pausa si fallaba la escritura siguiente | RPC `crear_solicitud_voz`, migración 0003; prueba de rollback al fallar bitácora |
+| Alta | Supabase podía guardar solicitud sin completar la pausa si fallaba la escritura siguiente | RPC `crear_solicitud_voz`, migración 0004; prueba de rollback al fallar bitácora |
 | Alta | Telefonía parcialmente configurada habilitaba la simulación | La presencia de PHONE_NUMBER_ID impide simular; la solicitud deja pausa/caso con error de configuración |
 | Alta | Despliegue con datos persistentes o telefonía podía quedar sin contraseña | Middleware devuelve 503 sin APP_PASSWORD si existe teléfono o service role; webhooks conservan autenticación propia |
 | Alta | Avisos heredados de PostCSS bajo Next | Override de PostCSS 8.5.32, sin cambiar Next de versión mayor; npm audit final sin avisos |
@@ -42,6 +42,10 @@ Alcance: rama `codex/axel-verificacion-voz`, servicios de CLABE, callbacks, evid
 
 Se conservan los tipos y resultados compartidos, y las rutas previas. `enviar` mantiene sus dos argumentos existentes; el tercero (timeout) es opcional y solo lo usa voz. `LineaTiempoClabe` añade `fallo` opcional. No se modifican puntaje, SAT ni workflows n8n.
 
-Cambios de integración que sí deben conocer: aplicar migración 0003 además de 0002; configurar APP_PASSWORD con Supabase o teléfono; callbacks genéricos reales requieren conversación correlacionada; simulación deshabilitada si existe PHONE_NUMBER_ID aunque falten otras variables. Samuel debe conservar estos avisos al editar las pantallas.
+Cambios de integración que sí deben conocer: aplicar las migraciones de voz 0003 y 0004 después de 0002_automatizacion; configurar APP_PASSWORD con Supabase o teléfono; callbacks genéricos reales requieren conversación correlacionada; simulación deshabilitada si existe PHONE_NUMBER_ID aunque falten otras variables. Samuel debe conservar estos avisos al editar las pantallas.
 
 La comprobación de merge con las ramas remotas conocidas se realiza antes de subir; no puede garantizar compatibilidad con commits futuros aún inexistentes. No se reescriben ramas ajenas ni se usa force-push.
+
+## Actualización de integración local
+
+Se incorporó main hasta 2d24fe0, preservando automatización, portal y puntaje. Las dos migraciones de voz se renombraron a 0003/0004 para no colisionar con 0002_automatizacion del equipo. Las 102 pruebas conjuntas pasan; también se verificó por HTTP el recorrido local y los contratos de n8n con un receptor ficticio. Ver DEMO-LOCAL.md. No se ha validado telefonía ni cuentas externas reales.
