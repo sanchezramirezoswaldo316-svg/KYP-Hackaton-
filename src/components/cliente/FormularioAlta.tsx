@@ -46,7 +46,7 @@ export function FormularioAlta() {
         nombre={datos.razon_social}
         ejecutar={ejecutar}
         alTerminar={() => id && (
-          <Link href={`/expediente/${id}`} className="inline-block rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Ver expediente completo →</Link>
+          <Link href={`/expediente/${id}`} className="inline-block rounded bg-marca px-4 py-2 font-medium text-white hover:bg-marca">Ver expediente completo →</Link>
         )}
       />
     );
@@ -57,13 +57,13 @@ export function FormularioAlta() {
       {CAMPOS.map((c) => (
         <label key={c.nombre} className="block text-sm">
           <span className="font-medium">{c.etiqueta}{"requerido" in c && c.requerido && " *"}</span>
-          <input name={c.nombre} type={"tipo" in c ? c.tipo : "text"} required={"requerido" in c && c.requerido} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
-          {"ayuda" in c && <span className="text-xs text-slate-500">{c.ayuda}</span>}
+          <input name={c.nombre} type={"tipo" in c ? c.tipo : "text"} required={"requerido" in c && c.requerido} className="mt-1 w-full rounded border border-borde-fuerte px-3 py-2" />
+          {"ayuda" in c && <span className="text-xs text-tinta-3">{c.ayuda}</span>}
         </label>
       ))}
       <div className="sm:col-span-2">
-        <button className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">🔍 Dar de alta y revisar</button>
-        {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+        <button className="rounded bg-marca px-4 py-2 text-sm font-medium text-white hover:bg-marca">Dar de alta y revisar</button>
+        {error && <p className="mt-2 text-sm text-error">{error}</p>}
       </div>
     </form>
   );

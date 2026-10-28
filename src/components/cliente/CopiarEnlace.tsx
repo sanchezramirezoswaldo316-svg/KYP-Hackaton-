@@ -17,8 +17,8 @@ export function CopiarEnlace({ token }: { token: string }) {
   }
   return (
     <span className="inline-flex items-center gap-2">
-      <button onClick={copiar} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-50">{copiado ? "✅ Copiado" : "🔗 Copiar enlace del portal"}</button>
-      <a href={`/portal/${token}`} target="_blank" rel="noreferrer" className="text-xs text-blue-800 underline">abrir</a>
+      <button onClick={copiar} className="rounded border border-borde-fuerte bg-white px-2 py-1 text-xs hover:bg-superficie">{copiado ? "Copiado" : "Copiar enlace del portal"}</button>
+      <a href={`/portal/${token}`} target="_blank" rel="noreferrer" className="text-xs text-tinta underline">abrir</a>
     </span>
   );
 }

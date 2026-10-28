@@ -27,9 +27,9 @@ export function SimularLlamada({ solicitudId }: { solicitudId: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-medium text-amber-800">Simular llamada (demo):</span>
+      <span className="text-xs font-medium text-acento">Simular llamada (demo):</span>
       {OPCIONES.map((o) => (
-        <button key={o.resultado} disabled={ocupado} onClick={() => simular(o.resultado)} className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-900 hover:bg-amber-100 disabled:opacity-50">
+        <button key={o.resultado} disabled={ocupado} onClick={() => simular(o.resultado)} className="rounded border border-acento bg-acento-fondo px-2 py-1 text-xs text-acento hover:bg-acento-fondo disabled:opacity-50">
           {o.texto}
         </button>
       ))}

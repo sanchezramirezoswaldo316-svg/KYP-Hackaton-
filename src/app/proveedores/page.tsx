@@ -21,33 +21,33 @@ export default async function Proveedores({ searchParams }: { searchParams: Prom
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Proveedores</h1>
-          <p className="text-sm text-slate-600">{lista.length} de {todos.length}, del más riesgoso al más confiable</p>
+          <p className="text-sm text-tinta-3">{lista.length} de {todos.length}, del más riesgoso al más confiable</p>
         </div>
-        <Link href="/proveedores/nuevo" className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">+ Nuevo proveedor</Link>
+        <Link href="/proveedores/nuevo" className="rounded bg-marca px-4 py-2 text-sm font-medium text-white hover:bg-marca">+ Nuevo proveedor</Link>
       </div>
       <form className="flex flex-wrap gap-2">
-        <input name="q" defaultValue={q} placeholder="Buscar por nombre o RFC" className="w-72 rounded border border-slate-300 px-3 py-2 text-sm" />
-        <select name="estado" defaultValue={estado} className="rounded border border-slate-300 px-3 py-2 text-sm">
+        <input name="q" defaultValue={q} placeholder="Buscar por nombre o RFC" className="w-72 rounded border border-borde-fuerte px-3 py-2 text-sm" />
+        <select name="estado" defaultValue={estado} className="rounded border border-borde-fuerte px-3 py-2 text-sm">
           <option value="">Todos</option>
-          <option value="aprobado">✅ Pagos activos</option>
+          <option value="aprobado">Pagos activos</option>
           <option value="en_revision">🔎 En revisión</option>
-          <option value="pausado">⏸️ Pagos congelados</option>
-          <option value="bloqueado">⛔ Bloqueados</option>
+          <option value="pausado">Pagos congelados</option>
+          <option value="bloqueado">Bloqueados</option>
         </select>
-        <button className="rounded border border-slate-300 bg-white px-3 py-2 text-sm">Filtrar</button>
+        <button className="rounded border border-borde-fuerte bg-white px-3 py-2 text-sm">Filtrar</button>
       </form>
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-borde bg-white">
         <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left text-slate-600">
+          <thead className="bg-superficie text-left text-tinta-3">
             <tr><th className="p-3">Proveedor</th><th className="p-3">Qué nos vende</th><th className="p-3 text-right">Compras al año</th><th className="p-3">Riesgo</th><th className="p-3">Pagos</th></tr>
           </thead>
           <tbody>
             {lista.slice(0, 300).map((p) => {
               const v = verificaciones.get(p.id);
               return (
-                <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
-                  <td className="p-3"><Link href={`/expediente/${p.id}`} className="font-medium text-blue-800 hover:underline">{p.razon_social}</Link><div className="font-mono text-xs text-slate-500">{p.rfc}</div></td>
-                  <td className="p-3 text-slate-600">{p.giro_declarado ?? "—"}</td>
+                <tr key={p.id} className="border-t border-borde hover:bg-superficie">
+                  <td className="p-3"><Link href={`/expediente/${p.id}`} className="font-medium text-tinta hover:underline">{p.razon_social}</Link><div className="font-mono text-xs text-tinta-3">{p.rfc}</div></td>
+                  <td className="p-3 text-tinta-3">{p.giro_declarado ?? "—"}</td>
                   <td className="p-3 text-right">{pesos(p.monto_anual)}</td>
                   <td className="p-3">{v && <Semaforo decision={v.decision} />}</td>
                   <td className="p-3"><EstadoSimple estado={p.estado} /></td>
@@ -56,7 +56,7 @@ export default async function Proveedores({ searchParams }: { searchParams: Prom
             })}
           </tbody>
         </table>
-        {lista.length > 300 && <p className="p-3 text-xs text-slate-500">Mostrando 300 de {lista.length}. Usa la búsqueda para encontrar otros.</p>}
+        {lista.length > 300 && <p className="p-3 text-xs text-tinta-3">Mostrando 300 de {lista.length}. Usa la búsqueda para encontrar otros.</p>}
       </div>
     </div>
   );

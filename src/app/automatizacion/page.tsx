@@ -33,21 +33,21 @@ export default async function Automatizacion() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">⚙️ Automatización</h1>
-        <p className="text-slate-600">Lo que el sistema hace solo para que la gestora se concentre en los casos que de verdad necesitan una persona.</p>
+        <p className="text-tinta-3">Lo que el sistema hace solo para que la gestora se concentre en los casos que de verdad necesitan una persona.</p>
       </div>
 
-      <Tarjeta titulo="🤖 Políticas: que el sistema decida solo" acciones={<span className="text-sm text-slate-500">{plural(porPolitica, "caso resuelto", "casos resueltos")} por políticas</span>}>
-        <p className="mb-3 text-sm text-slate-600">Actívalas y se aplican a cada proveedor nuevo. Cada acción queda en la bitácora con el nombre de la política. Los casos dudosos (nombres parecidos, señales mezcladas) siempre los decide una persona.</p>
+      <Tarjeta titulo="Políticas: que el sistema decida solo" acciones={<span className="text-sm text-tinta-3">{plural(porPolitica, "caso resuelto", "casos resueltos")} por políticas</span>}>
+        <p className="mb-3 text-sm text-tinta-3">Actívalas y se aplican a cada proveedor nuevo. Cada acción queda en la bitácora con el nombre de la política. Los casos dudosos (nombres parecidos, señales mezcladas) siempre los decide una persona.</p>
         <ul className="space-y-3">
           {CATALOGO.map((p) => {
             const n = afectados(p);
             return (
-              <li key={p.clave} className={`flex items-start gap-4 rounded-xl border p-4 ${activas.has(p.clave) ? "border-emerald-300 bg-emerald-50" : "border-slate-200"}`}>
+              <li key={p.clave} className={`flex items-start gap-4 rounded-xl border p-4 ${activas.has(p.clave) ? "border-borde-fuerte bg-superficie" : "border-borde"}`}>
                 <TogglePolitica clave={p.clave} activa={activas.has(p.clave)} />
                 <div className="flex-1">
-                  <div className="font-semibold">{p.accion === "bloquear" ? "⛔" : "📄"} {p.nombre}</div>
-                  <p className="text-sm text-slate-600">{p.descripcion}</p>
-                  {n > 0 && <p className="mt-1 text-xs font-medium text-blue-800">Aplicaría a {n} caso{n > 1 ? "s" : ""} que hoy está{n > 1 ? "n" : ""} en la bandeja.</p>}
+                  <div className="font-semibold">{p.accion === "bloquear" ? "" : ""} {p.nombre}</div>
+                  <p className="text-sm text-tinta-3">{p.descripcion}</p>
+                  {n > 0 && <p className="mt-1 text-xs font-medium text-tinta">Aplicaría a {n} caso{n > 1 ? "s" : ""} que hoy está{n > 1 ? "n" : ""} en la bandeja.</p>}
                 </div>
               </li>
             );
@@ -59,46 +59,46 @@ export default async function Automatizacion() {
       </Tarjeta>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Tarjeta titulo="🛰️ Monitoreo diario">
-          <p className="text-sm text-slate-600">Cada día vuelve a revisar a todos los proveedores contra las listas oficiales y avisa <strong>solo si alguien cambió</strong>. También manda recordatorios a proveedores y el resumen del día.</p>
-          <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm">
+        <Tarjeta titulo="Monitoreo diario">
+          <p className="text-sm text-tinta-3">Cada día vuelve a revisar a todos los proveedores contra las listas oficiales y avisa <strong>solo si alguien cambió</strong>. También manda recordatorios a proveedores y el resumen del día.</p>
+          <div className="mt-3 rounded-lg bg-superficie p-3 text-sm">
             {ultima ? (
               <>
                 <div>Última ejecución: <strong>{fecha(ultima.creado_en)}</strong> · {ultima.actor}</div>
-                {r && <div className="text-slate-600">{String(r.revisados)} revisados · {String(r.cambios)} cambios · {String(r.recordatorios)} recordatorios · resumen {r.resumen_enviado ? "enviado" : "no enviado"}</div>}
+                {r && <div className="text-tinta-3">{String(r.revisados)} revisados · {String(r.cambios)} cambios · {String(r.recordatorios)} recordatorios · resumen {r.resumen_enviado ? "enviado" : "no enviado"}</div>}
               </>
-            ) : <div className="text-slate-500">Aún no se ha ejecutado.</div>}
-            <div className="mt-1 text-xs text-slate-500">Automática todos los días a las 8:23 a. m. (hora del centro) con Vercel Cron{process.env.CRON_SECRET ? "" : " · falta configurar CRON_SECRET"}.</div>
+            ) : <div className="text-tinta-3">Aún no se ha ejecutado.</div>}
+            <div className="mt-1 text-xs text-tinta-3">Automática todos los días a las 8:23 a. m. (hora del centro) con Vercel Cron{process.env.CRON_SECRET ? "" : " · falta configurar CRON_SECRET"}.</div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <BotonAccion url="/api/tareas/diaria" texto="▶ Ejecutar ahora" textoOcupado="Revisando a todos…" variante="primario" />
-            <BotonAccion url="/api/monitoreo/simular" texto="🧪 Simular que el SAT publicó a un proveedor (demo)" />
+            <BotonAccion url="/api/tareas/diaria" texto="Ejecutar ahora" textoOcupado="Revisando a todos…" variante="primario" />
+            <BotonAccion url="/api/monitoreo/simular" texto="Simular que el SAT publicó a un proveedor (demo)" />
           </div>
-          <p className="mt-2 text-xs text-slate-500">La simulación marca a un proveedor aprobado como &quot;presunto&quot; solo para la demo; queda etiquetada como simulación en su expediente.</p>
+          <p className="mt-2 text-xs text-tinta-3">La simulación marca a un proveedor aprobado como &quot;presunto&quot; solo para la demo; queda etiquetada como simulación en su expediente.</p>
         </Tarjeta>
 
         <Tarjeta titulo="📬 Resumen de hoy">
-          <pre className="whitespace-pre-wrap rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100">{resumen.texto}</pre>
-          <p className="mt-2 text-xs text-slate-500">
+          <pre className="whitespace-pre-wrap rounded-lg bg-tinta p-3 font-mono text-xs leading-relaxed text-white">{resumen.texto}</pre>
+          <p className="mt-2 text-xs text-tinta-3">
             {avisos ? "Se envía cada día por n8n (correo, WhatsApp o Slack, según el flujo de Alan)." : "Para recibirlo por correo, WhatsApp o Slack, configura N8N_WEBHOOK_NOTIFICACIONES (flujo de n8n)."}
           </p>
         </Tarjeta>
       </div>
 
-      <Tarjeta titulo="📄 Documentos pedidos a proveedores" acciones={<span className="text-sm text-slate-500">{documentos.filter((d) => d.estado === "enviada").length} esperando · {documentos.filter((d) => d.estado === "recibida").length} recibidos</span>}>
-        {!avisos && <p className="mb-3 rounded bg-amber-50 p-2 text-xs text-amber-900">Los avisos automáticos al proveedor no están conectados: copia el enlace del portal y compártelo. Con n8n configurado se envían solos, con recordatorios cada 3 días.</p>}
-        {documentos.length === 0 ? <p className="text-sm text-slate-600">Aún no se han pedido documentos. Activa una política de documentos o pídelos desde un expediente.</p> : (
+      <Tarjeta titulo="Documentos pedidos a proveedores" acciones={<span className="text-sm text-tinta-3">{documentos.filter((d) => d.estado === "enviada").length} esperando · {documentos.filter((d) => d.estado === "recibida").length} recibidos</span>}>
+        {!avisos && <p className="mb-3 rounded bg-acento-fondo p-2 text-xs text-acento">Los avisos automáticos al proveedor no están conectados: copia el enlace del portal y compártelo. Con n8n configurado se envían solos, con recordatorios cada 3 días.</p>}
+        {documentos.length === 0 ? <p className="text-sm text-tinta-3">Aún no se han pedido documentos. Activa una política de documentos o pídelos desde un expediente.</p> : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-slate-500"><tr><th className="py-2">Proveedor</th><th>Estado</th><th>Pedido</th><th>Recordatorios</th><th></th></tr></thead>
+              <thead className="text-left text-tinta-3"><tr><th className="py-2">Proveedor</th><th>Estado</th><th>Pedido</th><th>Recordatorios</th><th></th></tr></thead>
               <tbody>
                 {documentos.sort((a, b) => b.enviada_en.localeCompare(a.enviada_en)).map((d) => (
-                  <tr key={d.id} className="border-t border-slate-100">
-                    <td className="py-2"><Link href={`/expediente/${d.proveedor_id}`} className="text-blue-800 hover:underline">{porId.get(d.proveedor_id)?.razon_social}</Link></td>
+                  <tr key={d.id} className="border-t border-borde">
+                    <td className="py-2"><Link href={`/expediente/${d.proveedor_id}`} className="text-tinta hover:underline">{porId.get(d.proveedor_id)?.razon_social}</Link></td>
                     <td><EstadoDocumento d={d} /></td>
-                    <td className="text-xs text-slate-500">{fecha(d.enviada_en)}<br />{d.solicitada_por}</td>
+                    <td className="text-xs text-tinta-3">{fecha(d.enviada_en)}<br />{d.solicitada_por}</td>
                     <td className="text-center">{d.recordatorios}</td>
-                    <td>{d.estado === "recibida" ? <a href={`/api/documentos/${d.id}`} className="text-xs text-blue-800 underline">⬇️ PDF</a> : <CopiarEnlace token={d.token} />}</td>
+                    <td>{d.estado === "recibida" ? <a href={`/api/documentos/${d.id}`} className="text-xs text-tinta underline">PDF</a> : <CopiarEnlace token={d.token} />}</td>
                   </tr>
                 ))}
               </tbody>

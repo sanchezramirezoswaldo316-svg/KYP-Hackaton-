@@ -14,7 +14,7 @@ export function Tarjeta({ titulo, children, acciones }: { titulo?: string; child
 
 export function Indicador({ titulo, valor, detalle }: { titulo: string; valor: React.ReactNode; detalle?: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-borde bg-white p-4">
       <div className="text-xs text-tinta-3">{titulo}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">{valor}</div>
       {detalle && <div className="mt-1 text-xs text-tinta-3">{detalle}</div>}

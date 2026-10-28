@@ -8,7 +8,7 @@ export default function Carga() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">Revisar muchos proveedores a la vez</h1>
-        <p className="text-slate-600">
+        <p className="text-tinta-3">
           El sistema revisa a todos contra la lista negra del SAT (<Termino t="69-B" />) y las sanciones internacionales (<Termino t="OFAC" />).
           Los confiables se aprueban solos; los dudosos llegan a la bandeja.
         </p>

@@ -28,15 +28,15 @@ const POS: Record<IdNodo, { x: number; y: number }> = {
   ia: { x: 800, y: 170 }, reglas: { x: 800, y: 430 }, veredicto: { x: 955, y: 300 },
 };
 const NODO: Record<IdNodo, { icono: string; nombre: string }> = {
-  sat_69b: { icono: "🧾", nombre: "SAT · Lista negra" },
-  sat_69: { icono: "🏛️", nombre: "SAT · Art. 69" },
-  ofac: { icono: "🌎", nombre: "OFAC · EE. UU." },
-  web: { icono: "🌐", nombre: "Página web" },
-  noticias: { icono: "📰", nombre: "Noticias" },
-  dominio: { icono: "📅", nombre: "Dominio" },
-  ia: { icono: "✨", nombre: "IA (Claude)" },
-  reglas: { icono: "⚖️", nombre: "Motor de reglas" },
-  veredicto: { icono: "🏁", nombre: "Veredicto" },
+  sat_69b: { icono: "1", nombre: "SAT · Lista negra" },
+  sat_69: { icono: "2", nombre: "SAT · Art. 69" },
+  ofac: { icono: "3", nombre: "OFAC · EE. UU." },
+  web: { icono: "4", nombre: "Página web" },
+  noticias: { icono: "5", nombre: "Noticias" },
+  dominio: { icono: "6", nombre: "Dominio" },
+  ia: { icono: "7", nombre: "IA (Claude)" },
+  reglas: { icono: "8", nombre: "Motor de reglas" },
+  veredicto: { icono: "9", nombre: "Veredicto" },
 };
 const FUENTES: Fuente[] = ["sat_69b", "sat_69", "ofac", "web", "noticias", "dominio"];
 const COLOR: Record<Nivel | "azul" | "gris", string> = { ok: "#10b981", info: "#94a3b8", alerta: "#f59e0b", peligro: "#ef4444", azul: "#3b82f6", gris: "#cbd5e1" };
@@ -183,7 +183,7 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
   return (
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-        <div data-tour="mapa" className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950">
+        <div data-tour="mapa" className="overflow-x-auto rounded-2xl border border-tinta bg-tinta">
           <svg viewBox="0 0 1040 600" className="h-auto w-full min-w-[680px]" role="img" aria-label="Mapa de extracción de información en tiempo real">
             <defs>
               <pattern id="cuadricula" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="1" /></pattern>
@@ -231,14 +231,14 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
           </svg>
         </div>
 
-        <div className="flex max-h-[520px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-          <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2 text-xs text-slate-400">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> Registro en vivo · tiempos reales del servidor
+        <div className="flex max-h-[520px] flex-col overflow-hidden rounded-2xl border border-tinta bg-tinta">
+          <div className="flex items-center gap-2 border-b border-tinta px-3 py-2 text-xs text-tinta-3">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-superficie" /> Registro en vivo · tiempos reales del servidor
           </div>
           <div ref={consola} className="flex-1 space-y-1 overflow-y-auto p-3 font-mono text-[11px] leading-relaxed">
             {lineas.map((l, i) => (
               <div key={i} className="animar-aparecer flex gap-2">
-                <span className="shrink-0 text-slate-500">{l.t}</span>
+                <span className="shrink-0 text-tinta-3">{l.t}</span>
                 <span style={{ color: l.nivel === "azul" ? "#93c5fd" : l.nivel === "info" ? "#cbd5e1" : COLOR[l.nivel] }}>{l.texto}</span>
               </div>
             ))}
@@ -248,7 +248,7 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
 
       {tarjetas.length > 0 && (
         <div>
-          <h3 className="mb-2 font-semibold">📦 Datos extraídos</h3>
+          <h3 className="mb-2 font-semibold">Datos extraídos</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {tarjetas.map(({ h, ms }, i) => {
               const x = explicarHallazgo(h);
@@ -256,19 +256,19 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
                 <div key={i} className="animar-aparecer rounded-xl border-2 bg-white p-3" style={{ borderColor: COLOR[x.nivel] }}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{NODO[h.fuente].icono} {NODO[h.fuente].nombre}</span>
-                    <span className="font-mono text-[10px] text-slate-500">{ms} ms</span>
+                    <span className="font-mono text-[10px] text-tinta-3">{ms} ms</span>
                   </div>
                   <div className="text-sm" style={{ color: COLOR[x.nivel] === COLOR.info ? "#475569" : COLOR[x.nivel] }}>{x.titulo}</div>
                   {h.datos && (
                     <dl className="mt-2 space-y-0.5 font-mono text-[11px]">
                       {Object.entries(h.datos).map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2 border-b border-dashed border-slate-200 pb-0.5">
-                          <dt className="shrink-0 text-slate-500">{k}</dt><dd className="truncate text-right text-slate-900" title={v}>{v}</dd>
+                        <div key={k} className="flex justify-between gap-2 border-b border-dashed border-borde pb-0.5">
+                          <dt className="shrink-0 text-tinta-3">{k}</dt><dd className="truncate text-right text-tinta" title={v}>{v}</dd>
                         </div>
                       ))}
                     </dl>
                   )}
-                  {!h.datos && <p className="mt-1 text-xs text-slate-500">{x.frase}</p>}
+                  {!h.datos && <p className="mt-1 text-xs text-tinta-3">{x.frase}</p>}
                 </div>
               );
             })}
@@ -277,13 +277,13 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
       )}
 
       {final && (
-        <div className="animar-aparecer grid items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-[auto_1fr]">
+        <div className="animar-aparecer grid items-center gap-6 rounded-2xl border border-borde bg-white p-6 md:grid-cols-[auto_1fr]">
           <Velocimetro valor={final.verificacion.puntaje} />
           <div className="space-y-3">
             <Semaforo decision={final.verificacion.decision} grande />
             <p className="text-lg">{SEMAFORO[final.verificacion.decision].frase}</p>
-            <p className="text-sm text-slate-600">{final.verificacion.resumen}</p>
-            <Link href={`/expediente/${final.proveedor.id}`} className="inline-block rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Ver expediente →</Link>
+            <p className="text-sm text-tinta-3">{final.verificacion.resumen}</p>
+            <Link href={`/expediente/${final.proveedor.id}`} className="inline-block rounded bg-marca px-4 py-2 font-medium text-white hover:bg-marca">Ver expediente →</Link>
           </div>
         </div>
       )}

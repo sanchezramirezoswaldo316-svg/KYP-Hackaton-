@@ -27,15 +27,15 @@ export function Personas() {
               className={`text-2xl transition-all duration-700 sm:text-3xl ${fase && !ana ? "scale-75 opacity-10 grayscale" : ""} ${fase && ana ? "animar-latido" : ""}`}
               style={{ transitionDelay: fase && !ana ? `${(30 - i) * 60}ms` : "0ms" }}
             >
-              {ana ? "👩‍💼" : "🧑‍💼"}
+              {ana ? "" : ""}
             </span>
           );
         })}
       </div>
       <div className="text-center sm:text-left">
         <div className={`text-lg transition-opacity duration-500 ${fase ? "opacity-40 line-through" : ""}`}>Antes: <strong>30 auditores</strong></div>
-        <div className={`text-2xl font-bold text-blue-800 transition-opacity delay-[2200ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>Con KYP: 1 gestora</div>
-        <p className={`max-w-xs text-sm text-slate-600 transition-opacity delay-[2600ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>El sistema revisa a todos; Ana solo decide los casos dudosos.</p>
+        <div className={`text-2xl font-bold text-tinta transition-opacity delay-[2200ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>Con KYP: 1 gestora</div>
+        <p className={`max-w-xs text-sm text-tinta-3 transition-opacity delay-[2600ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>El sistema revisa a todos; Ana solo decide los casos dudosos.</p>
       </div>
     </div>
   );

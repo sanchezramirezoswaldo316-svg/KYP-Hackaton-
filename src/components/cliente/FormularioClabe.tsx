@@ -37,25 +37,25 @@ export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { 
     <form onSubmit={enviarFormulario} className="grid gap-4 sm:grid-cols-3">
       <label className="block text-sm sm:col-span-3">
         <span className="font-medium">Proveedor *</span>
-        <select name="proveedor_id" required defaultValue={seleccionado ?? ""} className="mt-1 w-full rounded border border-slate-300 px-3 py-2">
+        <select name="proveedor_id" required defaultValue={seleccionado ?? ""} className="mt-1 w-full rounded border border-borde-fuerte px-3 py-2">
           <option value="">Selecciona…</option>
           {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social} · {p.rfc}</option>)}
         </select>
       </label>
       <label className="block text-sm">
         <span className="font-medium">Cuenta nueva que piden (CLABE) *</span>
-        <input name="clabe_nueva" required pattern="\d{18}" className="mt-1 w-full rounded border border-slate-300 px-3 py-2 font-mono" />
+        <input name="clabe_nueva" required pattern="\d{18}" className="mt-1 w-full rounded border border-borde-fuerte px-3 py-2 font-mono" />
       </label>
       <label className="block text-sm sm:col-span-2">
         <span className="font-medium">Teléfono que viene en la solicitud</span>
-        <input name="telefono_en_solicitud" className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
-        <span className="text-xs text-slate-500">Se guarda como evidencia, pero el sistema NUNCA llama a este número: llama al registrado en el alta.</span>
+        <input name="telefono_en_solicitud" className="mt-1 w-full rounded border border-borde-fuerte px-3 py-2" />
+        <span className="text-xs text-tinta-3">Se guarda como evidencia, pero el sistema NUNCA llama a este número: llama al registrado en el alta.</span>
       </label>
       <div className="sm:col-span-3">
-        <button disabled={ocupado} className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50">
-          {ocupado ? "Registrando…" : "⏸️ Congelar pago y llamar al proveedor"}
+        <button disabled={ocupado} className="rounded bg-marca px-4 py-2 text-sm font-medium text-white hover:bg-marca disabled:opacity-50">
+          {ocupado ? "Registrando…" : "Congelar pago y llamar al proveedor"}
         </button>
-        {mensaje && <p className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-emerald-700" : "text-red-700"}`}>{mensaje.texto}</p>}
+        {mensaje && <p className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-tinta-2" : "text-error"}`}>{mensaje.texto}</p>}
       </div>
     </form>
   );
