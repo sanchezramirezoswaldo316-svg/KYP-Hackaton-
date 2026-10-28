@@ -61,3 +61,8 @@ button, a, input, select, textarea { outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .linea-viva { animation: none; }
 }
+
+/* Grafo de vínculos: las entidades aparecen con un fundido. */
+@keyframes aparecer-nodo { from { opacity: 0; } to { opacity: 1; } }
+.aparecer-nodo { animation: aparecer-nodo 0.5s ease both; }
+@media (prefers-reduced-motion: reduce) { .aparecer-nodo { animation: none; } }
