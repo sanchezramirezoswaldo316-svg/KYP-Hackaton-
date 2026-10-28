@@ -56,7 +56,7 @@ Para la demo de 500 proveedores, sube `public/demo/proveedores-demo.csv` en **Ca
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Datos persistentes en Supabase. Primero ejecuta `supabase/migrations/0001_inicial.sql` |
 | `FIRECRAWL_API_KEY` | Análisis de la página web y búsqueda de noticias |
-| `ANTHROPIC_API_KEY` | Comparación de giro, evaluación de noticias y resúmenes con Claude |
+| `GROQ_API_KEY` | Comparación de giro, evaluación de noticias y resúmenes con Qwen vía Groq |
 | `ELEVENLABS_*`, `EMPRESA_NOMBRE` | Llamadas reales de verificación (ver `voz/README.md`) |
 | `WEBHOOK_SECRET` | Webhooks para n8n (ver `n8n/README.md`) |
 | `APP_PASSWORD` | Contraseña para todo el sitio. Recomendado si la URL es pública |

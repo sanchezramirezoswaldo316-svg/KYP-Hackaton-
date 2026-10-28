@@ -242,41 +242,32 @@
     },
     {
       "parameters": {
-        "modelId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "claude-sonnet-4-6",
-          "cachedResultName": "claude-sonnet-4-6"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "=Proveedor: {{ $json.razon_social }} (RFC {{ $json.rfc }})\nGiro declarado: {{ $json.giro_declarado }}\nSitio web: {{ $json.sitio_web || \"no declarado\" }}\n\nContenido del sitio (puede estar vacio):\n{{ $json.contenido_web }}\n\nHallazgos ya normalizados:\n{{ JSON.stringify($json.hallazgos) }}\n\nFuentes NO consultadas por este flujo: SAT 69, SAT 69-B (EFOS) y OFAC. El resumen DEBE incluir textualmente la frase: \"SAT 69/69-B y OFAC no fueron consultados por este flujo.\" No digas que estan limpios, sin hallazgos o que el proveedor no aparece en ellos.\nSi el hallazgo de noticias es sin_dato, di que no se pudo determinar, no que no hay noticias.\n\nResponde SOLO con JSON valido, sin markdown:\n{\"giro_resultado\": \"giro_coincide\" | \"giro_no_coincide\" | \"sin_sitio\", \"giro_detalle\": \"explicacion breve\", \"resumen\": \"resumen en espanol de 3 a 5 frases\"}"
-            }
-          ]
-        },
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"qwen/qwen3.8-27b\",\n  messages: [\n    { role: \"system\", content: \"Eres un analista de cumplimiento. Solo describes hallazgos. Nunca asignes puntajes, niveles o calificaciones de riesgo, ni recomiendes aprobar, continuar, rechazar o bloquear al proveedor. Responde únicamente con un objeto JSON válido con giro_resultado, giro_detalle y resumen. Si no hay contenido del sitio, usa giro_resultado sin_sitio. No inventes datos del SAT, OFAC ni de ninguna fuente oficial. SAT 69, SAT 69-B y OFAC no se consultan en este flujo: escribe siempre 'SAT 69/69-B y OFAC no fueron consultados por este flujo.'\" },\n    { role: \"user\", content: `Proveedor: ${$json.razon_social} (RFC ${$json.rfc})\\nGiro declarado: ${$json.giro_declarado}\\nSitio web: ${$json.sitio_web || 'no declarado'}\\nContenido del sitio: ${String($json.contenido_web || '').slice(0, 12000)}\\nHallazgos ya normalizados: ${JSON.stringify($json.hallazgos)}\\nFuentes NO consultadas por este flujo: SAT 69, SAT 69-B (EFOS) y OFAC.\\nSi noticias es sin_dato, di que no se pudo determinar; no digas que no hay noticias.\\nDevuelve SOLO JSON con este formato: {\\\"giro_resultado\\\":\\\"giro_coincide|giro_no_coincide|sin_sitio\\\",\\\"giro_detalle\\\":\\\"explicacion breve\\\",\\\"resumen\\\":\\\"resumen en espanol de 3 a 5 frases\\\"}` }\n  ],\n  response_format: { type: \"json_object\" },\n  max_completion_tokens: 1024\n}) }}",
         "options": {
-          "includeMergedResponse": true,
-          "system": "Eres un analista de cumplimiento. Solo describes hallazgos. Nunca asignes puntajes, niveles o calificaciones de riesgo, ni recomiendes aprobar, continuar, rechazar o bloquear al proveedor. El resumen solo enumera hechos encontrados. Si no hay contenido del sitio, usa giro_resultado \"sin_sitio\". No inventes datos del SAT, OFAC ni de ninguna fuente oficial. SAT 69, SAT 69-B y OFAC NO se consultan en este flujo: nunca afirmes que el proveedor esta limpio, no aparece o no tiene hallazgos en esas listas; escribe siempre: SAT 69/69-B y OFAC no fueron consultados por este flujo.",
-          "maxTokens": 1024,
-          "temperature": 0.2
+          "timeout": 30000
         }
       },
       "id": "51892515-f915-434a-ad92-1eb980b801f2",
-      "name": "Claude: comparar giro y redactar resumen",
-      "type": "@n8n/n8n-nodes-langchain.anthropic",
-      "typeVersion": 1,
+      "name": "Groq/Qwen: comparar giro y redactar resumen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
       "position": [
         1696,
         512
       ],
       "notesInFlow": true,
       "onError": "continueRegularOutput",
-      "notes": "Usa Gateway credits. La IA no asigna puntos ni decide. Si falla, el giro queda sin_dato y el resumen indica el fallo."
+      "notes": "Selecciona una credencial Header Auth: Name=Authorization, Value=Bearer <GROQ_API_KEY>. La clave nunca debe quedar escrita en el JSON exportado. La IA no asigna puntos ni decide."
     },
     {
       "parameters": {
-        "jsCode": "const base = $('Normalizar hallazgos reales').first().json;\nconst r = $input.first().json;\nif (r.error) {\n  const msg = typeof r.error === 'string' ? r.error : (r.error.message || JSON.stringify(r.error));\n  const hallazgosErr = base.hallazgos.map(h => h.resultado === 'pendiente_ia' ? { ...h, resultado: 'sin_dato', detalle: h.detalle + '. FALLO de Claude al comparar el giro: ' + msg } : h);\n  return [{ json: { proveedor_id: base.proveedor_id, hallazgos: hallazgosErr, resumen_ia: 'NO GENERADO: la llamada a Claude fallo (' + msg + '). Revisar los hallazgos manualmente. SAT 69/69-B y OFAC no fueron consultados por este flujo.' } }];\n}\nlet texto = r.merged_response || ((r.content || []).find(c => c.type === 'text') || {}).text || '';\nconst ini = texto.indexOf('{');\nconst fin = texto.lastIndexOf('}');\nlet ia = {};\ntry { ia = JSON.parse(texto.slice(ini, fin + 1)); } catch (e) { ia = { resumen: texto }; }\nconst validos = ['giro_coincide', 'giro_no_coincide', 'sin_sitio'];\nconst hallazgos = base.hallazgos.map(h => {\n  if (h.resultado !== 'pendiente_ia') return h;\n  if (validos.includes(ia.giro_resultado)) return { ...h, resultado: ia.giro_resultado, detalle: h.detalle + '. ' + (ia.giro_detalle || ia.justificacion_giro || '') };\n  return { ...h, resultado: 'sin_dato', detalle: h.detalle + '. La IA no devolvio una comparacion valida; revisar manualmente.' };\n});\n// Salvaguarda: quitar frases que afirmen que SAT 69/69-B u OFAC estan limpios y garantizar la leyenda obligatoria\nconst LEYENDA = 'SAT 69/69-B y OFAC no fueron consultados por este flujo.';\nconst listas = /(sat|69-?b|efos|ofac|lista negra)/i;\nconst afirmaLimpio = /(limpi|sin hallazgos|sin registros|sin coincidencias|no aparece|no figura|no esta listad|no está listad|no se encontr|no se identific|no registra|no tiene antecedentes|libre de)/i;\nlet resumen = String(ia.resumen || 'Sin resumen generado por la IA.');\nconst frases = resumen.split(/(?<=[.!?])\\s+/);\nresumen = frases.filter(f => f.includes('no fueron consultados') || !(listas.test(f) && afirmaLimpio.test(f))).join(' ').trim();\nif (!resumen.includes(LEYENDA)) resumen = (resumen ? resumen + ' ' : '') + LEYENDA;\nreturn [{ json: { proveedor_id: base.proveedor_id, hallazgos, resumen_ia: resumen } }];"
+        "jsCode": "const base = $('Normalizar hallazgos reales').first().json;\nconst r = $input.first().json;\nconst fallo = (msg) => {\n  const hallazgos = base.hallazgos.map(h => h.resultado === 'pendiente_ia'\n    ? { ...h, resultado: 'sin_dato', detalle: h.detalle + '. FALLO de Qwen al comparar el giro: ' + msg }\n    : h);\n  return [{ json: {\n    proveedor_id: base.proveedor_id,\n    hallazgos,\n    resumen_ia: 'NO GENERADO: la llamada a Qwen fallo (' + msg + '). Revisar los hallazgos manualmente. SAT 69/69-B y OFAC no fueron consultados por este flujo.'\n  } }];\n};\nif (r.error) {\n  const msg = typeof r.error === 'string' ? r.error : (r.error.message || JSON.stringify(r.error));\n  return fallo(msg);\n}\nconst texto = r.choices?.[0]?.message?.content;\nif (typeof texto !== 'string' || !texto.trim()) return fallo('respuesta vacia de Groq');\nlet ia;\ntry { ia = JSON.parse(texto); } catch (e) { return fallo('JSON invalido de Groq'); }\nif (!ia || typeof ia !== 'object') return fallo('respuesta inesperada de Groq');\nconst validos = ['giro_coincide', 'giro_no_coincide', 'sin_sitio'];\nconst hallazgos = base.hallazgos.map(h => {\n  if (h.resultado !== 'pendiente_ia') return h;\n  if (validos.includes(ia.giro_resultado)) return { ...h, resultado: ia.giro_resultado, detalle: h.detalle + '. ' + (ia.giro_detalle || '') };\n  return { ...h, resultado: 'sin_dato', detalle: h.detalle + '. La IA no devolvio una comparacion valida; revisar manualmente.' };\n});\nconst LEYENDA = 'SAT 69/69-B y OFAC no fueron consultados por este flujo.';\nconst listas = /(sat|69-?b|efos|ofac|lista negra)/i;\nconst afirmaLimpio = /(limpi|sin hallazgos|sin registros|sin coincidencias|no aparece|no figura|no esta listad|no está listad|no se encontr|no se identific|no registra|no tiene antecedentes|libre de)/i;\nlet resumen = String(ia.resumen || 'Sin resumen generado por la IA.');\nconst frases = resumen.split(/(?<=[.!?])\\s+/);\nresumen = frases.filter(f => f.includes('no fueron consultados') || !(listas.test(f) && afirmaLimpio.test(f))).join(' ').trim();\nif (!resumen.includes(LEYENDA)) resumen = (resumen ? resumen + ' ' : '') + LEYENDA;\nreturn [{ json: { proveedor_id: base.proveedor_id, hallazgos, resumen_ia: resumen } }];"
       },
       "id": "eebd0fb4-c01e-4441-b1d3-56a3367ce7ca",
       "name": "Integrar resultado de la IA",
@@ -456,18 +447,7 @@
       "main": [
         [
           {
-            "node": "Claude: comparar giro y redactar resumen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Claude: comparar giro y redactar resumen": {
-      "main": [
-        [
-          {
-            "node": "Integrar resultado de la IA",
+            "node": "Groq/Qwen: comparar giro y redactar resumen",
             "type": "main",
             "index": 0
           }
@@ -490,6 +470,17 @@
         [
           {
             "node": "Enviar a /api/webhooks/verificacion (PENDIENTE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq/Qwen: comparar giro y redactar resumen": {
+      "main": [
+        [
+          {
+            "node": "Integrar resultado de la IA",
             "type": "main",
             "index": 0
           }

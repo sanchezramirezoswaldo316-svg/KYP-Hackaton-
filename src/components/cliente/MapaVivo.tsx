@@ -34,7 +34,7 @@ const NODO: Record<IdNodo, { icono: string; nombre: string }> = {
   web: { icono: "🌐", nombre: "Página web" },
   noticias: { icono: "📰", nombre: "Noticias" },
   dominio: { icono: "📅", nombre: "Dominio" },
-  ia: { icono: "✨", nombre: "IA (Claude)" },
+  ia: { icono: "✨", nombre: "IA (Qwen)" },
   reglas: { icono: "⚖️", nombre: "Motor de reglas" },
   veredicto: { icono: "🏁", nombre: "Veredicto" },
 };
