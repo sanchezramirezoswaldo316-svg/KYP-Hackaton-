@@ -1,29 +1,70 @@
-# Verificación por voz (Axel)
+# Verificación por voz — Axel
 
-El código ya está listo (`src/lib/voz/elevenlabs.ts`). Falta configurar el agente en ElevenLabs.
+## Estado y alcance
 
-## Flujo
+Agente `agent_2601m61t00pbefrvh4ntd0a613bd` creado y leído de vuelta el 28/10/2026: idioma `es`, instrucciones de español de México, grabación activada, retención de 30 días y extracción `resultado`. Voz multilingüe Sarah; acento y naturalidad pendientes de escucha por Axel. Configuración reproducible en `agente-config.json`, generada desde `guion-agente.md`.
 
-1. Se registra una solicitud de cambio de CLABE (pantalla **Cambios de CLABE**) → el pago queda **en pausa**.
-2. La app llama a `POST https://api.elevenlabs.io/v1/convai/twilio/outbound-call` al **`telefono_registrado` del alta**. El teléfono que venga en la solicitud se guarda como evidencia, pero nunca se usa.
-3. ElevenLabs envía el webhook post-llamada a `/api/webhooks/elevenlabs`. La app verifica la firma, guarda la transcripción y:
-   - `confirmado` → la CLABE nueva queda verificada y se reactiva el pago.
-   - cualquier otro resultado → caso de **alto riesgo** en la bandeja (sugerencia: bloquear).
+No hay números asociados en la cuenta ElevenLabs. No se hicieron llamadas reales. Las cuatro simulaciones conversacionales del MCP devolvieron HTTP 500 del proveedor; no se presentan como aprobadas. Las pruebas locales usan datos ficticios y `fetch` interceptado. El proxy de audio está probado con un archivo ficticio; falta comprobar grabación, transcripción y resumen de una conversación real después de conectar Twilio.
 
-Sin variables de ElevenLabs, la app muestra botones para **simular** el resultado. Quedan marcados como "Simulada" en el expediente y en el PDF.
+Se conserva la política existente: `confirmado` aplica la CLABE nueva y recupera el estado base del proveedor; si hay otra solicitud pendiente, mantiene el pago pausado. Los otros tres resultados mantienen la pausa y generan un caso de riesgo. Axel/Oswaldo deben resolver por separado si la confirmación requerirá aprobación humana.
 
-## Configuración en ElevenLabs
+## Flujo y garantías
 
-1. **Agente** (Conversational AI): idioma español y voz natural. El prompt está en `guion-agente.md`.
-2. **Variables dinámicas** que envía la app: `{{empresa}}`, `{{proveedor}}`, `{{folio_factura}}`, `{{monto_factura}}`, `{{ultimos4_anterior}}`, `{{solicitud_id}}`.
-3. **Análisis → Data collection:** crea un campo llamado exactamente `resultado` (tipo string) con esta descripción:
-   > "Uno de: confirmado (reconoce la solicitud y los tres datos coinciden), no_reconoce (dice que no pidió el cambio), datos_no_coinciden (algún dato no coincide), sin_respuesta (no contestó o no era el representante)."
-4. **Número de teléfono:** importa un número de Twilio en ElevenLabs y copia su `phone_number_id`.
-5. **Webhook post-llamada:** en la configuración de webhooks del workspace, apunta a `https://<tu-app>.vercel.app/api/webhooks/elevenlabs` y copia el secreto de firma.
-6. **Variables en Vercel:** `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `ELEVENLABS_WEBHOOK_SECRET`, `EMPRESA_NOMBRE`.
+1. `solicitarCambioClabe` guarda solicitud y pausa proveedor antes de llamar. Solo usa `telefono_registrado`; el teléfono incluido en la solicitud queda como evidencia.
+2. El teléfono registrado debe estar además en `VOZ_TELEFONOS_AUTORIZADOS` (E.164, separados por coma). Lista vacía impide llamadas. No agregar números reales sin autorización del equipo.
+3. Requiere factura y cuenta anterior. Envía las seis variables existentes: empresa, proveedor, folio_factura, monto_factura, ultimos4_anterior y solicitud_id.
+4. Guarda `conversation_id` en el evento `llamada_iniciada` de la bitácora. El webhook comprueba HMAC del cuerpo original (ventana 5 minutos), agente y correlación. Si llega antes de que se persista el inicio devuelve 503 para reintento. Nunca vincula una conversación desconocida por el solo `solicitud_id` recibido.
+5. Acepta `post_call_transcription` y `call_initiation_failure`. Los fallos de inicio no incluyen necesariamente variables: se resuelven por la conversación registrada y producen `sin_respuesta`. No habilitar `post_call_audio`: el audio se consulta por proxy.
+6. Reintentos equivalentes devuelven la evidencia existente; resultados distintos para la misma solicitud se rechazan. No sobrescriben transcripción ni crean casos adicionales. Supabase aplica todo en una transacción con bloqueo del proveedor y solicitud; memoria serializa el procesamiento en un único proceso.
+7. Timeout, HTTP no exitoso o respuesta sin ID dejan el pago pausado y un caso para revisión. No reintentar automáticamente una llamada de inicio incierto: primero revisar ElevenLabs para evitar marcar dos veces.
 
-## Para la demo
+## Oswaldo: despliegue
 
-- Da de alta un proveedor con **tu teléfono** como "teléfono del representante", con folio y monto de factura.
-- Ensaya los cuatro resultados.
-- Ten grabada una llamada exitosa como plan B.
+- Aplicar `supabase/migrations/0001_inicial.sql` y luego `0002_resultado_voz.sql`. La segunda agrega un RPC exclusivo de `service_role`; no cambia tablas ni tipos compartidos. Las pruebas ejecutan ambas con PostgreSQL embebido. Verificar también en el Supabase de staging antes de la demo.
+- Configurar `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`. No usar memoria en Vercel para recibir callbacks: se pierde entre instancias/reinicios.
+- Configurar `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `ELEVENLABS_WEBHOOK_SECRET`, `EMPRESA_NOMBRE` y `VOZ_TELEFONOS_AUTORIZADOS`. No usar prefijo `NEXT_PUBLIC` para secretos.
+- Importar el número Twilio autorizado en ElevenLabs y asociarlo al agente. Copiar el ID interno de ElevenLabs, no el SID de Twilio, a `ELEVENLABS_PHONE_NUMBER_ID`. Confirmar permisos de llamadas a México y destinos verificados si Twilio está en trial.
+- Configurar webhook público HTTPS `/api/webhooks/elevenlabs`, eventos de transcripción y fallo de inicio, firma HMAC y reintentos habilitados. Guardar el secreto generado en el servidor. La ruta se excluye de Basic Auth y verifica su propia firma.
+- Configurar `APP_PASSWORD` para restringir expediente y audio. El endpoint de audio rechaza acceso incluso si la contraseña no está configurada. El sitio no tiene autorización por proveedor: usar solo con el equipo durante la demo.
+- El webhook genérico `/api/webhooks/llamada` mantiene `x-kyp-secret` (`WEBHOOK_SECRET`) y su formato, pero ahora exige `conversation_id` correlacionado para resultados reales. Quien implemente otro adaptador debe registrar primero `llamada_iniciada` desde un servicio confiable; no enviar callbacks sin ese inicio.
+- Ensayar los cuatro resultados con teléfonos autorizados. Revisar identidad del representante, no divulgación de respuestas, tolerancia del monto (<5%), silencio/buzón, rechazo de grabación, resumen, transcripción y reproducción de audio.
+- La retención remota es de 30 días. El proxy no archiva el MP3: una retención de expediente mayor necesita copia en almacenamiento privado y política acordada con el equipo. Tras expirar el audio puede responder 404.
+
+## Samuel: contrato de evidencia
+
+Los tipos `SolicitudClabe`, `Llamada`, `WebhookLlamada` y los cuatro resultados no cambian. `cargarExpediente(proveedorId).llamadas` ya contiene `id`, `solicitud_id`, `conversation_id`, `resultado`, `transcripcion`, `resumen`, `simulada` y `creado_en`; el expediente/PDF existente conserva esta evidencia.
+
+Para una llamada real con `conversation_id`, solicitar `GET /api/voz/llamadas/{llamada.id}/audio` con la misma sesión Basic Auth del sitio. Devuelve `audio/mpeg`, `Cache-Control: private, no-store`; 401 sin acceso, 404 si es simulada/inexistente/audio expirado, 502 si falla ElevenLabs y 503 sin configuración. No formar enlaces con API keys. Mostrar “Audio no disponible” cuando corresponda. No presentar la pregrabación como audio de expediente real.
+
+`POST /api/webhooks/elevenlabs`: 200 procesado/duplicado equivalente, 400 JSON/esquema/agente/correlación conflictiva, 401 firma inválida, 503 correlación aún ausente, 500 fallo de persistencia. Solo configurar los dos eventos admitidos.
+
+## Pruebas reproducibles
+
+Desde la raíz del repositorio, con Node 24:
+
+```sh
+npm ci
+node --test 'src/**/*.test.ts'
+node node_modules/typescript/bin/tsc --noEmit
+node node_modules/eslint/bin/eslint.js src/lib/voz src/lib/servicios.ts src/app/api/webhooks/elevenlabs src/app/api/webhooks/llamada src/app/api/voz
+node voz/probar-http.mjs
+node node_modules/next/dist/bin/next build
+```
+
+Se invocan los binarios con Node porque el `:` de la ruta del checkout rompe la resolución de algunos scripts npm. `probar-http.mjs` inicia y detiene un servidor en 127.0.0.1:3197, reemplaza credenciales por valores ficticios y verifica diez respuestas HTTP. No ejecutar simultáneamente con un build/dev de Next en el mismo checkout.
+
+Para actualizar exclusivamente el agente de Axel (lee el existente antes del PATCH):
+
+```sh
+node --env-file=.env voz/configurar-agente.mjs
+# Solo regenerar JSON, sin acceso remoto:
+node voz/configurar-agente.mjs --solo-archivo
+```
+
+## Plan B: demo pregrabada
+
+Reproducir `voz/demo/DEMO-PREGRABADA-SINTETICA.mp3`. Anuncia audiblemente que es una demostración con voces sintéticas y datos ficticios, sin llamada real ni autorización de pagos. Es una dramatización con un único narrador, no grabación de Twilio.
+
+Para enseñar estados, usar la simulación existente en una instancia local sin configuración completa de ElevenLabs; las evidencias quedan `simulada: true`. Usar una solicitud nueva para cada resultado: los resultados conflictivos de una solicitud ya procesada ahora se rechazan.
+
+Fuentes oficiales: [webhooks post-llamada](https://elevenlabs.io/docs/eleven-agents/workflows/post-call-webhooks), [crear agente](https://elevenlabs.io/docs/api-reference/agents/create).
