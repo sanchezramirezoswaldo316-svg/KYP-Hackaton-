@@ -13,15 +13,15 @@ export function Reverificar({ id, nombre }: { id: string; nombre: string }) {
 
   return (
     <>
-      <button onClick={() => setAbierto(true)} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">🔍 Volver a revisar</button>
+      <button onClick={() => setAbierto(true)} className="rounded border border-borde-fuerte bg-white px-3 py-2 text-sm font-medium text-tinta hover:bg-superficie">Volver a revisar</button>
       {abierto && (
-        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/60 p-4" role="dialog" aria-modal>
-          <div className="my-8 w-full max-w-lg rounded-xl bg-slate-50 p-5 shadow-xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-tinta/60 p-4" role="dialog" aria-modal>
+          <div className="my-8 w-full max-w-lg rounded-xl bg-superficie p-5 shadow-xl">
             <Escaner
               nombre={nombre}
               ejecutar={ejecutar}
               alTerminar={() => (
-                <button onClick={() => { setAbierto(false); router.refresh(); }} className="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Listo</button>
+                <button onClick={() => { setAbierto(false); router.refresh(); }} className="rounded bg-marca px-4 py-2 font-medium text-white hover:bg-marca">Listo</button>
               )}
             />
           </div>

@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Boton } from "@/components/ui/Boton";
 import { enviar } from "./peticion.ts";
 
 const BOTONES = [
-  { estado: "aprobado", texto: "Aprobar", clase: "bg-emerald-600 hover:bg-emerald-700" },
-  { estado: "pausado", texto: "Pausar", clase: "bg-amber-500 hover:bg-amber-600" },
-  { estado: "bloqueado", texto: "Bloquear", clase: "bg-red-600 hover:bg-red-700" },
+  { estado: "aprobado", texto: "Aprobar proveedor", variante: "primario" },
+  { estado: "pausado", texto: "Pausar pago", variante: "secundario" },
+  { estado: "bloqueado", texto: "Bloquear proveedor", variante: "peligro" },
 ] as const;
 
 export function BotonesDecision({ casoId }: { casoId: string }) {
@@ -15,10 +16,24 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
   const [comentario, setComentario] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmarBloqueo, setConfirmarBloqueo] = useState(false);
 
-  async function decidir(estado: string) {
-    setOcupado(true);
+  async function decidir(estado: (typeof BOTONES)[number]["estado"]) {
     setError(null);
+    if (estado === "bloqueado") {
+      if (!comentario.trim()) {
+        setError("Escribe el motivo antes de bloquear.");
+        return;
+      }
+      setConfirmarBloqueo(true);
+      return;
+    }
+
+    await enviarDecision(estado);
+  }
+
+  async function enviarDecision(estado: (typeof BOTONES)[number]["estado"]) {
+    setOcupado(true);
     try {
       await enviar(`/api/casos/${casoId}/decision`, { estado, comentario });
       router.refresh();
@@ -34,17 +49,30 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
       <input
         value={comentario}
         onChange={(e) => setComentario(e.target.value)}
-        placeholder="Comentario (opcional, queda en la bitácora)"
-        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+        placeholder="Motivo obligatorio al bloquear; comentario opcional en otros casos"
+        aria-label="Motivo o comentario de la decisión"
+        disabled={ocupado}
+        className="w-full rounded-control border border-borde-fuerte px-3 py-2 text-sm focus:border-acento disabled:opacity-50"
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         {BOTONES.map((b) => (
-          <button key={b.estado} disabled={ocupado} onClick={() => decidir(b.estado)} className={`rounded px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${b.clase}`}>
-            {b.texto}
-          </button>
+          <Boton key={b.estado} disabled={ocupado} onClick={() => decidir(b.estado)} variante={b.variante}>{ocupado ? "Guardando…" : b.texto}</Boton>
         ))}
       </div>
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
+      {confirmarBloqueo && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-tinta/35 p-4" role="presentation">
+          <div role="dialog" aria-modal="true" aria-labelledby="confirmar-bloqueo" className="w-full max-w-md rounded-panel border border-borde bg-panel p-5 shadow-[0_8px_24px_rgb(0_0_0_/_0.12)]">
+            <h2 id="confirmar-bloqueo" className="text-base font-semibold">Bloquear proveedor</h2>
+            <p className="mt-2 text-sm text-tinta-2">El pago quedará detenido y el motivo se guardará en la bitácora.</p>
+            <p className="mt-3 border border-borde bg-superficie px-3 py-2 text-sm text-tinta">{comentario}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Boton disabled={ocupado} onClick={() => setConfirmarBloqueo(false)}>Cancelar</Boton>
+              <Boton variante="peligro" disabled={ocupado} onClick={() => { setConfirmarBloqueo(false); void enviarDecision("bloqueado"); }}>{ocupado ? "Bloqueando…" : "Bloquear proveedor"}</Boton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

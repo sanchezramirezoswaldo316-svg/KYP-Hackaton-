@@ -6,7 +6,7 @@ export function BannerModo() {
   const faltan = [!i.firecrawl && "Firecrawl", !i.ia && "IA (Qwen)", !i.voz && "voz (ElevenLabs)"].filter(Boolean);
   if (almacen().modo === "supabase" && faltan.length === 0) return null;
   return (
-    <div className="border-b border-amber-200 bg-amber-50 text-sm text-amber-900">
+    <div className="border-b border-acento bg-acento-fondo text-sm text-acento">
       <div className="mx-auto max-w-6xl px-4 py-2">
         {almacen().modo === "memoria" && <strong>Modo demo: </strong>}
         {almacen().modo === "memoria" && "datos en memoria (se reinician al reiniciar el servidor). "}

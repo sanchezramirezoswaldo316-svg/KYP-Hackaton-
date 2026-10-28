@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+@theme {
+  --color-lienzo: #ffffff;
+  --color-panel: #ffffff;
+  --color-superficie: #fafafa;
+  --color-hover: #f5f5f5;
+  --color-seleccion: #efefef;
+  --color-borde: #e5e5e5;
+  --color-borde-fuerte: #d4d4d4;
+  --color-tinta: #000000;
+  --color-tinta-2: #525252;
+  --color-tinta-3: #6b6b6b;
+  --color-marca: #000000;
+  --color-marca-2: #262626;
+  --color-acento: #4a1d5c;
+  --color-acento-2: #5e2775;
+  --color-acento-fondo: #f4eef7;
+  --color-error: #b3261e;
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --radius-ventana: 10px;
+}
+
+* { box-sizing: border-box; }
+body { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+body { background: var(--color-lienzo); color: var(--color-tinta); }
+button, a, input, select, textarea { outline-offset: 2px; }
+:where(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--color-acento); }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.app-main { min-width: 0; }
+
 @keyframes aparecer {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
@@ -16,7 +46,7 @@
   80% { transform: rotate(8deg); }
 }
 
-.animar-aparecer { animation: aparecer 0.45s ease both; }
+.animar-aparecer { animation: aparecer 0.25s cubic-bezier(.23,1,.32,1) both; }
 .animar-latido { animation: latido 1.6s ease-in-out infinite; }
 .animar-llamando { animation: llamando 1s ease-in-out infinite; display: inline-block; }
 

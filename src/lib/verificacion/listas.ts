@@ -1,7 +1,7 @@
 // Carga perezosa (y en caché) de las listas oficiales generadas con `npm run listas`.
 // Se leen del disco para no inflar el bundle ni el chequeo de tipos.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { Hallazgo } from "../tipos.ts";
 import {
@@ -15,8 +15,22 @@ let sat69b: Datos69B | null = null;
 let sat69: Datos69 | null = null;
 let ofac: IndiceOfac | null = null;
 
+// Captura todo el conjunto una vez; no mezclar cachés de distintas generaciones.
+let conjunto: Record<string, unknown> | null = null;
 function leer<T>(archivo: string): T {
-  return JSON.parse(readFileSync(path.join(DIR, archivo), "utf8")) as T;
+  if (!conjunto) {
+    const bloqueo = path.join(process.cwd(), "datos", "ulises-publicacion");
+    const marca = path.join(process.cwd(), "datos", "ulises-generacion.json");
+    const version = () => existsSync(marca) ? readFileSync(marca, "utf8") : "historico";
+    if (existsSync(bloqueo)) throw new Error("Listas en publicación/recuperación; conservar última generación y reintentar");
+    const antes = version();
+    const datos = Object.fromEntries(["sat-69b.json", "sat-69.json", "ofac-sdn.json"].map(
+      (nombre) => [nombre, JSON.parse(readFileSync(path.join(DIR, nombre), "utf8"))],
+    ));
+    if (existsSync(bloqueo) || version() !== antes) throw new Error("Generación de listas cambió durante lectura; reintentar");
+    conjunto = datos;
+  }
+  return conjunto[archivo] as T;
 }
 
 export function revisar69B(rfc: string): Hallazgo {

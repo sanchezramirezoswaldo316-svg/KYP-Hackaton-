@@ -15,11 +15,11 @@ export default async function EnVivo({ searchParams }: { searchParams: Promise<{
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">🛰️ Extracción en vivo</h1>
-        <p className="text-slate-600">
+        <h1 className="text-2xl font-semibold">Extracción en vivo</h1>
+        <p className="text-tinta-3">
           Mira cómo el sistema consulta cada fuente, qué datos extrae y cómo los convierte en una decisión. Los paquetes azules son consultas; los de color, datos que regresan.
         </p>
-        {(!i.firecrawl || !i.ia) && <p className="mt-1 text-xs text-slate-500">Página web, noticias e IA aparecen como &quot;no revisado&quot; hasta que se configuren sus claves.</p>}
+        {(!i.firecrawl || !i.ia) && <p className="mt-1 text-xs text-tinta-3">Página web, noticias e IA aparecen como &quot;no revisado&quot; hasta que se configuren sus claves.</p>}
       </div>
       <VistaEnVivo proveedores={lista} inicial={proveedor} />
     </div>

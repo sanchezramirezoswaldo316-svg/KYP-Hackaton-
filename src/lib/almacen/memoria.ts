@@ -42,5 +42,8 @@ export function crearAlmacenMemoria(): Almacen {
     solicitudes: coleccion(),
     llamadas: coleccion(),
     bitacora: coleccion(),
+    politicas: coleccion(),
+    documentos: coleccion(),
+    alertas: coleccion(),
   };
 }

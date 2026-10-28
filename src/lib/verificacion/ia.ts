@@ -94,3 +94,40 @@ export async function redactarResumen(datos: { razon_social: string; rfc: string
   );
   return r?.resumen ?? null;
 }
+
+const EsquemaOpinion = z.object({
+  es_opinion_32d: z.boolean(),
+  sentido: z.enum(["positivo", "negativo", "no_concluyente"]),
+  rfc: z.string(),
+  fecha_emision: z.string(),
+  explicacion: z.string(),
+});
+
+// Lee el PDF que subió el proveedor y extrae lo esencial de su opinión de cumplimiento 32-D.
+export async function analizarOpinion32D(pdfBase64: string) {
+  try {
+    const res = await anthropic().beta.messages.parse({
+      model: MODELO,
+      max_tokens: 4000,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      output_config: { effort: "low", format: betaZodOutputFormat(EsquemaOpinion) },
+      system: "Eres analista fiscal en México. Revisas documentos que suben proveedores. Indica si el documento es una Opinión del Cumplimiento de Obligaciones Fiscales del SAT (32-D), su sentido (positivo o negativo), el RFC al que corresponde y su fecha de emisión (AAAA-MM-DD). Si no es una opinión 32-D o no se puede leer, dilo. Responde en español.",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
+          { type: "text", text: "Analiza este documento." },
+        ],
+      }],
+    });
+    if (res.stop_reason === "refusal") return null;
+    return res.parsed_output ?? null;
+  } catch (error) {
+    if (error instanceof Anthropic.APIError) {
+      console.error(`Claude API ${error.status}: ${error.message}`);
+      return null;
+    }
+    throw error;
+  }
+}
