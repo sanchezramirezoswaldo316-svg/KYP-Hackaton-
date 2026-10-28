@@ -1,7 +1,7 @@
 // Íconos de línea (Lucide) por nombre. Los textos del servidor y de lib/ guardan solo el nombre,
 // así se pueden usar sin depender de React.
 import {
-  Activity, AlertTriangle, ArrowLeft, ArrowRight, Ban, Banknote, Bell, Bot, Building2, Calendar, CheckCircle2,
+  Activity, AlertTriangle, Camera, CircleDashed, Hash, LayoutGrid, Maximize2, Network, Tag, Target, ZoomIn, ZoomOut, ArrowLeft, ArrowRight, Ban, Banknote, Bell, Bot, Building2, Calendar, CheckCircle2,
   CircleDot, Clock, Cpu, CreditCard, Database, FileCheck2, FileSearch, FileText, Fingerprint, Gauge, Globe,
   Hourglass, Inbox, Landmark, LayoutDashboard, Link2, ListChecks, Lock, Mail, Newspaper, PauseCircle, Phone,
   PhoneCall, PlayCircle, Radar, Receipt, RefreshCw, Scale, ScanSearch, Search, Settings2, Shield, ShieldAlert,
@@ -18,6 +18,8 @@ export const ICONOS = {
   repetir: RefreshCw, balanza: Scale, escanear: ScanSearch, buscar: Search, ajustes: Settings2, escudo: Shield,
   escudoAlerta: ShieldAlert, escudoOk: ShieldCheck, escudoX: ShieldX, ia: Sparkles, subir: Upload, persona: User,
   personas: Users, flujo: Workflow, error: XCircle, rayo: Zap,
+  camara: Camera, circular: CircleDashed, numero: Hash, cuadricula: LayoutGrid, ajustar: Maximize2, red: Network,
+  etiqueta: Tag, halo: Target, acercar: ZoomIn, alejar: ZoomOut,
 } satisfies Record<string, LucideIcon>;
 
 export type NombreIcono = keyof typeof ICONOS;

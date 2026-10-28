@@ -84,3 +84,7 @@
 @keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .animar-parpadeo { animation: parpadeo 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .animar-parpadeo { animation: none; } }
+
+@keyframes aparecer-nodo { from { opacity: 0; } to { opacity: 1; } }
+.aparecer-nodo { animation: aparecer-nodo 0.5s ease both; }
+@media (prefers-reduced-motion: reduce) { .aparecer-nodo { animation: none; } }
