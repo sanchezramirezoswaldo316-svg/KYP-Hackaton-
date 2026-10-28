@@ -1,0 +1,540 @@
+{
+  "name": "KYP - Alta de proveedor (prototipo de Alan)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kyp-alta",
+        "options": {
+          "responseData": "{\"recibido\": true, \"mensaje\": \"Alta de proveedor recibida. El analisis KYP continua en segundo plano.\"}"
+        }
+      },
+      "id": "52173be8-cac2-4e38-ad5f-c7d91c194893",
+      "name": "Webhook: Alta de proveedor",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "55a40cbc-3df3-4927-b53e-57a20410b4e2",
+      "notesInFlow": true,
+      "notes": "Recibe POST JSON: proveedor_id, rfc, razon_social, sitio_web, giro_declarado, modo_demo (opcional, por defecto true). Responde al instante que se recibio."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "proveedor_id",
+              "type": "string",
+              "value": "={{ $json.body.proveedor_id ?? \"\" }}"
+            },
+            {
+              "id": "a2",
+              "name": "rfc",
+              "type": "string",
+              "value": "={{ ($json.body.rfc ?? \"\").toString().trim().toUpperCase() }}"
+            },
+            {
+              "id": "a3",
+              "name": "razon_social",
+              "type": "string",
+              "value": "={{ ($json.body.razon_social ?? \"\").toString().trim() }}"
+            },
+            {
+              "id": "a4",
+              "name": "sitio_web",
+              "type": "string",
+              "value": "={{ ($json.body.sitio_web ?? \"\").toString().trim() }}"
+            },
+            {
+              "id": "a5",
+              "name": "giro_declarado",
+              "type": "string",
+              "value": "={{ ($json.body.giro_declarado ?? \"\").toString().trim() }}"
+            },
+            {
+              "id": "a6",
+              "name": "dominio",
+              "type": "string",
+              "value": "={{ ($json.body.sitio_web ?? \"\").toString().trim().replace(/^https?:\\/\\//i, \"\").replace(/^www\\./i, \"\").split(\"/\")[0].toLowerCase() }}"
+            },
+            {
+              "id": "a7",
+              "name": "modo_demo",
+              "type": "boolean",
+              "value": "={{ $json.body.modo_demo === true }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d05bb968-720a-4795-aa19-6ef26261c859",
+      "name": "Preparar datos del proveedor",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        224
+      ],
+      "notesInFlow": true,
+      "notes": "Demo SOLO si modo_demo es exactamente true (booleano). Si falta, es false o es otro valor (ej. \"true\" como texto), se ejecuta la rama real."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.modo_demo }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "00a3233c-4f12-481b-abb2-67d5864d710b",
+      "name": "¿Modo demo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst hoy = new Date().toISOString().slice(0, 10);\nconst tieneSitio = !!d.sitio_web;\nconst hallazgos = [\n  {\n    fuente: 'SIMULADO - Firecrawl scrape (pagina web)',\n    resultado: tieneSitio ? 'giro_coincide' : 'sin_sitio',\n    detalle: tieneSitio\n      ? '[DATO SIMULADO] La pagina ' + d.sitio_web + ' describe actividades compatibles con el giro declarado \"' + d.giro_declarado + '\". No se consulto el sitio real.'\n      : '[DATO SIMULADO] El proveedor no declaro sitio web.',\n    fecha_fuente: hoy,\n  },\n  {\n    fuente: 'SIMULADO - Firecrawl search (noticias)',\n    resultado: 'sin_noticias',\n    detalle: '[DATO SIMULADO] Busqueda ficticia \"' + d.razon_social + ' fraude / demanda / SAT / EFOS\" sin resultados negativos. Enlaces de ejemplo: https://ejemplo.invalid/noticia-simulada-1. No es una consulta oficial al SAT ni a listas EFOS.',\n    fecha_fuente: hoy,\n  },\n  {\n    fuente: 'SIMULADO - WHOIS/RDAP (antiguedad del dominio)',\n    resultado: tieneSitio ? 'dominio_establecido' : 'sin_dato',\n    detalle: tieneSitio\n      ? '[DATO SIMULADO] Dominio ' + d.dominio + ' con fecha de registro ficticia 2015-03-10 (aprox. 11 anios).'\n      : '[DATO SIMULADO] Sin dominio para consultar.',\n    fecha_fuente: hoy,\n  },\n];\nconst resumen_ia = '[RESUMEN SIMULADO - NO GENERADO POR IA] Proveedor ' + d.razon_social + ' (RFC ' + d.rfc + '). ' +\n  (tieneSitio ? 'El sitio web parece coincidir con el giro declarado. ' : 'No declaro sitio web. ') +\n  'No se encontraron noticias negativas en la busqueda simulada. ' +\n  'Estos hallazgos son de ejemplo y no sustituyen consultas oficiales (SAT, OFAC). Sin puntaje ni decision.';\nreturn [{ json: { proveedor_id: d.proveedor_id, hallazgos, resumen_ia } }];"
+      },
+      "id": "3ec9599f-df52-4e91-ad48-14355d91f2d7",
+      "name": "DEMO: Generar hallazgos simulados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        0
+      ],
+      "notesInFlow": true,
+      "notes": "Datos ficticios marcados como SIMULADO. No consulta SAT, OFAC ni servicios externos. Esta rama termina aqui: NUNCA se envia a la app."
+    },
+    {
+      "parameters": {},
+      "id": "7754f68d-6ed3-4822-8e79-d2171346acb8",
+      "name": "Iniciar investigación real",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        800,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json.sitio_web ? ($json.sitio_web.startsWith(\"http\") ? $json.sitio_web : \"https://\" + $json.sitio_web) : \"https://sin-sitio.invalid\" }}",
+        "scrapeOptions": {
+          "options": {
+            "formats": {
+              "format": [
+                {}
+              ]
+            },
+            "headers": {}
+          }
+        },
+        "requestOptions": {}
+      },
+      "id": "6b01cb7e-b727-48fe-a007-54a72b0eae9e",
+      "name": "Firecrawl: leer sitio web",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        320
+      ],
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Usa Gateway credits. Sin sitio: sin_sitio. Si la llamada falla: sin_dato con el error (no se inventa resultado)."
+    },
+    {
+      "parameters": {
+        "resource": "MapSearch",
+        "operation": "search",
+        "query": "=\"{{ $json.razon_social }}\" fraude OR demanda OR SAT OR EFOS",
+        "sources": [
+          "web",
+          "news"
+        ],
+        "limit": 10,
+        "requestOptions": {}
+      },
+      "id": "36be742a-bd38-4982-b6df-35b3970d25d3",
+      "name": "Firecrawl: buscar noticias negativas",
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        512
+      ],
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Usa Gateway credits. Si falla: sin_dato con el error. El filtro (en Normalizar) exige que la nota identifique a la empresa y trate sobre ella; descarta documentacion, repositorios y articulos academicos. Si no queda ninguna fuente verificable: sin_dato. Palabras clave negativas: revisar con el equipo."
+    },
+    {
+      "parameters": {
+        "url": "=https://rdap.org/domain/{{ $json.dominio || \"sin-dominio.invalid\" }}",
+        "options": {}
+      },
+      "id": "03a30245-ba16-4427-9659-aa15b705d177",
+      "name": "RDAP: consultar antigüedad del dominio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        704
+      ],
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "RDAP publico, sin credencial. Algunos .mx no publican RDAP: si falla, resultado sin_dato. Puedes cambiarlo por un proveedor WHOIS del equipo."
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "b0d4704f-1e9e-44a4-946c-50cc6e774f76",
+      "name": "Unir resultados de fuentes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1248,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Preparar datos del proveedor').first().json;\nconst hoy = new Date().toISOString().slice(0, 10);\nfunction leer(nombre) { try { return $(nombre).all().map(i => i.json); } catch (e) { return []; } }\n\nfunction errorDe(x) { if (!x || !x.error) return ''; const e = x.error; return typeof e === 'string' ? e : (e.message || JSON.stringify(e)); }\n\n// Pagina web\nconst scrape = leer('Firecrawl: leer sitio web')[0] || {};\nconst errWeb = errorDe(scrape);\nconst contenido = errWeb ? '' : ((scrape.data && scrape.data.markdown) || scrape.markdown || '');\nconst webOk = !!d.sitio_web && !!contenido;\nlet hWeb;\nif (!d.sitio_web) {\n  hWeb = { fuente: 'web', resultado: 'sin_sitio', detalle: 'El proveedor no declaro sitio web.', fecha_fuente: hoy };\n} else if (webOk) {\n  hWeb = { fuente: 'web', resultado: 'pendiente_ia', detalle: 'Contenido leido de ' + d.sitio_web, fecha_fuente: hoy };\n} else {\n  hWeb = { fuente: 'web', resultado: 'sin_dato', detalle: 'FALLO de la fuente al leer ' + d.sitio_web + ': ' + (errWeb || 'la respuesta no trajo contenido') + '.', fecha_fuente: hoy };\n}\n\n// Noticias\nconst busq = leer('Firecrawl: buscar noticias negativas');\nconst errBusq = busq.map(errorDe).filter(Boolean).join(' | ') || (busq.length ? '' : 'sin respuesta de la fuente');\nlet resultados = [];\nfor (const r of busq) {\n  const data = r.data !== undefined ? r.data : r;\n  if (Array.isArray(data)) resultados.push(...data);\n  else if (data && typeof data === 'object') {\n    for (const k of ['web', 'news']) if (Array.isArray(data[k])) resultados.push(...data[k].map(x => ({ ...x, _origen: k })));\n    if (data.url) resultados.push(data);\n  }\n}\nconst negativas = /fraude|defraud|demandad[oa]s?\\b|demanda (judicial|penal|mercantil|laboral|contra|por)|denuncia|efos|69-?b|operaciones simuladas|factureras?|empresas? fantasma|lista negra|embargo|evasi[oó]n fiscal|lavado de dinero/i;\nconst enlaces = resultados.filter(x => x && x.url).map(x => ({ titulo: x.title || '', url: x.url, texto: (x.description || x.snippet || x.markdown || '').slice(0, 1500), origen: x._origen || 'web', fecha: x.date || '' }));\n\n// FILTRO ESTRICTO DE RELEVANCIA. Que aparezca el nombre, el RFC o el dominio NO basta.\n// Un enlace se acepta solo si: (1) no es documentacion tecnica, repositorio, foro tecnico ni articulo academico,\n// (2) identifica a la ENTIDAD (RFC, o nombre junto a figura juridica o palabra de empresa) y\n// (3) la nota trata sobre ella (nombre/RFC en el titulo o junto a un verbo de hecho noticioso).\nfunction norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9& ]+/g, ' ').replace(/ +/g, ' ').trim(); }\nconst sufijos = / (s a p i|sapi|s a b|sab|s a|sa|s de r l|s de rl|srl|s c|sc|a c|ac|de c v|de cv|de r l|de rl|cv|sas)$/;\nlet nucleo = norm(d.razon_social);\nfor (let i = 0; i < 4; i++) nucleo = nucleo.replace(sufijos, '').trim();\nconst rfcN = norm(d.rfc).replace(/ /g, '');\nconst dom = (d.dominio || '').toLowerCase();\nconst genericas = ['example','ejemplo','domain','dominio','test','prueba','demo','sample','web','site','sitio','online','global','group','grupo','services','servicios','solutions','soluciones','company','compania','empresa','mexico','international','internacional','digital','tech','data','systems','sistemas','consulting','comercial','comercializadora','corporativo','industrial','de','del','la','el','los','las','y','the','of','and'];\nconst nombreGenerico = nucleo.length < 4 || nucleo.split(' ').every(w => genericas.includes(w));\nconst hostsTecnicos = ['github.com','gitlab.com','bitbucket.org','sourceforge.net','stackoverflow.com','stackexchange.com','npmjs.com','pypi.org','readthedocs.io','sourceware.org','apache.org','w3.org','ietf.org','rfc-editor.org','iana.org','oracle.com','microsoft.com','developer.apple.com'];\nconst hostsAcademicos = ['arxiv.org','acm.org','ieee.org','springer.com','sciencedirect.com','researchgate.net','semanticscholar.org','scholar.google.com','jstor.org','nature.com','wiley.com','vldb.org','ijcai.org','aaai.org','ssrn.com','mdpi.com','plos.org','nih.gov','scielo.org','redalyc.org','academia.edu'];\nconst prefijosTecnicos = ['docs.','doc.','developer.','developers.','api.','repository.','repo.','forum.','forums.','community.','support.','help.','learn.','wiki.'];\nconst rutasTecnicas = ['/docs/','/doc/','/documentation/','/api/','/sdk','/pipermail/','/forums/','/forum/','/proceedings/','/doi/','/javadoc','/reference/','/thread/'];\n// Los PDF NO se descartan por su formato: pasan por las mismas reglas de fuente y contenido que cualquier enlace.\nfunction esPdf(u) { return /[.]pdf([?#]|$)/i.test(String(u || '')); }\nconst textoTecnico = ['cited by','citado por','proceedings','index of','et al','doi','javadoc','sdk','pull request','repository','repositorio','arxiv'];\nconst palabrasEntidad = ['empresa','compania','proveedor','proveedora','firma','sociedad','corporativo','contribuyente','razon social','company','firm','corporation','s a de c v','sa de cv','s de r l','sapi'];\nconst verbosNoticia = ['acus','demand','sancion','multa','investig','denunci','fraud','embarg','clausur','anunci','inaugur','firm','contrat','adquir','report','inform','detuv','vincul','senal','public','incluy','list','opera','invier','abre','cierra','expand','gan','perd','quiebr','concurso','licit'];\nfunction host(u) { const m = String(u || '').toLowerCase().match(/^[a-z][a-z0-9+.-]*:[/][/]([^/?#:]+)/); return m ? m[1].replace(/^www[0-9]*[.]/, '') : ''; }\nfunction contiene(t, frase) { return (' ' + t + ' ').includes(' ' + frase + ' '); }\nfunction evaluar(e) {\n  const h = host(e.url);\n  const ruta = String(e.url || '').toLowerCase();\n  const tit = norm(e.titulo);\n  const t = norm(e.titulo + ' ' + e.texto);\n  if (dom && (h === dom || h.endsWith('.' + dom))) return 'sitio propio del proveedor, no es noticia de terceros';\n  if (hostsAcademicos.some(x => h === x || h.endsWith('.' + x)) || h.endsWith('.edu') || h.includes('.edu.') || h.includes('.ac.')) return 'articulo o fuente academica';\n  if (hostsTecnicos.some(x => h === x || h.endsWith('.' + x)) || prefijosTecnicos.some(p => h.startsWith(p))) return 'documentacion tecnica, repositorio o foro tecnico';\n  if (rutasTecnicas.some(p => ruta.includes(p))) return 'documento tecnico o foro tecnico';\n  const senalesTec = textoTecnico.filter(w => contiene(t, w));\n  if (senalesTec.length) return 'contenido tecnico o academico (' + senalesTec.join(', ') + ')';\n  const rfcEn = rfcN.length >= 12 && t.replace(/ /g, '').includes(rfcN);\n  const iNom = nucleo.length >= 4 ? (' ' + t + ' ').indexOf(' ' + nucleo + ' ') : -1;\n  if (!rfcEn && iNom < 0) return 'no menciona la razon social ni el RFC (el dominio solo no identifica a la entidad)';\n  const ventana = iNom >= 0 ? t.slice(Math.max(0, iNom - 80), iNom + nucleo.length + 80) : '';\n  const despues = iNom >= 0 ? t.slice(iNom + nucleo.length, iNom + nucleo.length + 25) : '';\n  const conFigura = / (s a|sa|s de r l|sapi|sab|sc|ac|sas|inc|llc|ltd|corp)( |$)/.test(despues);\n  const conPalabra = palabrasEntidad.some(w => contiene(ventana, w));\n  if (!rfcEn && !conFigura && !conPalabra) return 'coincidencia generica: el nombre aparece sin contexto que identifique a una empresa';\n  if (nombreGenerico && !rfcEn && !conFigura) return 'nombre generico: se exige RFC o razon social con figura juridica';\n  const enTitulo = rfcEn ? tit.replace(/ /g, '').includes(rfcN) || (iNom >= 0 && contiene(tit, nucleo)) : contiene(tit, nucleo);\n  const conHecho = verbosNoticia.some(v => (' ' + ventana).includes(' ' + v));\n  if (!enTitulo && !conHecho) return 'sin relacion clara: la nota no trata sobre la empresa';\n  return '';\n}\nconst aceptados = [];\nconst rechazados = [];\nfor (const e of enlaces) { const motivo = evaluar(e); if (motivo) rechazados.push({ ...e, motivo }); else aceptados.push(e); }\nconst negativos = aceptados.filter(e => negativas.test(e.titulo + ' ' + e.texto));\nconst q = '\"' + d.razon_social + '\" fraude OR demanda OR SAT OR EFOS';\nconst txtAcept = aceptados.map(e => (esPdf(e.url) ? '[PDF] ' : '') + e.titulo + ' - ' + e.url + (e.fecha ? ' (' + e.fecha + ')' : '')).join(' | ');\nconst revisados = enlaces.length;\nconst base = revisados + ' enlace(s) revisado(s), ' + aceptados.length + ' fuente(s) relevante(s)';\nlet hNoticias;\nif (errBusq) {\n  hNoticias = { fuente: 'noticias', resultado: 'sin_dato', detalle: 'FALLO de la fuente en la busqueda de noticias: ' + errBusq + '. 0 enlace(s) revisado(s), 0 fuente(s) relevante(s). Motivo de sin_dato: la busqueda fallo y no fue posible evaluar noticias.', fecha_fuente: hoy };\n} else if (negativos.length) {\n  hNoticias = { fuente: 'noticias', resultado: 'noticias_negativas', detalle: base + ', ' + negativos.length + ' con terminos negativos (revisar manualmente): ' + txtAcept + '.', fecha_fuente: hoy };\n} else if (aceptados.length) {\n  hNoticias = { fuente: 'noticias', resultado: 'sin_noticias', detalle: base + ', sin terminos negativos: ' + txtAcept + '.', fecha_fuente: hoy };\n} else {\n  hNoticias = { fuente: 'noticias', resultado: 'sin_dato', detalle: base + '. Motivo de sin_dato: ' + (revisados ? 'ningun enlace es una fuente verificable que identifique al proveedor' : 'la busqueda no devolvio enlaces') + '; no fue posible evaluar noticias.', fecha_fuente: hoy };\n}\nconst filtro_noticias = { busqueda: q, revisados, aceptados: aceptados.map(e => ({ titulo: e.titulo, url: e.url, pdf: esPdf(e.url) })), descartados: rechazados.map(e => ({ titulo: e.titulo, url: e.url, pdf: esPdf(e.url), motivo: e.motivo })) };\n\n// Dominio\nlet rdap = leer('RDAP: consultar antigüedad del dominio')[0] || {};\nconst errRdap = errorDe(rdap);\nif (typeof rdap.data === 'string') { try { rdap = JSON.parse(rdap.data); } catch (e) { rdap = {}; } }\nconst ev = Array.isArray(rdap.events) ? rdap.events.find(e => e.eventAction === 'registration') : null;\nlet hDom;\nif (ev && ev.eventDate && Number.isFinite(Date.parse(ev.eventDate)) && Date.parse(ev.eventDate) <= Date.now()) {\n  const edadMs = Date.now() - Date.parse(ev.eventDate);\n  const anios = edadMs / (365.25 * 24 * 3600 * 1000);\n  hDom = {\n    fuente: 'dominio',\n    resultado: edadMs < 182 * 24 * 3600 * 1000 ? 'dominio_reciente' : 'dominio_antiguo',\n    detalle: 'Dominio ' + d.dominio + ' registrado el ' + ev.eventDate.slice(0, 10) + ' (' + anios.toFixed(1) + ' anios).',\n    fecha_fuente: ev.eventDate.slice(0, 10),\n  };\n} else {\n  hDom = { fuente: 'dominio', resultado: 'sin_dato', detalle: !d.dominio ? 'Sin dominio para consultar.' : (errRdap ? 'FALLO de la fuente RDAP para ' + d.dominio + ': ' + errRdap + '.' : 'RDAP no devolvio fecha de registro para ' + d.dominio + '.'), fecha_fuente: hoy };\n}\n\nreturn [{ json: {\n  proveedor_id: d.proveedor_id,\n  razon_social: d.razon_social,\n  rfc: d.rfc,\n  giro_declarado: d.giro_declarado,\n  sitio_web: d.sitio_web,\n  contenido_web: contenido.slice(0, 6000),\n  filtro_noticias,\n  hallazgos: [hWeb, hNoticias, hDom],\n} }];"
+      },
+      "id": "c7d479c1-bbf8-4a92-b5a1-6a9eaec047c2",
+      "name": "Normalizar hallazgos reales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        512
+      ],
+      "notesInFlow": true,
+      "executeOnce": true,
+      "notes": "Cada hallazgo: fuente, resultado, detalle, fecha_fuente. Valores de antiguedad (dominio_reciente / dominio_establecido / sin_dato) son propuesta: confirmar con el equipo."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "claude-sonnet-4-6"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Proveedor: {{ $json.razon_social }} (RFC {{ $json.rfc }})\nGiro declarado: {{ $json.giro_declarado }}\nSitio web: {{ $json.sitio_web || \"no declarado\" }}\n\nContenido del sitio (puede estar vacio):\n{{ $json.contenido_web }}\n\nHallazgos ya normalizados:\n{{ JSON.stringify($json.hallazgos) }}\n\nFuentes NO consultadas por este flujo: SAT 69, SAT 69-B (EFOS) y OFAC. El resumen DEBE incluir textualmente la frase: \"SAT 69/69-B y OFAC no fueron consultados por este flujo.\" No digas que estan limpios, sin hallazgos o que el proveedor no aparece en ellos.\nSi el hallazgo de noticias es sin_dato, di que no se pudo determinar, no que no hay noticias.\n\nResponde SOLO con JSON valido, sin markdown:\n{\"giro_resultado\": \"giro_coincide\" | \"giro_no_coincide\" | \"sin_sitio\", \"giro_detalle\": \"explicacion breve\", \"resumen\": \"resumen en espanol de 3 a 5 frases\"}"
+            }
+          ]
+        },
+        "options": {
+          "includeMergedResponse": true,
+          "system": "Eres un analista de cumplimiento. Solo describes hallazgos. Nunca asignes puntajes, niveles o calificaciones de riesgo, ni recomiendes aprobar, continuar, rechazar o bloquear al proveedor. El resumen solo enumera hechos encontrados. Si no hay contenido del sitio, usa giro_resultado \"sin_sitio\". No inventes datos del SAT, OFAC ni de ninguna fuente oficial. SAT 69, SAT 69-B y OFAC NO se consultan en este flujo: nunca afirmes que el proveedor esta limpio, no aparece o no tiene hallazgos en esas listas; escribe siempre: SAT 69/69-B y OFAC no fueron consultados por este flujo.",
+          "maxTokens": 1024,
+          "temperature": 0.2
+        }
+      },
+      "id": "51892515-f915-434a-ad92-1eb980b801f2",
+      "name": "Claude: comparar giro y redactar resumen",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        512
+      ],
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Usa Gateway credits. La IA no asigna puntos ni decide. Si falla, el giro queda sin_dato y el resumen indica el fallo."
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Normalizar hallazgos reales').first().json;\nconst r = $input.first().json;\nif (r.error) {\n  const msg = typeof r.error === 'string' ? r.error : (r.error.message || JSON.stringify(r.error));\n  const hallazgosErr = base.hallazgos.map(h => h.resultado === 'pendiente_ia' ? { ...h, resultado: 'sin_dato', detalle: h.detalle + '. FALLO de Claude al comparar el giro: ' + msg } : h);\n  return [{ json: { proveedor_id: base.proveedor_id, hallazgos: hallazgosErr, resumen_ia: 'NO GENERADO: la llamada a Claude fallo (' + msg + '). Revisar los hallazgos manualmente. SAT 69/69-B y OFAC no fueron consultados por este flujo.' } }];\n}\nlet texto = r.merged_response || ((r.content || []).find(c => c.type === 'text') || {}).text || '';\nconst ini = texto.indexOf('{');\nconst fin = texto.lastIndexOf('}');\nlet ia = {};\ntry { ia = JSON.parse(texto.slice(ini, fin + 1)); } catch (e) { ia = { resumen: texto }; }\nconst validos = ['giro_coincide', 'giro_no_coincide', 'sin_sitio'];\nconst hallazgos = base.hallazgos.map(h => {\n  if (h.resultado !== 'pendiente_ia') return h;\n  if (validos.includes(ia.giro_resultado)) return { ...h, resultado: ia.giro_resultado, detalle: h.detalle + '. ' + (ia.giro_detalle || ia.justificacion_giro || '') };\n  return { ...h, resultado: 'sin_dato', detalle: h.detalle + '. La IA no devolvio una comparacion valida; revisar manualmente.' };\n});\n// Salvaguarda: quitar frases que afirmen que SAT 69/69-B u OFAC estan limpios y garantizar la leyenda obligatoria\nconst LEYENDA = 'SAT 69/69-B y OFAC no fueron consultados por este flujo.';\nconst listas = /(sat|69-?b|efos|ofac|lista negra)/i;\nconst afirmaLimpio = /(limpi|sin hallazgos|sin registros|sin coincidencias|no aparece|no figura|no esta listad|no está listad|no se encontr|no se identific|no registra|no tiene antecedentes|libre de)/i;\nlet resumen = String(ia.resumen || 'Sin resumen generado por la IA.');\nconst frases = resumen.split(/(?<=[.!?])\\s+/);\nresumen = frases.filter(f => f.includes('no fueron consultados') || !(listas.test(f) && afirmaLimpio.test(f))).join(' ').trim();\nif (!resumen.includes(LEYENDA)) resumen = (resumen ? resumen + ' ' : '') + LEYENDA;\nreturn [{ json: { proveedor_id: base.proveedor_id, hallazgos, resumen_ia: resumen } }];"
+      },
+      "id": "eebd0fb4-c01e-4441-b1d3-56a3367ce7ca",
+      "name": "Integrar resultado de la IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "proveedor_id",
+              "type": "string",
+              "value": "={{ $json.proveedor_id }}"
+            },
+            {
+              "id": "s2",
+              "name": "hallazgos",
+              "type": "array",
+              "value": "={{ $json.hallazgos }}"
+            },
+            {
+              "id": "s3",
+              "name": "resumen_ia",
+              "type": "string",
+              "value": "={{ $json.resumen_ia }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3060a95e-29d2-45b8-9dac-4b59e9e72987",
+      "name": "Salida KYP (estructura final)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "<__PLACEHOLDER_VALUE__URL real de la app, terminando en /api/webhooks/verificacion__>",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpTemplatedCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ proveedor_id: $json.proveedor_id, hallazgos: $json.hallazgos }) }}",
+        "options": {}
+      },
+      "id": "38be386b-1a66-44db-860e-d0ca633b6850",
+      "name": "Enviar a /api/webhooks/verificacion (PENDIENTE)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1552,
+        224
+      ],
+      "notesInFlow": true,
+      "disabled": true,
+      "notes": "DESACTIVADO. Para activarlo: 1) pon la URL real, 2) crea la credencial con header x-kyp-secret y el secreto real, 3) activa el nodo. Confirmar contrato del body con el equipo."
+    }
+  ],
+  "connections": {
+    "Webhook: Alta de proveedor": {
+      "main": [
+        [
+          {
+            "node": "Preparar datos del proveedor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar datos del proveedor": {
+      "main": [
+        [
+          {
+            "node": "¿Modo demo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Modo demo?": {
+      "main": [
+        [
+          {
+            "node": "DEMO: Generar hallazgos simulados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Iniciar investigación real",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iniciar investigación real": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl: leer sitio web",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Firecrawl: buscar noticias negativas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RDAP: consultar antigüedad del dominio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl: leer sitio web": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados de fuentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl: buscar noticias negativas": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados de fuentes",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RDAP: consultar antigüedad del dominio": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados de fuentes",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Unir resultados de fuentes": {
+      "main": [
+        [
+          {
+            "node": "Normalizar hallazgos reales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar hallazgos reales": {
+      "main": [
+        [
+          {
+            "node": "Claude: comparar giro y redactar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: comparar giro y redactar resumen": {
+      "main": [
+        [
+          {
+            "node": "Integrar resultado de la IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Integrar resultado de la IA": {
+      "main": [
+        [
+          {
+            "node": "Salida KYP (estructura final)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salida KYP (estructura final)": {
+      "main": [
+        [
+          {
+            "node": "Enviar a /api/webhooks/verificacion (PENDIENTE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [
+    {
+      "id": "7dc93e2b-191e-4d79-9cdd-88718862f1a6",
+      "name": "Recibir alta",
+      "nodeIds": [
+        "d05bb968-720a-4795-aa19-6ef26261c859",
+        "00a3233c-4f12-481b-abb2-67d5864d710b"
+      ],
+      "description": "Limpia los datos enviados por la app y decide si se generan hallazgos simulados o se consultan fuentes reales"
+    },
+    {
+      "id": "4155ca3d-8bb8-4c9f-8ce5-cac0f06b7b8f",
+      "name": "Investigar proveedor",
+      "nodeIds": [
+        "7754f68d-6ed3-4822-8e79-d2171346acb8",
+        "6b01cb7e-b727-48fe-a007-54a72b0eae9e",
+        "36be742a-bd38-4982-b6df-35b3970d25d3",
+        "03a30245-ba16-4427-9659-aa15b705d177",
+        "b0d4704f-1e9e-44a4-946c-50cc6e774f76",
+        "c7d479c1-bbf8-4a92-b5a1-6a9eaec047c2",
+        "51892515-f915-434a-ad92-1eb980b801f2",
+        "eebd0fb4-c01e-4441-b1d3-56a3367ce7ca"
+      ],
+      "description": "Solo fuera de demo: lee el sitio, busca noticias negativas y la edad del dominio; la IA compara el giro y resume"
+    },
+    {
+      "id": "f6825bed-eb44-43e6-b748-d88ae3f09748",
+      "name": "Entregar resultado",
+      "nodeIds": [
+        "3060a95e-29d2-45b8-9dac-4b59e9e72987",
+        "38be386b-1a66-44db-860e-d0ca633b6850"
+      ],
+      "description": "Solo rama real: arma proveedor_id, hallazgos y resumen_ia; el envio a la app sigue apagado hasta tener URL, secreto y contrato"
+    }
+  ],
+  "active": false
+}
