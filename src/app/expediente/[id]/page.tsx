@@ -136,7 +136,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             <span className="rounded-control border border-acento px-2 py-0.5 text-xs font-semibold text-acento">Cambio de CLABE</span>
           </div>
           {e.solicitudes.map((s) => (
-            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} />
+            <div key={s.id} className="space-y-3"><Link href={`/clabe/${s.id}`} className="text-sm text-tinta underline">Ver monitor de llamada</Link><LineaTiempoClabe s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} /></div>
           ))}
         </section>
       )}

@@ -45,7 +45,7 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
           const p = porId.get(s.proveedor_id);
           const f = facturas.filter((x) => x.proveedor_id === s.proveedor_id).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
           return (
-            <Tarjeta key={s.id} titulo={p?.razon_social} acciones={<Link href={`/expediente/${s.proveedor_id}`} className="text-sm text-tinta underline">Ver expediente</Link>}>
+            <Tarjeta key={s.id} titulo={p?.razon_social} acciones={<div className="flex gap-3"><Link href={`/clabe/${s.id}`} className="text-sm text-tinta underline">Monitor de llamada</Link><Link href={`/expediente/${s.proveedor_id}`} className="text-sm text-tinta underline">Ver expediente</Link></div>}>
               <LineaTiempoClabe s={s} llamada={llamadas.find((l) => l.solicitud_id === s.id)} monto={f?.monto ?? null} simular={simular} />
             </Tarjeta>
           );
