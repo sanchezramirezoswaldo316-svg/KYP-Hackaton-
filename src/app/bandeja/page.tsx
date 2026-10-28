@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Alertas } from "@/components/Alertas";
 import { EstadoDocumento } from "@/components/DocumentoProveedor";
 import { Semaforo } from "@/components/Semaforo";
+import { AutoRefrescar } from "@/components/cliente/AutoRefrescar";
 import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { resumenSimple } from "@/lib/explicar.ts";
@@ -39,6 +40,7 @@ export default async function Bandeja() {
 
   return (
     <div className="space-y-4">
+      <AutoRefrescar activo />
       <div>
         <h1 className="text-2xl font-semibold">Bandeja de la gestora</h1>
         <p className="text-slate-600">
@@ -64,7 +66,7 @@ export default async function Bandeja() {
             const doc = docPorProveedor.get(p.id);
             return (
               <li key={c.id} className="animar-aparecer" style={{ animationDelay: `${Math.min(i, 10) * 60}ms` }}>
-                <Link href={`/expediente/${p.id}`} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
+                <Link href={`/expediente/${c.proveedor_id}`} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
                   <span className={`w-2 shrink-0 ${barra}`} />
                   <div className="flex flex-1 flex-wrap items-center gap-4 p-4">
                     <div className="min-w-0 flex-1">

@@ -22,14 +22,18 @@ test("proveedor limpio se aprueba solo y no genera caso", async () => {
   assert.equal(r.proveedor.telefono_registrado, "+525512345678");
 });
 
-test("69-B definitivo genera caso y aprobarlo exige comentario", async () => {
+test("69-B definitivo genera caso; bloquear exige motivo y aprobarlo exige justificación", async () => {
   const r = await altaProveedor({ ...limpio, rfc: definitivo[0], razon_social: definitivo[1][1] }, "prueba", false);
   assert.equal(r.verificacion.decision, "bloquear");
   assert.ok(r.caso);
   await assert.rejects(decidirCaso(r.caso!.id, "aprobado", "prueba", null), /comentario/);
-  const c = await decidirCaso(r.caso!.id, "bloqueado", "prueba", null);
+  await assert.rejects(decidirCaso(r.caso!.id, "bloqueado", "prueba", "  "), /motivo/);
+  const c = await decidirCaso(r.caso!.id, "bloqueado", "prueba", "  Riesgo confirmado  ");
   assert.equal(c.estado, "bloqueado");
+  assert.equal(c.comentario, "Riesgo confirmado");
   assert.equal((await almacen().proveedores.obtener(r.proveedor.id))!.estado, "bloqueado");
+  const evento = (await almacen().bitacora.listar({ entidad_id: c.id })).find((b) => b.accion === "caso_bloqueado");
+  assert.equal(evento?.detalle?.comentario, "Riesgo confirmado");
 });
 
 test("cambio de CLABE no reconocido pausa el pago y crea caso; confirmado actualiza la cuenta", async () => {

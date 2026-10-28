@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { filasAAltas } from "@/lib/csv.ts";
-import type { EntradaAlta } from "@/lib/servicios-tipos.ts";
+import { MAX_CSV_BYTES, validarFilasCsv, type FilaValidada } from "@/lib/csv.ts";
 import { enviar } from "./peticion.ts";
 
 const BLOQUE = 50;
+const CONCURRENCIA = 2;
 const COLOR = { liberar: "bg-emerald-500", revisar: "bg-amber-400", bloquear: "bg-red-600", error: "bg-slate-700" } as const;
 
-interface Resultado { rfc: string; ok: boolean; decision?: "liberar" | "revisar" | "bloquear"; error?: string }
+interface Resultado { fila?: number; rfc: string; ok: boolean; decision?: "liberar" | "revisar" | "bloquear"; error?: string }
 
 export function CargaCsv() {
   const [externas, setExternas] = useState(false);
@@ -32,43 +32,72 @@ export function CargaCsv() {
     return () => clearInterval(t);
   }, [estado]);
 
-  async function procesar(filas: EntradaAlta[]) {
+  async function procesar(filas: FilaValidada[]) {
     setError(null);
     setTotal(filas.length);
-    setRecibidos([]);
+    setRecibidos(filas.filter((f) => f.errores.length > 0).map((f) => ({
+      fila: f.numero,
+      rfc: f.proveedor.rfc,
+      ok: false,
+      error: f.errores.join(" "),
+    })));
     setMostrados(0);
     setEstado("cargando");
     const t0 = Date.now();
-    for (let i = 0; i < filas.length; i += BLOQUE) {
-      try {
-        const r = await enviar<{ resultados: Resultado[] }>("/api/proveedores/lote", { proveedores: filas.slice(i, i + BLOQUE), fuentesExternas: externas });
-        setRecibidos((prev) => [...prev, ...r.resultados]);
-      } catch (e) {
-        setError((e as Error).message);
-        break;
-      }
+    const validas = filas.filter((f) => f.errores.length === 0);
+    const lotes = Array.from({ length: Math.ceil(validas.length / BLOQUE) }, (_, i) => validas.slice(i * BLOQUE, (i + 1) * BLOQUE));
+    for (let i = 0; i < lotes.length; i += CONCURRENCIA) {
+      const resultados = await Promise.all(lotes.slice(i, i + CONCURRENCIA).map(async (lote) => {
+        try {
+          const respuesta = await enviar<{ resultados: Resultado[] }>("/api/proveedores/lote", {
+            proveedores: lote.map((f) => f.proveedor),
+            fuentesExternas: externas,
+          });
+          return lote.map((f, indice) => ({
+            ...(respuesta.resultados[indice] ?? { rfc: f.proveedor.rfc, ok: false, error: "No se recibió resultado para esta fila." }),
+            fila: f.numero,
+          }));
+        } catch {
+          return lote.map((f) => ({ fila: f.numero, rfc: f.proveedor.rfc, ok: false, error: "No se pudo procesar este bloque." }));
+        }
+      }));
+      setRecibidos((prev) => [...prev, ...resultados.flat()]);
     }
     setSegundos((Date.now() - t0) / 1000);
     setEstado("listo");
   }
 
+  async function desdeTexto(texto: string) {
+    if (new TextEncoder().encode(texto).byteLength > MAX_CSV_BYTES) {
+      throw new Error(`El archivo supera el límite de ${Math.floor(MAX_CSV_BYTES / 1024 / 1024)} MB.`);
+    }
+    await procesar(validarFilasCsv(texto));
+  }
+
   async function desdeArchivo(archivo: File) {
     try {
-      await procesar(filasAAltas(await archivo.text()));
+      if (archivo.size > MAX_CSV_BYTES) throw new Error(`El archivo supera el límite de ${Math.floor(MAX_CSV_BYTES / 1024 / 1024)} MB.`);
+      await desdeTexto(await archivo.text());
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
   async function usarEjemplo() {
-    const texto = await (await fetch("/demo/proveedores-demo.csv")).text();
-    await procesar(filasAAltas(texto));
+    try {
+      const respuesta = await fetch("/demo/proveedores-demo.csv");
+      if (!respuesta.ok) throw new Error("No se pudo cargar el archivo de ejemplo.");
+      await desdeTexto(await respuesta.text());
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   const visibles = recibidos.slice(0, mostrados);
   const cuenta = (d: string) => visibles.filter((r) => (r.ok ? r.decision : "error") === d).length;
   const aprobados = cuenta("liberar");
   const dudosos = cuenta("revisar") + cuenta("bloquear");
+  const porcentaje = total ? Math.min(100, Math.round((mostrados / total) * 100)) : 0;
   const terminado = estado === "listo" && mostrados >= recibidos.length;
 
   return (
@@ -95,7 +124,10 @@ export function CargaCsv() {
           <div>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="font-semibold">Cada cuadrito es un proveedor</h3>
-              <span className="text-sm text-slate-600">{mostrados} de {total} revisados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
+              <span className="text-sm text-slate-600">{mostrados} de {total} procesados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
+            </div>
+            <div role="progressbar" aria-label="Progreso de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje} className="mb-3 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-blue-700 transition-[width]" style={{ width: `${porcentaje}%` }} />
             </div>
             <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(12px, 1fr))" }} aria-hidden>
               {Array.from({ length: total }, (_, i) => {
@@ -138,7 +170,7 @@ export function CargaCsv() {
           {cuenta("error") > 0 && terminado && (
             <details className="text-sm">
               <summary className="cursor-pointer text-red-700">{cuenta("error")} filas con errores</summary>
-              <ul className="mt-2 list-disc pl-5">{recibidos.filter((r) => !r.ok).map((e, i) => <li key={i}>{e.rfc}: {e.error}</li>)}</ul>
+              <ul className="mt-2 list-disc pl-5">{visibles.filter((r) => !r.ok).map((e) => <li key={`${e.fila}-${e.rfc}`}>Fila {e.fila} · {e.rfc}: {e.error}</li>)}</ul>
             </details>
           )}
         </div>
