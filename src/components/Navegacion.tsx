@@ -6,6 +6,7 @@ import { BotonTour } from "./cliente/Tour";
 
 const enlaces = [
   { href: "/panel", texto: "📊 Panel" },
+  { href: "/en-vivo", texto: "🛰️ En vivo" },
   { href: "/bandeja", texto: "👩‍💼 Bandeja" },
   { href: "/proveedores", texto: "🏢 Proveedores" },
   { href: "/carga", texto: "📥 Revisar muchos" },

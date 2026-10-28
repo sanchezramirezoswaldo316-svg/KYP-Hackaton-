@@ -46,6 +46,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">🛰️ Ver extracción en vivo</Link>
           <Reverificar id={p.id} nombre={p.razon_social} />
           <a href={`/api/expediente/${p.id}/pdf`} className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">📄 Descargar expediente</a>
         </div>
