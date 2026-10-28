@@ -15,7 +15,7 @@ import { explicarHallazgo, SEMAFORO } from "@/lib/explicar.ts";
 import { cargarExpediente } from "@/lib/expediente.ts";
 import { fecha, pesos } from "@/lib/formato.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
-import { vozConfigurada } from "@/lib/voz/elevenlabs.ts";
+import { simulacionPermitida } from "@/lib/voz/elevenlabs.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
   const { proveedor: p } = e;
   const v = e.verificaciones[0];
   const abiertos = e.casos.filter((c) => c.estado === "pendiente" || c.estado === "pausado");
-  const simular = !vozConfigurada();
+  const simular = simulacionPermitida();
   const montoFactura = e.facturas[0]?.monto ?? null;
   const enLlamada = e.solicitudes.some((s) => s.estado === "en_llamada" && !e.llamadas.some((l) => l.solicitud_id === s.id));
   const hallazgos = v ? [...v.hallazgos].sort((a, b) => ORDEN_NIVEL[explicarHallazgo(a).nivel] - ORDEN_NIVEL[explicarHallazgo(b).nivel]) : [];
@@ -88,7 +88,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
         <section data-tour="clabe-timeline" className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-semibold">🏦 Cambios de cuenta bancaria (<Termino t="CLABE" />)</h2>
           {e.solicitudes.map((s) => (
-            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} />
+            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} fallo={e.bitacora.some(b => b.entidad_id === s.id && b.accion === "llamada_fallida")} />
           ))}
         </section>
       )}

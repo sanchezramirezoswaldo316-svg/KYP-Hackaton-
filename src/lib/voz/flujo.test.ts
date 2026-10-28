@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { almacen, reiniciarAlmacenMemoria } from '../almacen/index.ts';
-import { registrarResultadoLlamada, solicitarCambioClabe } from '../servicios.ts';
+import { registrarResultadoLlamada, solicitarCambioClabe, decidirCaso } from '../servicios.ts';
 
 // Datos ficticios. fetch siempre interceptado: ninguna llamada real ni consulta SAT.
 test('flujo de voz aislado: cuatro resultados, duplicados concurrentes, correlación y fallos', async t => {
@@ -41,4 +41,14 @@ test('flujo de voz aislado: cuatro resultados, duplicados concurrentes, correlac
   assert.equal(llamada.iniciada,false);
   assert.equal((await db.proveedores.obtener(p.id))?.estado,'pausado');
   assert.equal((await db.casos.listar({solicitud_id:solicitud.id})).length,1);
+  // Una configuración incompleta no debe habilitar la demo ni liberar el pago.
+  delete process.env.ELEVENLABS_WEBHOOK_SECRET;
+  const parcial=await solicitarCambioClabe(p.id,'012180001234567899',null,'test');
+  assert.match(parcial.llamada.error!,/incompleta/);
+  await assert.rejects(registrarResultadoLlamada({solicitud_id:parcial.solicitud.id,resultado:'confirmado',transcripcion:'',simulada:true}),/simular/);
+  const caso=(await db.casos.listar({solicitud_id:solicitud.id}))[0];
+  await decidirCaso(caso.id,'bloqueado','test','No se reconoce');
+  assert.equal((await db.proveedores.obtener(p.id))?.estado,'pausado');
+  await db.proveedores.actualizar(p.id,{estado:'bloqueado'});
+  await assert.rejects(solicitarCambioClabe(p.id,'012180001234567899',null,'test'),/bloqueado/);
 });

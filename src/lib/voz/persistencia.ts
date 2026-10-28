@@ -14,3 +14,13 @@ export async function registrarResultadoPersistente(datos: {
   }
   return data as Llamada;
 }
+
+export async function crearSolicitudPersistente(proveedorId: string, clabeNueva: string, telefono: string | null, actor: string) {
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+  const { data, error } = await db.rpc('crear_solicitud_voz', { proveedor: proveedorId, nueva: clabeNueva, telefono, actor });
+  if (error) {
+    if (error.code === '22023') throw new ErrorValidacion('El proveedor no existe o está bloqueado');
+    throw new Error('No se pudo registrar la solicitud de voz de forma segura');
+  }
+  return data as import('../tipos.ts').SolicitudClabe;
+}

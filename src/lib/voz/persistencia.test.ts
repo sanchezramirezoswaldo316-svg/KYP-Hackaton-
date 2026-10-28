@@ -9,7 +9,15 @@ test('PostgreSQL: cuatro resultados atómicos, duplicados, conflictos y rollback
     await db.exec('create role anon; create role authenticated; create role service_role;');
     await db.exec(readFileSync('supabase/migrations/0001_inicial.sql','utf8').replace('create extension if not exists pgcrypto;',''));
     await db.exec(readFileSync('supabase/migrations/0002_resultado_voz.sql','utf8'));
+    await db.exec(readFileSync('supabase/migrations/0003_solicitud_voz_atomica.sql','utf8'));
     const p = (await db.query<{id:string}>("insert into proveedores(rfc,razon_social,telefono_registrado,clabe,estado) values('ZZZ010101AB1','DEMO','+525500000001','anterior','pausado') returning id")).rows[0];
+    await db.exec("alter table bitacora add constraint fallo_inicio check (accion <> 'solicitud_clabe') not valid;");
+    await assert.rejects(db.query("select crear_solicitud_voz($1,'nueva',null,'test')",[p.id]));
+    assert.equal((await db.query('select * from solicitudes_clabe')).rows.length,0);
+    await db.exec('alter table bitacora drop constraint fallo_inicio;');
+    const inicio = await db.query<{s:{id:string}}>("select crear_solicitud_voz($1,'nueva',null,'test') as s",[p.id]);
+    assert.ok(inicio.rows[0].s.id);
+    await db.query("update solicitudes_clabe set estado='rechazada' where id=$1",[inicio.rows[0].s.id]);
     for (const resultado of ['confirmado','no_reconoce','datos_no_coinciden','sin_respuesta']) {
       const s = (await db.query<{id:string}>("insert into solicitudes_clabe(proveedor_id,clabe_nueva) values($1,'nueva') returning id",[p.id])).rows[0];
       const cid='conv-'+s.id;

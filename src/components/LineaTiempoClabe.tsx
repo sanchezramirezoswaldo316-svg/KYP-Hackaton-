@@ -2,6 +2,8 @@
 import type { Llamada, SolicitudClabe } from "@/lib/tipos.ts";
 import { pesos } from "@/lib/formato.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
+import { avisoVoz } from "@/lib/voz/estado.ts";
+import { AudioLlamada } from "./cliente/AudioLlamada";
 import { SimularLlamada } from "./cliente/SimularLlamada";
 
 type Paso = { icono: string; titulo: string; texto: string; estado: "hecho" | "actual" | "pendiente" | "fraude" | "ok" };
@@ -11,8 +13,8 @@ function pasos(s: SolicitudClabe, l: Llamada | undefined): Paso[] {
   const resultado: Paso = !l
     ? { icono: "❔", titulo: "Resultado", texto: "Esperando la llamada", estado: "pendiente" }
     : l.resultado === "confirmado"
-      ? { icono: "✅", titulo: "Confirmado", texto: "El proveedor reconoció el cambio. Pagos reactivados.", estado: "ok" }
-      : { icono: "🚫", titulo: "Fraude detenido", texto: l.resultado === "sin_respuesta" ? "Nadie contestó: el pago sigue congelado." : "El proveedor NO pidió el cambio. El pago sigue congelado.", estado: "fraude" };
+      ? { icono: "✅", titulo: "Confirmado", texto: "El proveedor reconoció el cambio. Consulta el estado actual del pago en el expediente.", estado: "ok" }
+      : { icono: "🚫", titulo: "Revisión necesaria", texto: l.resultado === "sin_respuesta" ? "No se completó la verificación. El pago sigue pausado." : l.resultado === "datos_no_coinciden" ? "Los datos no coinciden. El pago sigue pausado." : "El proveedor no reconoce el cambio. El pago sigue pausado.", estado: "fraude" };
   return [
     { icono: "📩", titulo: "Solicitud recibida", texto: `Piden cambiar la cuenta a ${enmascararClabe(s.clabe_nueva)}`, estado: "hecho" },
     { icono: "⏸️", titulo: "Pago congelado", texto: "Nadie puede pagar a la cuenta nueva todavía", estado: "hecho" },
@@ -29,12 +31,15 @@ const ESTILO = {
   fraude: "border-red-400 bg-red-50",
 };
 
-export function LineaTiempoClabe({ s, llamada, monto, simular }: { s: SolicitudClabe; llamada?: Llamada; monto: number | null; simular: boolean }) {
+export function LineaTiempoClabe({ s, llamada, monto, simular, fallo = false }: { s: SolicitudClabe; llamada?: Llamada; monto: number | null; simular: boolean; fallo?: boolean }) {
+  const aviso = avisoVoz(s, llamada, fallo);
   const ps = pasos(s, llamada);
-  const fraude = llamada && llamada.resultado !== "confirmado";
+  const fraude = llamada?.resultado === "no_reconoce";
   const mensajes = (llamada?.transcripcion ?? "").split("\n").filter(Boolean);
   return (
     <div className="space-y-4">
+      {aviso && <p role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{aviso}</p>}
+      {llamada && !llamada.simulada && llamada.conversation_id && <AudioLlamada llamadaId={llamada.id} />}
       <ol className="grid gap-2 sm:grid-cols-4">
         {ps.map((p, i) => (
           <li key={i} className={`animar-aparecer rounded-lg border-2 p-3 ${ESTILO[p.estado]}`} style={{ animationDelay: `${i * 150}ms` }}>
@@ -48,7 +53,7 @@ export function LineaTiempoClabe({ s, llamada, monto, simular }: { s: SolicitudC
       {fraude && monto !== null && (
         <div className="animar-aparecer rounded-xl bg-red-600 p-4 text-center text-white">
           <div className="text-sm uppercase tracking-wide">Posible fraude detenido</div>
-          <div className="text-3xl font-bold">Se evitó desviar {pesos(monto)}</div>
+          <div className="text-3xl font-bold">Monto bajo revisión: {pesos(monto)}</div>
           <div className="text-sm opacity-90">monto de su última factura</div>
         </div>
       )}

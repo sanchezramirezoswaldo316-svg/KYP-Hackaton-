@@ -8,6 +8,11 @@ export function vozConfigurada(): boolean {
   return !!(process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_AGENT_ID && process.env.ELEVENLABS_PHONE_NUMBER_ID && process.env.ELEVENLABS_WEBHOOK_SECRET);
 }
 
+// Un número conectado indica intención de usar telefonía real, aun con configuración incompleta.
+export function simulacionPermitida(): boolean {
+  return !process.env.ELEVENLABS_PHONE_NUMBER_ID;
+}
+
 export async function iniciarLlamada(telefono: string, variables: Record<string, string>): Promise<string> {
   const permitidos = (process.env.VOZ_TELEFONOS_AUTORIZADOS ?? "").split(",").map(t => t.trim());
   if (!/^\+[1-9]\d{7,14}$/.test(telefono) || !permitidos.includes(telefono)) {
@@ -23,9 +28,9 @@ export async function iniciarLlamada(telefono: string, variables: Record<string,
       to_number: telefono,
       conversation_initiation_client_data: { dynamic_variables: variables },
     }),
-  });
+  }).catch(() => { throw new Error("No se pudo confirmar el inicio de la llamada; revisar ElevenLabs antes de reintentar"); });
   if (!res.ok) throw new Error(`ElevenLabs respondió ${res.status}`);
-  const datos = (await res.json()) as { success?: boolean; conversation_id?: string; message?: string };
+  const datos = (await res.json().catch(() => { throw new Error("Respuesta de telefonía inválida; revisar ElevenLabs antes de reintentar"); })) as { success?: boolean; conversation_id?: string; message?: string };
   if (datos.success === false) throw new Error("ElevenLabs no pudo iniciar la llamada");
   if (!datos.conversation_id) throw new Error("ElevenLabs no devolvió conversation_id; revisar antes de reintentar");
   return datos.conversation_id;

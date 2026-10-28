@@ -8,7 +8,7 @@ import type {
 import { clabeValida, normalizarRfc, normalizarTelefono, rfcValido } from "./validacion.ts";
 import type { EntradaAlta } from "./servicios-tipos.ts";
 import { verificarProveedor, type EventoVerificacion } from "./verificacion/index.ts";
-import { iniciarLlamada, vozConfigurada, resultadoSchema } from "./voz/elevenlabs.ts";
+import { iniciarLlamada, vozConfigurada, simulacionPermitida, resultadoSchema } from "./voz/elevenlabs.ts";
 
 export const SISTEMA = "Sistema KYP";
 
@@ -125,7 +125,8 @@ export async function decidirCaso(casoId: string, estado: Exclude<EstadoCaso, "p
       await db.proveedores.actualizar(caso.proveedor_id, { estado: "pausado" });
     }
   } else {
-    await db.proveedores.actualizar(caso.proveedor_id, { estado: ESTADO_PROVEEDOR[estado] });
+    const pendiente = (await db.solicitudes.listar({ proveedor_id: caso.proveedor_id })).some(s => ["pausada", "en_llamada"].includes(s.estado));
+    await db.proveedores.actualizar(caso.proveedor_id, { estado: estado !== "bloqueado" && pendiente ? "pausado" : ESTADO_PROVEEDOR[estado] });
   }
 
   await registrar(actor, `caso_${estado}`, "caso", casoId, { proveedor_id: caso.proveedor_id, tipo: caso.tipo, comentario });
@@ -134,6 +135,7 @@ export async function decidirCaso(casoId: string, estado: Exclude<EstadoCaso, "p
 
 // Estado del proveedor según su caso de alta más reciente (sin contar cambios de CLABE).
 async function estadoBase(proveedorId: string): Promise<EstadoProveedor> {
+  if ((await almacen().solicitudes.listar({ proveedor_id: proveedorId })).some(s => ["pausada", "en_llamada"].includes(s.estado))) return "pausado";
   const casos = (await almacen().casos.listar({ proveedor_id: proveedorId, tipo: "alta" }))
     .sort((a, b) => b.creado_en.localeCompare(a.creado_en));
   const ultimo = casos[0];
@@ -147,21 +149,27 @@ export async function solicitarCambioClabe(proveedorId: string, clabeNueva: stri
   const db = almacen();
   const p = await db.proveedores.obtener(proveedorId);
   if (!p) throw new ErrorValidacion("El proveedor no existe");
+  if (p.estado === "bloqueado") throw new ErrorValidacion("El proveedor está bloqueado; primero revisa su caso");
   if (!clabeValida(clabeNueva)) throw new ErrorValidacion("La CLABE no es válida (18 dígitos y dígito verificador)");
 
-  const solicitud = await db.solicitudes.crear({
+  const solicitud = db.modo === "supabase"
+    ? await (await import("./voz/persistencia.ts")).crearSolicitudPersistente(proveedorId, clabeNueva, telefonoEnSolicitud?.trim() || null, actor)
+    : await db.solicitudes.crear({
     proveedor_id: p.id,
     clabe_nueva: clabeNueva,
     telefono_en_solicitud: telefonoEnSolicitud?.trim() || null,
     estado: "pausada",
     creado_en: new Date().toISOString(),
   });
-  await db.proveedores.actualizar(p.id, { estado: "pausado" });
-  await registrar(actor, "solicitud_clabe", "solicitud_clabe", solicitud.id, { proveedor_id: p.id, pago: "pausado" });
+  if (db.modo === "memoria") {
+    await db.proveedores.actualizar(p.id, { estado: "pausado" });
+    await registrar(actor, "solicitud_clabe", "solicitud_clabe", solicitud.id, { proveedor_id: p.id, pago: "pausado" });
+  }
 
   let llamada: { iniciada: boolean; error?: string } = { iniciada: false };
-  if (vozConfigurada()) {
+  if (!simulacionPermitida()) {
     try {
+      if (!vozConfigurada()) throw new Error("La configuración de voz está incompleta; solicita revisión a Oswaldo");
       const factura = (await db.facturas.listar({ proveedor_id: p.id })).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
       if (!factura || !p.clabe) throw new Error("Faltan factura o cuenta anterior para verificar");
       const conversationId = await iniciarLlamada(p.telefono_registrado, {
@@ -227,7 +235,7 @@ async function aplicarResultadoLlamada(datos: {
     const inicio = (await db.bitacora.listar({ entidad_id: s.id, accion: "llamada_iniciada" }))
       .find(e => e.detalle?.conversation_id === datos.conversation_id);
     if (!datos.conversation_id || !inicio) throw new ErrorValidacion("La conversación no corresponde a la solicitud");
-  } else if (vozConfigurada()) throw new ErrorValidacion("No se puede simular con voz configurada");
+  } else if (!simulacionPermitida()) throw new ErrorValidacion("No se puede simular con voz configurada");
 
   const llamada = await db.llamadas.crear({
     solicitud_id: s.id,
@@ -304,7 +312,7 @@ let colaVoz: Promise<unknown> = Promise.resolve();
 export async function registrarResultadoLlamada(entrada: Parameters<typeof aplicarResultadoLlamada>[0]): Promise<Llamada> {
   const parsed = resultadoSchema.safeParse(entrada);
   if (!parsed.success) throw new ErrorValidacion("Resultado de llamada inválido");
-  if (parsed.data.simulada && vozConfigurada()) throw new ErrorValidacion("No se puede simular con voz configurada");
+  if (parsed.data.simulada && !simulacionPermitida()) throw new ErrorValidacion("No se puede simular con voz configurada");
   if (almacen().modo === "supabase") {
     const { registrarResultadoPersistente } = await import("./voz/persistencia.ts");
     return registrarResultadoPersistente(parsed.data);

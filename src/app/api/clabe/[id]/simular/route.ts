@@ -5,7 +5,7 @@ import { pesos } from "@/lib/formato.ts";
 import { manejarError } from "@/lib/http.ts";
 import { registrarResultadoLlamada } from "@/lib/servicios.ts";
 import type { ResultadoLlamada } from "@/lib/tipos.ts";
-import { vozConfigurada } from "@/lib/voz/elevenlabs.ts";
+import { simulacionPermitida } from "@/lib/voz/elevenlabs.ts";
 
 const RESULTADOS: ResultadoLlamada[] = ["confirmado", "no_reconoce", "datos_no_coinciden", "sin_respuesta"];
 
@@ -44,16 +44,17 @@ function conversacion(r: ResultadoLlamada, d: { empresa: string; proveedor: stri
         "Agente: Gracias. Un analista revisará la solicitud antes de hacer cualquier cambio.",
       ].join("\n");
     case "sin_respuesta":
-      return "Agente: (Se marcó al teléfono registrado. Nadie contestó después de 3 intentos.)";
+      return "Agente: (Se marcó al teléfono registrado. Nadie contestó en esta simulación.)";
   }
 }
 
 // Solo disponible cuando ElevenLabs NO está configurado: permite mostrar el flujo sin llamada real.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (vozConfigurada()) return NextResponse.json({ error: "La voz está configurada: usa una llamada real" }, { status: 409 });
+  if (!simulacionPermitida()) return NextResponse.json({ error: "La voz está configurada: usa una llamada real" }, { status: 409 });
   try {
     await listo();
-    const { resultado } = (await req.json()) as { resultado: ResultadoLlamada };
+    const body = await req.json().catch(() => null);
+    const resultado = body?.resultado as ResultadoLlamada;
     if (!RESULTADOS.includes(resultado)) return NextResponse.json({ error: "Resultado inválido" }, { status: 400 });
     const db = almacen();
     const s = await db.solicitudes.obtener((await params).id);

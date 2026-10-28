@@ -20,7 +20,7 @@ Se conserva la política existente: `confirmado` aplica la CLABE nueva y recuper
 
 ## Oswaldo: despliegue
 
-- Aplicar `supabase/migrations/0001_inicial.sql` y luego `0002_resultado_voz.sql`. La segunda agrega un RPC exclusivo de `service_role`; no cambia tablas ni tipos compartidos. Las pruebas ejecutan ambas con PostgreSQL embebido. Verificar también en el Supabase de staging antes de la demo.
+- Aplicar `supabase/migrations/0001_inicial.sql`, luego `0002_resultado_voz.sql` y `0003_solicitud_voz_atomica.sql`. La segunda agrega un RPC exclusivo de `service_role`; no cambia tablas ni tipos compartidos. Las pruebas ejecutan ambas con PostgreSQL embebido. Verificar también en el Supabase de staging antes de la demo.
 - Configurar `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`. No usar memoria en Vercel para recibir callbacks: se pierde entre instancias/reinicios.
 - Configurar `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `ELEVENLABS_WEBHOOK_SECRET`, `EMPRESA_NOMBRE` y `VOZ_TELEFONOS_AUTORIZADOS`. No usar prefijo `NEXT_PUBLIC` para secretos.
 - Importar el número Twilio autorizado en ElevenLabs y asociarlo al agente. Copiar el ID interno de ElevenLabs, no el SID de Twilio, a `ELEVENLABS_PHONE_NUMBER_ID`. Confirmar permisos de llamadas a México y destinos verificados si Twilio está en trial.
@@ -48,10 +48,11 @@ node --test 'src/**/*.test.ts'
 node node_modules/typescript/bin/tsc --noEmit
 node node_modules/eslint/bin/eslint.js src/lib/voz src/lib/servicios.ts src/app/api/webhooks/elevenlabs src/app/api/webhooks/llamada src/app/api/voz
 node voz/probar-http.mjs
+node voz/probar-http.mjs --sin-password
 node node_modules/next/dist/bin/next build
 ```
 
-Se invocan los binarios con Node porque el `:` de la ruta del checkout rompe la resolución de algunos scripts npm. `probar-http.mjs` inicia y detiene un servidor en 127.0.0.1:3197, reemplaza credenciales por valores ficticios y verifica diez respuestas HTTP. No ejecutar simultáneamente con un build/dev de Next en el mismo checkout.
+Se invocan los binarios con Node porque el `:` de la ruta del checkout rompe la resolución de algunos scripts npm. `probar-http.mjs` inicia y detiene un servidor en 127.0.0.1:3197, reemplaza credenciales por valores ficticios y verifica catorce respuestas HTTP. No ejecutar simultáneamente con un build/dev de Next en el mismo checkout.
 
 Para actualizar exclusivamente el agente de Axel (lee el existente antes del PATCH):
 
@@ -68,3 +69,9 @@ Reproducir `voz/demo/DEMO-PREGRABADA-SINTETICA.mp3`. Anuncia audiblemente que es
 Para enseñar estados, usar la simulación existente en una instancia local sin configuración completa de ElevenLabs; las evidencias quedan `simulada: true`. Usar una solicitud nueva para cada resultado: los resultados conflictivos de una solicitud ya procesada ahora se rechazan.
 
 Fuentes oficiales: [webhooks post-llamada](https://elevenlabs.io/docs/eleven-agents/workflows/post-call-webhooks), [crear agente](https://elevenlabs.io/docs/api-reference/agents/create).
+
+## Segunda auditoría
+
+Ver [AUDITORIA.md](AUDITORIA.md) para hallazgos, pruebas y límites. Ver [VALIDAR-LLAMADA-REAL.md](VALIDAR-LLAMADA-REAL.md) para conectar Twilio y completar la matriz real.
+
+APP_PASSWORD es obligatorio si hay ELEVENLABS_PHONE_NUMBER_ID o SUPABASE_SERVICE_ROLE_KEY: sin él el sitio devuelve 503. Tener número configurado impide simular aunque falten otras variables. La migración 0003 hace atómicos el registro de solicitud, pausa del pago y bitácora. La pantalla muestra fallos de llamada persistidos, espera de webhook mayor a diez minutos y errores al descargar audio. No vuelve a marcar automáticamente.
