@@ -44,12 +44,13 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
         onChange={(e) => setComentario(e.target.value)}
         placeholder="Motivo obligatorio al bloquear; comentario opcional en otros casos"
         aria-label="Motivo o comentario de la decisión"
-        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+        disabled={ocupado}
+        className="w-full rounded border border-slate-300 px-3 py-2 text-sm disabled:opacity-50"
       />
       <div className="flex flex-wrap gap-2">
         {BOTONES.map((b) => (
-          <button key={b.estado} disabled={ocupado} onClick={() => decidir(b.estado)} className={`rounded px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${b.clase}`}>
-            {b.texto}
+          <button key={b.estado} disabled={ocupado} onClick={() => decidir(b.estado)} className={`rounded px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${b.clase}`}>
+            {ocupado ? "Enviando…" : b.texto}
           </button>
         ))}
       </div>

@@ -17,13 +17,44 @@ import { listo } from "@/lib/demo.ts";
 import { explicarHallazgo, SEMAFORO } from "@/lib/explicar.ts";
 import { cargarExpediente } from "@/lib/expediente.ts";
 import { enDias, fecha, pesos } from "@/lib/formato.ts";
+import { UMBRAL_LIBERAR, UMBRAL_REVISAR } from "@/lib/puntaje/reglas.ts";
 import { proximosPagos } from "@/lib/servicios.ts";
+import type { Caso, Decision, SolicitudClabe } from "@/lib/tipos.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
 import { vozConfigurada } from "@/lib/voz/elevenlabs.ts";
 
 export const dynamic = "force-dynamic";
 
 const ORDEN_NIVEL = { peligro: 0, alerta: 1, ok: 2, info: 3 };
+
+function chipRiesgo(puntaje: number | undefined) {
+  if (puntaje == null) return { texto: "Sin puntaje", clase: "bg-slate-100 text-slate-700 ring-slate-300" };
+  if (puntaje <= UMBRAL_LIBERAR) return { texto: "Riesgo bajo", clase: "bg-emerald-100 text-emerald-900 ring-emerald-300" };
+  if (puntaje <= UMBRAL_REVISAR) return { texto: "Riesgo medio", clase: "bg-amber-100 text-amber-900 ring-amber-300" };
+  return { texto: "Riesgo alto", clase: "bg-red-100 text-red-900 ring-red-300" };
+}
+
+function SeccionDecision({ c, solicitud }: { c: Caso; solicitud?: SolicitudClabe }) {
+  const clabe = c.tipo === "clabe";
+  return (
+    <section data-tour="decision" className={`rounded-2xl border-2 p-5 ${clabe ? "border-orange-400 bg-orange-50" : "border-blue-300 bg-blue-50"}`}>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <h2 className="text-lg font-semibold">Tu decisión</h2>
+        {clabe && (
+          <>
+            <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">Cambio de CLABE</span>
+            <span className="font-mono text-sm text-orange-950">{enmascararClabe(solicitud?.clabe_nueva ?? null)}</span>
+          </>
+        )}
+      </div>
+      <p className="mb-3 text-sm text-slate-700">
+        {clabe ? "Alguien pidió cambiar la cuenta bancaria de este proveedor. " : ""}
+        El sistema sugiere: <Semaforo decision={c.decision_sugerida} />. Tu decisión queda registrada con tu nombre y la hora.
+      </p>
+      <BotonesDecision casoId={c.id} />
+    </section>
+  );
+}
 
 export default async function Expediente({ params }: { params: Promise<{ id: string }> }) {
   await listo();
@@ -33,31 +64,39 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
   const v = e.verificaciones[0];
   const abiertos = e.casos.filter((c) => c.estado === "pendiente" || c.estado === "pausado");
   const simular = !vozConfigurada();
+  const demo = almacen().modo === "memoria";
   const montoFactura = e.facturas[0]?.monto ?? null;
   const documentos = (await almacen().documentos.listar({ proveedor_id: p.id })).sort((a, b) => b.enviada_en.localeCompare(a.enviada_en));
   const pago = (await proximosPagos()).get(p.id);
   const casoAbierto = abiertos.find((c) => c.tipo === "alta");
   const enLlamada = e.solicitudes.some((s) => s.estado === "en_llamada" && !e.llamadas.some((l) => l.solicitud_id === s.id));
   const hallazgos = v ? [...v.hallazgos].sort((a, b) => ORDEN_NIVEL[explicarHallazgo(a).nivel] - ORDEN_NIVEL[explicarHallazgo(b).nivel]) : [];
+  const riesgo = chipRiesgo(v?.puntaje);
+  const decisionActual: Decision | null = v?.decision ?? null;
+  const solicitudPorId = new Map(e.solicitudes.map((s) => [s.id, s]));
 
   return (
     <div className="space-y-5">
       <AutoRefrescar activo={enLlamada} />
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/bandeja" className="text-sm text-blue-800 hover:underline">← Bandeja</Link>
           <h1 className="mt-1 text-2xl font-semibold">{p.razon_social}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span><Termino t="RFC" />: <span className="font-mono">{p.rfc}</span></span>
+            <span className="text-slate-400">·</span>
+            <span>{pesos(p.monto_anual)} al año</span>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${riesgo.clase}`}>{riesgo.texto}</span>
+            {decisionActual ? <Semaforo decision={decisionActual} /> : <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-300">Sin decisión</span>}
             <EstadoSimple estado={p.estado} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">🛰️ Ver extracción en vivo</Link>
+          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver extracción en vivo</Link>
           <Reverificar id={p.id} nombre={p.razon_social} />
-          <a href={`/api/expediente/${p.id}/pdf`} className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">📄 Descargar expediente</a>
+          <a href={`/api/expediente/${p.id}/pdf`} className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">Descargar expediente</a>
         </div>
-      </div>
+      </header>
 
       {v && (
         <section data-tour="velocimetro" className="grid items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-[auto_1fr]">
@@ -67,7 +106,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             <p className="text-lg">{SEMAFORO[v.decision].frase}</p>
             <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
               {v.resumen}
-              <span className="mt-1 block text-xs text-slate-500">{v.resumen_origen === "ia" ? "✨ Resumen redactado por IA a partir de las pruebas" : "Resumen automático"} · revisado {fecha(v.fecha)}</span>
+              <span className="mt-1 block text-xs text-slate-500">{v.resumen_origen === "ia" ? "Resumen redactado por IA a partir de las pruebas" : "Resumen automático"} · revisado {fecha(v.fecha)}</span>
             </p>
             {v.motivos.some((m) => m.puntos > 0) && (
               <details className="text-sm">
@@ -79,47 +118,45 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
         </section>
       )}
 
-
       {abiertos.filter((c) => c.tipo === "alta").map((c) => (
-        <section key={c.id} data-tour="decision" className="rounded-2xl border-2 border-blue-300 bg-blue-50 p-5">
-          <h2 className="text-lg font-semibold">👩‍💼 Tu decisión</h2>
-          <p className="mb-3 text-sm text-slate-700">
-            {c.tipo === "clabe" ? "Alguien pidió cambiar la cuenta bancaria de este proveedor. " : ""}
-            El sistema sugiere: <Semaforo decision={c.decision_sugerida} />. Tu decisión queda registrada con tu nombre y la hora.
-          </p>
-          <BotonesDecision casoId={c.id} />
-        </section>
+        <SeccionDecision key={c.id} c={c} />
       ))}
 
       {e.solicitudes.length > 0 && (
-        <section data-tour="clabe-timeline" className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold">🏦 Cambios de cuenta bancaria (<Termino t="CLABE" />)</h2>
+        <section data-tour="clabe-timeline" className="space-y-4 rounded-2xl border border-orange-200 bg-white p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold">Cambios de cuenta bancaria (<Termino t="CLABE" />)</h2>
+            <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">Cambio de CLABE</span>
+          </div>
           {e.solicitudes.map((s) => (
-            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} />
+            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} />
           ))}
         </section>
       )}
 
+      {e.solicitudes.length === 0 && (
+        <Tarjeta titulo="Llamada de verificación">
+          <p className="text-sm text-slate-500">Este expediente no tiene una llamada registrada. Las llamadas solo se solicitan para confirmar cambios de CLABE.</p>
+        </Tarjeta>
+      )}
+
       {abiertos.filter((c) => c.tipo === "clabe").map((c) => (
-        <section key={c.id} data-tour="decision" className="rounded-2xl border-2 border-blue-300 bg-blue-50 p-5">
-          <h2 className="text-lg font-semibold">👩‍💼 Tu decisión</h2>
-          <p className="mb-3 text-sm text-slate-700">
-            {c.tipo === "clabe" ? "Alguien pidió cambiar la cuenta bancaria de este proveedor. " : ""}
-            El sistema sugiere: <Semaforo decision={c.decision_sugerida} />. Tu decisión queda registrada con tu nombre y la hora.
-          </p>
-          <BotonesDecision casoId={c.id} />
-        </section>
+        <SeccionDecision key={c.id} c={c} solicitud={c.solicitud_id ? solicitudPorId.get(c.solicitud_id) : undefined} />
       ))}
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {v && (
-            <Tarjeta titulo="🔎 Qué encontramos">
+          <Tarjeta titulo="Qué encontramos">
+            {!v ? (
+              <p className="text-sm text-slate-500">Aún no hay verificación para este proveedor.</p>
+            ) : hallazgos.length === 0 ? (
+              <p className="text-sm text-slate-500">No se registraron hallazgos.</p>
+            ) : (
               <ul data-tour="evidencia" className="space-y-2">
                 {hallazgos.map((h, i) => <HallazgoSimple key={i} h={h} retraso={i * 120} />)}
               </ul>
-            </Tarjeta>
-          )}
+            )}
+          </Tarjeta>
         </div>
 
         <div className="space-y-5">
@@ -135,11 +172,11 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             <Link href={`/clabe?proveedor=${p.id}`} className="mt-3 inline-block text-sm text-blue-800 underline">Registrar un cambio de cuenta</Link>
           </Tarjeta>
 
-          <Tarjeta titulo="📄 Documentos del proveedor">
+          <Tarjeta titulo="Documentos del proveedor">
             <div className="space-y-2">
               {documentos.map((d) => <DocumentoProveedor key={d.id} d={d} rfc={p.rfc} />)}
               {!documentos.some((d) => d.estado === "enviada") && (
-                <BotonAccion url="/api/documentos" cuerpo={{ proveedor_id: p.id, caso_id: casoAbierto?.id }} texto="📨 Pedir su opinión 32-D" textoOcupado="Creando solicitud…" />
+                <BotonAccion url="/api/documentos" cuerpo={{ proveedor_id: p.id, caso_id: casoAbierto?.id }} texto="Pedir su opinión 32-D" textoOcupado="Creando solicitud…" />
               )}
               {documentos.length === 0 && <p className="text-xs text-slate-500">Se le envía un enlace a su portal para que suba el PDF; si no responde, recibe recordatorios cada 3 días.</p>}
             </div>
@@ -150,7 +187,8 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
               <ul className="space-y-2 text-sm">
                 {e.casos.filter((c) => c.decidido_por).map((c) => (
                   <li key={c.id}>
-                    <strong>{c.estado === "aprobado" ? "✅ Aprobado" : c.estado === "bloqueado" ? "⛔ Bloqueado" : "⏸️ En pausa"}</strong>
+                    <strong>{c.estado === "aprobado" ? "Aprobado" : c.estado === "bloqueado" ? "Bloqueado" : "En pausa"}</strong>
+                    {c.tipo === "clabe" && <span className="ml-2 rounded-full bg-orange-100 px-1.5 py-0.5 text-xs font-semibold text-orange-900">Cambio de CLABE</span>}
                     <span className="text-xs text-slate-500"> · {c.tipo === "clabe" ? "cambio de cuenta" : "alta"} · {fecha(c.decidido_en)}</span>
                     <p className="text-xs text-slate-600">{c.decidido_por}{c.comentario && `: "${c.comentario}"`}</p>
                   </li>
@@ -165,12 +203,16 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             </Tarjeta>
           )}
 
-          <Tarjeta titulo="📜 Bitácora">
-            <ol className="space-y-2 text-xs">
-              {e.bitacora.slice(0, 25).map((b) => (
-                <li key={b.id}><span className="text-slate-500">{fecha(b.creado_en)}</span><br /><strong>{b.actor}</strong> · {b.accion.replaceAll("_", " ")}</li>
-              ))}
-            </ol>
+          <Tarjeta titulo="Bitácora">
+            {e.bitacora.length === 0 ? (
+              <p className="text-sm text-slate-500">Sin eventos todavía.</p>
+            ) : (
+              <ol className="space-y-2 text-xs">
+                {e.bitacora.slice(0, 25).map((b) => (
+                  <li key={b.id}><span className="text-slate-500">{fecha(b.creado_en)}</span><br /><strong>{b.actor}</strong> · {b.accion.replaceAll("_", " ")}</li>
+                ))}
+              </ol>
+            )}
           </Tarjeta>
         </div>
       </div>

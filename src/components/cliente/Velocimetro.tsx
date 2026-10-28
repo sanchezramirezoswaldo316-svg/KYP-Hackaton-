@@ -12,7 +12,7 @@ export function Velocimetro({ valor, tam = 220 }: { valor: number; tam?: number 
 
   const arco = (desde: number, hasta: number) => {
     const a = (v: number) => Math.PI * (1 - v / 100);
-    const p = (v: number) => [100 + 80 * Math.cos(a(v)), 100 - 80 * Math.sin(a(v))];
+    const p = (v: number) => [100 + 80 * Math.cos(a(v)), 100 - 80 * Math.sin(a(v))].map((n) => Number(n.toFixed(6)));
     const [x1, y1] = p(desde), [x2, y2] = p(hasta);
     return `M ${x1} ${y1} A 80 80 0 0 1 ${x2} ${y2}`;
   };

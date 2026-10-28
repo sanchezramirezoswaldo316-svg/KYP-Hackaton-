@@ -2,6 +2,8 @@
 import type { Llamada, SolicitudClabe } from "@/lib/tipos.ts";
 import { pesos } from "@/lib/formato.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
+import { TranscripcionLlamada } from "./TranscripcionLlamada";
+import { AudioLlamada } from "./cliente/AudioLlamada";
 import { SimularLlamada } from "./cliente/SimularLlamada";
 
 type Paso = { icono: string; titulo: string; texto: string; estado: "hecho" | "actual" | "pendiente" | "fraude" | "ok" };
@@ -29,10 +31,10 @@ const ESTILO = {
   fraude: "border-red-400 bg-red-50",
 };
 
-export function LineaTiempoClabe({ s, llamada, monto, simular }: { s: SolicitudClabe; llamada?: Llamada; monto: number | null; simular: boolean }) {
+export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: { s: SolicitudClabe; llamada?: Llamada; monto: number | null; simular: boolean; demo?: boolean }) {
   const ps = pasos(s, llamada);
   const fraude = llamada && llamada.resultado !== "confirmado";
-  const mensajes = (llamada?.transcripcion ?? "").split("\n").filter(Boolean);
+  const llamando = s.estado === "en_llamada" && !llamada;
   return (
     <div className="space-y-4">
       <ol className="grid gap-2 sm:grid-cols-4">
@@ -53,26 +55,22 @@ export function LineaTiempoClabe({ s, llamada, monto, simular }: { s: SolicitudC
         </div>
       )}
 
-      {mensajes.length > 0 && (
+      {llamando && (
+        <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">Llamando al teléfono registrado…</p>
+      )}
+      {!llamada && !llamando && s.estado !== "pausada" && (
+        <p className="text-sm text-slate-500">Aún no hay llamada registrada.</p>
+      )}
+      {llamada && (
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-            🎙️ Conversación de la llamada {llamada?.simulada && <span className="rounded bg-amber-200 px-1.5 text-xs text-amber-900">Simulada (demo)</span>}
+            Conversación de la llamada {llamada.simulada && <span className="rounded bg-amber-200 px-1.5 text-xs text-amber-900">Simulada (demo)</span>}
           </div>
-          <div className="space-y-2">
-            {mensajes.map((m, i) => {
-              const agente = m.startsWith("Agente:");
-              const texto = m.replace(/^(Agente|Proveedor):\s*/, "");
-              return (
-                <div key={i} className={`animar-aparecer flex ${agente ? "justify-start" : "justify-end"}`} style={{ animationDelay: `${300 + i * 700}ms` }}>
-                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${agente ? "rounded-bl-sm bg-white" : "rounded-br-sm bg-emerald-200"}`}>
-                    <div className="text-[10px] font-semibold uppercase text-slate-500">{agente ? "🤖 Agente KYP" : "👤 Proveedor"}</div>
-                    {texto}
-                  </div>
-                </div>
-              );
-            })}
+          <AudioLlamada llamada={llamada} demo={demo} />
+          <div className="mt-2">
+            <TranscripcionLlamada texto={llamada.transcripcion} />
           </div>
-          {llamada?.resumen && <p className="mt-2 text-xs text-slate-600">Resumen: {llamada.resumen}</p>}
+          {llamada.resumen && <p className="mt-2 text-xs text-slate-600">Resumen: {llamada.resumen}</p>}
         </div>
       )}
 
