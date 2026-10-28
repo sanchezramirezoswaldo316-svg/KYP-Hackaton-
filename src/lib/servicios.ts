@@ -27,7 +27,7 @@ export function validarAlta(e: EntradaAlta): string[] {
   if (!rfcValido(e.rfc ?? "")) errores.push(`RFC inválido: ${e.rfc}`);
   if (!e.razon_social?.trim()) errores.push("Falta la razón social");
   if (!e.telefono_registrado?.trim()) errores.push("Falta el teléfono registrado del representante");
-  if (e.clabe && !clabeValida(e.clabe)) errores.push(`CLABE inválida: ${e.clabe}`);
+  if (e.clabe && !clabeValida(e.clabe)) errores.push("CLABE inválida (18 dígitos y dígito verificador)");
   return errores;
 }
 
