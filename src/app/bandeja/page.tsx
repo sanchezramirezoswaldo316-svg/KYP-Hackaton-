@@ -1,6 +1,7 @@
 // Bandeja: solo los casos que necesitan a una persona, explicados en lenguaje simple.
 import Link from "next/link";
 import { Semaforo } from "@/components/Semaforo";
+import { AutoRefrescar } from "@/components/cliente/AutoRefrescar";
 import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { resumenSimple } from "@/lib/explicar.ts";
@@ -13,12 +14,15 @@ export default async function Bandeja() {
   await listo();
   const db = almacen();
   const [casos, proveedores, verificaciones] = await Promise.all([db.casos.listar(), db.proveedores.listar(), ultimasVerificaciones()]);
-  const abiertos = casos.filter((c) => c.estado === "pendiente" || c.estado === "pausado").sort((a, b) => b.prioridad - a.prioridad);
+  const abiertos = casos
+    .filter((c) => c.estado === "pendiente" || c.estado === "pausado")
+    .sort((a, b) => Number(b.tipo === "clabe") - Number(a.tipo === "clabe") || b.prioridad - a.prioridad);
   const porId = new Map(proveedores.map((p) => [p.id, p]));
   const aprobadosSolos = [...verificaciones.values()].filter((v) => v.decision === "liberar").length;
 
   return (
     <div className="space-y-4">
+      <AutoRefrescar activo />
       <div>
         <h1 className="text-2xl font-semibold">Bandeja de la gestora</h1>
         <p className="text-slate-600">
