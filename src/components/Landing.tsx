@@ -11,7 +11,7 @@ const casos = [
 
 export function Landing() {
   return (
-    <div className="-mx-4 -my-6 bg-lienzo px-8 py-0 sm:-mx-6 lg:-mx-8 lg:-my-8">
+    <div className="-mx-4 -my-6 bg-lienzo px-8 py-0 sm:-mx-6 lg:-my-8 lg:-ml-[232px] lg:-mr-8">
       <div className="mx-auto max-w-[1120px]">
         <header className="flex min-h-[68px] items-center justify-between gap-4"><Link href="/inicio" className="text-lg font-semibold tracking-tight">KYP</Link><nav className="hidden items-center gap-6 text-sm text-tinta-3 sm:flex"><a href="#como">Cómo funciona</a><a href="#clabe">Cambio de CLABE</a><a href="#expediente">Expediente</a><Link href="/bandeja" className="rounded-control bg-marca px-3 py-2 font-medium text-white hover:bg-marca-2">Entrar</Link></nav></header>
         <main>
