@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icono } from "@/components/Icono";
 import { Contador } from "./Contador";
 
 // La barra "con KYP" empieza igual que la manual y se encoge hasta su tamaño real.
@@ -15,16 +16,16 @@ export function BarrasHoras({ manual, kyp }: { manual: number; kyp: number }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="w-24 text-sm">🧑‍💼 A mano</span>
-        <div className="h-7 flex-1 rounded bg-slate-100"><div className="h-7 rounded bg-slate-400" style={{ width: manual ? "100%" : "0%" }} /></div>
-        <span className="w-24 text-right font-semibold"><Contador valor={manual} formato="horas" /></span>
+        <span className="flex w-28 items-center gap-1.5 text-[13px] text-texto-2"><Icono nombre="personas" className="h-3.5 w-3.5" />A mano</span>
+        <div className="h-6 flex-1 rounded-sm bg-realce"><div className="h-6 rounded-sm bg-texto-3/60" style={{ width: manual ? "100%" : "0%" }} /></div>
+        <span className="w-24 text-right font-mono font-semibold tabular-nums"><Contador valor={manual} formato="horas" /></span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="w-24 text-sm">⚡ Con KYP</span>
-        <div className="h-7 flex-1 rounded bg-slate-100"><div className="h-7 rounded bg-blue-700 transition-all duration-[2000ms] ease-out" style={{ width: listo ? `${pct}%` : manual ? "100%" : "0%" }} /></div>
-        <span className="w-24 text-right font-semibold"><Contador valor={kyp} formato="horas" /></span>
+        <span className="flex w-28 items-center gap-1.5 text-[13px] text-texto-2"><Icono nombre="rayo" className="h-3.5 w-3.5 text-acento-2" />Con KYP</span>
+        <div className="h-6 flex-1 rounded-sm bg-realce"><div className="h-6 rounded-sm bg-acento transition-all duration-[2000ms] ease-out" style={{ width: listo ? `${pct}%` : manual ? "100%" : "0%" }} /></div>
+        <span className="w-24 text-right font-mono font-semibold tabular-nums"><Contador valor={kyp} formato="horas" /></span>
       </div>
-      {ahorro > 0 && <p className={`text-center text-lg font-semibold text-blue-800 transition-opacity duration-700 ${listo ? "opacity-100" : "opacity-0"}`}>{ahorro}% menos horas de trabajo</p>}
+      {ahorro > 0 && <p className={`text-center font-mono text-lg font-semibold text-acento-2 transition-opacity duration-700 ${listo ? "opacity-100" : "opacity-0"}`}>{ahorro}% menos horas de trabajo</p>}
     </div>
   );
 }

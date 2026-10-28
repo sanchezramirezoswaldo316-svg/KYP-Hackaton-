@@ -1,31 +1,32 @@
 // Traduce los resultados técnicos a lenguaje simple para cualquier persona.
 // Sin dependencias de servidor: se usa también en componentes del navegador.
 
+import type { NombreIcono } from "../components/Icono.tsx";
 import type { Decision, EstadoProveedor, Fuente, Hallazgo } from "./tipos.ts";
 
 export type Nivel = "ok" | "info" | "alerta" | "peligro";
 
-export const SEMAFORO: Record<Decision, { emoji: string; texto: string; frase: string; nivel: Nivel }> = {
-  liberar: { emoji: "🟢", texto: "Confiable", frase: "No encontramos señales de riesgo. Se aprueba solo.", nivel: "ok" },
-  revisar: { emoji: "🟡", texto: "Revisar", frase: "Hay señales que una persona debe revisar antes de pagarle.", nivel: "alerta" },
-  bloquear: { emoji: "🔴", texto: "Peligro", frase: "Hay señales graves. Se recomienda no pagarle.", nivel: "peligro" },
+export const SEMAFORO: Record<Decision, { icono: NombreIcono; texto: string; frase: string; nivel: Nivel }> = {
+  liberar: { icono: "escudoOk", texto: "Confiable", frase: "No encontramos señales de riesgo. Se aprueba solo.", nivel: "ok" },
+  revisar: { icono: "escudoAlerta", texto: "Revisar", frase: "Hay señales que una persona debe revisar antes de pagarle.", nivel: "alerta" },
+  bloquear: { icono: "escudoX", texto: "Peligro", frase: "Hay señales graves. Se recomienda no pagarle.", nivel: "peligro" },
 };
 
-export const ESTADO_SIMPLE: Record<EstadoProveedor, { emoji: string; texto: string }> = {
-  pendiente: { emoji: "⏳", texto: "Pendiente" },
-  aprobado: { emoji: "✅", texto: "Pagos activos" },
-  en_revision: { emoji: "🔎", texto: "En revisión" },
-  pausado: { emoji: "⏸️", texto: "Pagos congelados" },
-  bloqueado: { emoji: "⛔", texto: "Bloqueado" },
+export const ESTADO_SIMPLE: Record<EstadoProveedor, { icono: NombreIcono; texto: string }> = {
+  pendiente: { icono: "espera", texto: "Pendiente" },
+  aprobado: { icono: "ok", texto: "Pagos activos" },
+  en_revision: { icono: "buscar", texto: "En revisión" },
+  pausado: { icono: "pausa", texto: "Pagos congelados" },
+  bloqueado: { icono: "prohibido", texto: "Bloqueado" },
 };
 
-export const FUENTE_SIMPLE: Record<Fuente, { icono: string; titulo: string; revisando: string }> = {
-  sat_69b: { icono: "🧾", titulo: "Lista negra del SAT (facturas falsas)", revisando: "Revisando la lista negra del SAT…" },
-  sat_69: { icono: "🏛️", titulo: "Problemas fiscales con el SAT", revisando: "Revisando si tiene problemas con el SAT…" },
-  ofac: { icono: "🌎", titulo: "Sanciones internacionales", revisando: "Revisando sanciones de EE. UU. (OFAC)…" },
-  web: { icono: "🌐", titulo: "Su página web", revisando: "Leyendo su página web…" },
-  noticias: { icono: "📰", titulo: "Noticias", revisando: "Buscando noticias negativas…" },
-  dominio: { icono: "📅", titulo: "Antigüedad de su página", revisando: "Revisando desde cuándo existe su página…" },
+export const FUENTE_SIMPLE: Record<Fuente, { icono: NombreIcono; titulo: string; revisando: string }> = {
+  sat_69b: { icono: "factura", titulo: "Lista negra del SAT (facturas falsas)", revisando: "Revisando la lista negra del SAT…" },
+  sat_69: { icono: "banco", titulo: "Problemas fiscales con el SAT", revisando: "Revisando si tiene problemas con el SAT…" },
+  ofac: { icono: "escudo", titulo: "Sanciones internacionales", revisando: "Revisando sanciones de EE. UU. (OFAC)…" },
+  web: { icono: "web", titulo: "Su página web", revisando: "Leyendo su página web…" },
+  noticias: { icono: "noticias", titulo: "Noticias", revisando: "Buscando noticias negativas…" },
+  dominio: { icono: "calendario", titulo: "Antigüedad de su página", revisando: "Revisando desde cuándo existe su página…" },
 };
 
 type Explicacion = { nivel: Nivel; titulo: string; frase: string };
@@ -71,7 +72,7 @@ const GENERICO: Record<string, Explicacion> = {
   error: { nivel: "info", titulo: "No se pudo revisar", frase: "La fuente no respondió. Se puede volver a intentar." },
 };
 
-export function explicarHallazgo(h: Hallazgo): Explicacion & { icono: string; fuente: string } {
+export function explicarHallazgo(h: Hallazgo): Explicacion & { icono: NombreIcono; fuente: string } {
   const e = TABLA[h.fuente]?.[h.resultado] ?? GENERICO[h.resultado] ?? { nivel: "info", titulo: h.resultado.replaceAll("_", " "), frase: h.detalle };
   return { ...e, icono: FUENTE_SIMPLE[h.fuente].icono, fuente: FUENTE_SIMPLE[h.fuente].titulo };
 }

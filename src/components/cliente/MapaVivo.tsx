@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ICONOS, Icono, type NombreIcono } from "@/components/Icono";
 import { Semaforo } from "@/components/Semaforo";
 import { explicarHallazgo, SEMAFORO, type Nivel } from "@/lib/explicar.ts";
 import type { Decision, Fuente, Hallazgo, ResultadoPuntaje } from "@/lib/tipos.ts";
@@ -27,19 +28,19 @@ const POS: Record<IdNodo, { x: number; y: number }> = {
   web: { x: 195, y: 358 }, noticias: { x: 306, y: 456 }, dominio: { x: 494, y: 508 },
   ia: { x: 800, y: 170 }, reglas: { x: 800, y: 430 }, veredicto: { x: 955, y: 300 },
 };
-const NODO: Record<IdNodo, { icono: string; nombre: string }> = {
-  sat_69b: { icono: "🧾", nombre: "SAT · Lista negra" },
-  sat_69: { icono: "🏛️", nombre: "SAT · Art. 69" },
-  ofac: { icono: "🌎", nombre: "OFAC · EE. UU." },
-  web: { icono: "🌐", nombre: "Página web" },
-  noticias: { icono: "📰", nombre: "Noticias" },
-  dominio: { icono: "📅", nombre: "Dominio" },
-  ia: { icono: "✨", nombre: "IA (Claude)" },
-  reglas: { icono: "⚖️", nombre: "Motor de reglas" },
-  veredicto: { icono: "🏁", nombre: "Veredicto" },
+const NODO: Record<IdNodo, { icono: NombreIcono; nombre: string }> = {
+  sat_69b: { icono: "factura", nombre: "SAT · Lista negra" },
+  sat_69: { icono: "banco", nombre: "SAT · Art. 69" },
+  ofac: { icono: "escudo", nombre: "OFAC · EE. UU." },
+  web: { icono: "web", nombre: "Página web" },
+  noticias: { icono: "noticias", nombre: "Noticias" },
+  dominio: { icono: "calendario", nombre: "Dominio" },
+  ia: { icono: "ia", nombre: "IA (Claude)" },
+  reglas: { icono: "balanza", nombre: "Motor de reglas" },
+  veredicto: { icono: "escudoOk", nombre: "Veredicto" },
 };
 const FUENTES: Fuente[] = ["sat_69b", "sat_69", "ofac", "web", "noticias", "dominio"];
-const COLOR: Record<Nivel | "azul" | "gris", string> = { ok: "#10b981", info: "#94a3b8", alerta: "#f59e0b", peligro: "#ef4444", azul: "#3b82f6", gris: "#cbd5e1" };
+const COLOR: Record<Nivel | "azul" | "gris", string> = { ok: "#2fb37a", info: "#a7b4c2", alerta: "#e3a33b", peligro: "#ef5350", azul: "#2d8cf0", gris: "#364657" };
 const NIVEL_DECISION: Record<Decision, Nivel> = { liberar: "ok", revisar: "alerta", bloquear: "peligro" };
 const VIAJE_MS = 800;
 
@@ -96,17 +97,17 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
       case "puntaje":
         lanzar("centro", "reglas", COLOR.azul);
         nodo("reglas", { estado: "listo", nivel: NIVEL_DECISION[e.resultado.decision], texto: `${e.resultado.puntaje} puntos · ${e.resultado.motivos.filter((m) => m.puntos > 0).length} motivos` });
-        log(e.t, `⚖ Reglas: ${e.resultado.puntaje} puntos → ${SEMAFORO[e.resultado.decision].texto}${e.resultado.bloqueo_directo ? " (bloqueo directo)" : ""}`, NIVEL_DECISION[e.resultado.decision]);
+        log(e.t, `Reglas: ${e.resultado.puntaje} puntos → ${SEMAFORO[e.resultado.decision].texto}${e.resultado.bloqueo_directo ? " (bloqueo directo)" : ""}`, NIVEL_DECISION[e.resultado.decision]);
         break;
       case "ia":
         if (e.estado === "redactando") {
           nodo("ia", { estado: "consultando", texto: "redactando resumen…" });
           lanzar("centro", "ia", COLOR.azul);
-          log(e.t, "✨ IA: redactando el resumen para la gestora…", "azul");
+          log(e.t, "IA: redactando el resumen para la gestora…", "azul");
         } else if (e.estado === "listo") {
           nodo("ia", { estado: "listo", nivel: "ok", texto: "resumen listo" });
           lanzar("ia", "veredicto", COLOR.ok);
-          log(e.t, "✨ IA: resumen listo (no cambia el puntaje)", "ok");
+          log(e.t, "IA: resumen listo (no cambia el puntaje)", "ok");
         } else {
           nodo("ia", { estado: "omitido", texto: "no fue necesaria" });
         }
@@ -114,12 +115,12 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
       case "fin":
         lanzar("reglas", "veredicto", COLOR[NIVEL_DECISION[e.verificacion.decision]]);
         nodo("veredicto", { estado: "listo", nivel: NIVEL_DECISION[e.verificacion.decision], texto: SEMAFORO[e.verificacion.decision].texto });
-        log(null, `🏁 Veredicto: ${SEMAFORO[e.verificacion.decision].emoji} ${SEMAFORO[e.verificacion.decision].texto} · guardado en el expediente`, NIVEL_DECISION[e.verificacion.decision]);
+        log(null, `Veredicto: ${SEMAFORO[e.verificacion.decision].texto} · guardado en el expediente`, NIVEL_DECISION[e.verificacion.decision]);
         setTimeout(() => setFinal(e), VIAJE_MS);
         alTerminar?.();
         break;
       case "error":
-        log(null, `✖ ${e.mensaje}`, "peligro");
+        log(null, `ERROR ${e.mensaje}`, "peligro");
         break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -183,10 +184,10 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
   return (
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-        <div data-tour="mapa" className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950">
+        <div data-tour="mapa" className="overflow-x-auto rounded-md border border-borde bg-fondo">
           <svg viewBox="0 0 1040 600" className="h-auto w-full min-w-[680px]" role="img" aria-label="Mapa de extracción de información en tiempo real">
             <defs>
-              <pattern id="cuadricula" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="1" /></pattern>
+              <pattern id="cuadricula" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#18212a" strokeWidth="1" /></pattern>
               <filter id="brillo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             </defs>
             <rect width="1040" height="600" fill="url(#cuadricula)" />
@@ -213,33 +214,34 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
                       <animate attributeName="opacity" values="0.9;0" dur="1s" repeatCount="indefinite" />
                     </circle>
                   )}
-                  <circle cx={x} cy={y} r={36} fill="#0f172a" stroke={c} strokeWidth={e.estado === "inactivo" ? 2 : 4} filter={e.estado === "listo" ? "url(#brillo)" : undefined} />
-                  <text x={x} y={y + 10} textAnchor="middle" fontSize="28">{NODO[id].icono}</text>
-                  <text x={x} y={y + 56} textAnchor="middle" fontSize="15" fontWeight="600" fill="#e2e8f0" stroke="#020617" strokeWidth="5" paintOrder="stroke">{NODO[id].nombre}</text>
-                  {e.texto && <text x={x} y={y + 75} textAnchor="middle" fontSize="13" fill={c} stroke="#020617" strokeWidth="5" paintOrder="stroke">{corto(e.texto)}</text>}
+                  <circle cx={x} cy={y} r={36} fill="#121920" stroke={c} strokeWidth={e.estado === "inactivo" ? 1.5 : 2.5} filter={e.estado === "listo" ? "url(#brillo)" : undefined} />
+                  {(() => { const I = ICONOS[NODO[id].icono]; return <I x={x - 14} y={y - 14} width={28} height={28} strokeWidth={1.6} color={e.estado === "inactivo" ? "#a7b4c2" : c} />; })()}
+                  <text x={x} y={y + 56} textAnchor="middle" fontSize="13" fontWeight="600" fill="#e3eaf1" stroke="#0b1015" strokeWidth="5" paintOrder="stroke">{NODO[id].nombre}</text>
+                  {e.texto && <text x={x} y={y + 75} textAnchor="middle" fontSize="12" fontFamily="var(--font-mono)" fill={c} stroke="#0b1015" strokeWidth="5" paintOrder="stroke">{corto(e.texto)}</text>}
                 </g>
               );
             })}
 
             <g>
-              <circle cx={CENTRO.x} cy={CENTRO.y} r={58} fill="#1e3a8a" stroke="#60a5fa" strokeWidth="4" filter="url(#brillo)" />
-              <text x={CENTRO.x} y={CENTRO.y + 2} textAnchor="middle" fontSize="38">🏢</text>
-              <text x={CENTRO.x} y={CENTRO.y + 28} textAnchor="middle" fontSize="11" fill="#bfdbfe">EXPEDIENTE</text>
-              <text x={CENTRO.x} y={CENTRO.y + 82} textAnchor="middle" fontSize="15" fontWeight="700" fill="#f8fafc" stroke="#020617" strokeWidth="5" paintOrder="stroke">{nombre ? corto(nombre.razon_social, 34) : "Conectando…"}</text>
-              {nombre && <text x={CENTRO.x} y={CENTRO.y + 100} textAnchor="middle" fontSize="12" fill="#94a3b8" fontFamily="monospace">{nombre.rfc}</text>}
+              <circle cx={CENTRO.x} cy={CENTRO.y} r={58} fill="#0f2238" stroke="#6cb2ff" strokeWidth="2.5" filter="url(#brillo)" />
+              <circle cx={CENTRO.x} cy={CENTRO.y} r={70} fill="none" stroke="#2d8cf0" strokeOpacity="0.4" strokeDasharray="2 6" />
+              <ICONOS.empresa x={CENTRO.x - 18} y={CENTRO.y - 28} width={36} height={36} strokeWidth={1.5} color="#6cb2ff" />
+              <text x={CENTRO.x} y={CENTRO.y + 28} textAnchor="middle" fontSize="10" letterSpacing="2" fontFamily="var(--font-mono)" fill="#a7b4c2">EXPEDIENTE</text>
+              <text x={CENTRO.x} y={CENTRO.y + 82} textAnchor="middle" fontSize="14" fontWeight="700" fill="#e3eaf1" stroke="#0b1015" strokeWidth="5" paintOrder="stroke">{nombre ? corto(nombre.razon_social, 34) : "Conectando…"}</text>
+              {nombre && <text x={CENTRO.x} y={CENTRO.y + 100} textAnchor="middle" fontSize="12" fill="#758595" fontFamily="var(--font-mono)">{nombre.rfc}</text>}
             </g>
           </svg>
         </div>
 
-        <div className="flex max-h-[520px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-          <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2 text-xs text-slate-400">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> Registro en vivo · tiempos reales del servidor
+        <div className="flex max-h-[520px] flex-col overflow-hidden rounded-md border border-borde bg-fondo">
+          <div className="flex items-center gap-2 border-b border-borde px-3 py-2 text-xs text-texto-3">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ok" /> <span className="rotulo">Registro en vivo</span><span className="ml-auto font-mono text-[10px]">tiempos reales del servidor</span>
           </div>
           <div ref={consola} className="flex-1 space-y-1 overflow-y-auto p-3 font-mono text-[11px] leading-relaxed">
             {lineas.map((l, i) => (
               <div key={i} className="animar-aparecer flex gap-2">
-                <span className="shrink-0 text-slate-500">{l.t}</span>
-                <span style={{ color: l.nivel === "azul" ? "#93c5fd" : l.nivel === "info" ? "#cbd5e1" : COLOR[l.nivel] }}>{l.texto}</span>
+                <span className="shrink-0 text-texto-3">{l.t}</span>
+                <span style={{ color: l.nivel === "azul" ? "#6cb2ff" : l.nivel === "info" ? "#a7b4c2" : COLOR[l.nivel] }}>{l.texto}</span>
               </div>
             ))}
           </div>
@@ -248,27 +250,27 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
 
       {tarjetas.length > 0 && (
         <div>
-          <h3 className="mb-2 font-semibold">📦 Datos extraídos</h3>
+          <h3 className="rotulo mb-2 flex items-center gap-2"><Icono nombre="datos" className="h-3.5 w-3.5" />Datos extraídos</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {tarjetas.map(({ h, ms }, i) => {
               const x = explicarHallazgo(h);
               return (
-                <div key={i} className="animar-aparecer rounded-xl border-2 bg-white p-3" style={{ borderColor: COLOR[x.nivel] }}>
+                <div key={i} className="animar-aparecer rounded border border-borde border-l-2 bg-panel p-3" style={{ borderLeftColor: COLOR[x.nivel] }}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold">{NODO[h.fuente].icono} {NODO[h.fuente].nombre}</span>
-                    <span className="font-mono text-[10px] text-slate-500">{ms} ms</span>
+                    <span className="flex items-center gap-2 font-semibold"><Icono nombre={NODO[h.fuente].icono} className="h-4 w-4 text-texto-2" />{NODO[h.fuente].nombre}</span>
+                    <span className="font-mono text-[10px] text-texto-3">{ms} ms</span>
                   </div>
-                  <div className="text-sm" style={{ color: COLOR[x.nivel] === COLOR.info ? "#475569" : COLOR[x.nivel] }}>{x.titulo}</div>
+                  <div className="text-sm" style={{ color: COLOR[x.nivel] }}>{x.titulo}</div>
                   {h.datos && (
                     <dl className="mt-2 space-y-0.5 font-mono text-[11px]">
                       {Object.entries(h.datos).map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2 border-b border-dashed border-slate-200 pb-0.5">
-                          <dt className="shrink-0 text-slate-500">{k}</dt><dd className="truncate text-right text-slate-900" title={v}>{v}</dd>
+                        <div key={k} className="flex justify-between gap-2 border-b border-dashed border-borde pb-0.5">
+                          <dt className="shrink-0 text-texto-3">{k}</dt><dd className="truncate text-right text-texto" title={v}>{v}</dd>
                         </div>
                       ))}
                     </dl>
                   )}
-                  {!h.datos && <p className="mt-1 text-xs text-slate-500">{x.frase}</p>}
+                  {!h.datos && <p className="mt-1 text-xs text-texto-3">{x.frase}</p>}
                 </div>
               );
             })}
@@ -277,13 +279,13 @@ export function MapaVivo({ cuerpo, alTerminar }: { cuerpo: { proveedor_id?: stri
       )}
 
       {final && (
-        <div className="animar-aparecer grid items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-[auto_1fr]">
+        <div className="animar-aparecer grid items-center gap-6 rounded-md border border-borde bg-panel p-6 md:grid-cols-[auto_1fr]">
           <Velocimetro valor={final.verificacion.puntaje} />
           <div className="space-y-3">
             <Semaforo decision={final.verificacion.decision} grande />
             <p className="text-lg">{SEMAFORO[final.verificacion.decision].frase}</p>
-            <p className="text-sm text-slate-600">{final.verificacion.resumen}</p>
-            <Link href={`/expediente/${final.proveedor.id}`} className="inline-block rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Ver expediente →</Link>
+            <p className="text-sm text-texto-2">{final.verificacion.resumen}</p>
+            <Link href={`/expediente/${final.proveedor.id}`} className="inline-block rounded bg-acento px-4 py-2 font-medium text-white hover:bg-acento/85">Ver expediente →</Link>
           </div>
         </div>
       )}

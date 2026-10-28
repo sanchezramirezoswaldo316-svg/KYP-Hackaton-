@@ -1,5 +1,6 @@
 "use client";
 
+import { User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 // 30 auditores que se desvanecen hasta quedar una sola persona.
@@ -24,18 +25,18 @@ export function Personas() {
           return (
             <span
               key={i}
-              className={`text-2xl transition-all duration-700 sm:text-3xl ${fase && !ana ? "scale-75 opacity-10 grayscale" : ""} ${fase && ana ? "animar-latido" : ""}`}
+              className={`flex h-7 w-7 items-center justify-center rounded-sm border transition-all duration-700 sm:h-8 sm:w-8 ${ana ? "border-acento bg-acento/15 text-acento-2" : "border-borde-fuerte bg-panel-2 text-texto-2"} ${fase && !ana ? "scale-75 opacity-15" : ""} ${fase && ana ? "animar-latido" : ""}`}
               style={{ transitionDelay: fase && !ana ? `${(30 - i) * 60}ms` : "0ms" }}
             >
-              {ana ? "👩‍💼" : "🧑‍💼"}
+              <User className="h-4 w-4" strokeWidth={1.75} />
             </span>
           );
         })}
       </div>
       <div className="text-center sm:text-left">
-        <div className={`text-lg transition-opacity duration-500 ${fase ? "opacity-40 line-through" : ""}`}>Antes: <strong>30 auditores</strong></div>
-        <div className={`text-2xl font-bold text-blue-800 transition-opacity delay-[2200ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>Con KYP: 1 gestora</div>
-        <p className={`max-w-xs text-sm text-slate-600 transition-opacity delay-[2600ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>El sistema revisa a todos; Ana solo decide los casos dudosos.</p>
+        <div className={`text-lg transition-opacity duration-500 ${fase ? "opacity-40 line-through" : ""}`}>Antes: <strong className="font-mono">30 auditores</strong></div>
+        <div className={`font-mono text-2xl font-bold text-acento-2 transition-opacity delay-[2200ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>Con KYP: 1 gestora</div>
+        <p className={`max-w-xs text-sm text-texto-2 transition-opacity delay-[2600ms] duration-700 ${fase ? "opacity-100" : "opacity-0"}`}>El sistema revisa a todos; Ana solo decide los casos dudosos.</p>
       </div>
     </div>
   );

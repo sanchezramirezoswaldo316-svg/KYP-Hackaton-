@@ -5,9 +5,9 @@ import { useState } from "react";
 import { enviar } from "./peticion.ts";
 
 const BOTONES = [
-  { estado: "aprobado", texto: "Aprobar", clase: "bg-emerald-600 hover:bg-emerald-700" },
-  { estado: "pausado", texto: "Pausar", clase: "bg-amber-500 hover:bg-amber-600" },
-  { estado: "bloqueado", texto: "Bloquear", clase: "bg-red-600 hover:bg-red-700" },
+  { estado: "aprobado", texto: "Aprobar", clase: "bg-ok hover:bg-ok/85" },
+  { estado: "pausado", texto: "Pausar", clase: "bg-alerta hover:bg-alerta" },
+  { estado: "bloqueado", texto: "Bloquear", clase: "bg-peligro hover:bg-peligro/85" },
 ] as const;
 
 export function BotonesDecision({ casoId }: { casoId: string }) {
@@ -44,7 +44,7 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
         onChange={(e) => setComentario(e.target.value)}
         placeholder="Motivo obligatorio al bloquear; comentario opcional en otros casos"
         aria-label="Motivo o comentario de la decisión"
-        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+        className="w-full rounded border border-borde-fuerte px-3 py-2 text-sm"
       />
       <div className="flex flex-wrap gap-2">
         {BOTONES.map((b) => (
@@ -53,7 +53,7 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
           </button>
         ))}
       </div>
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-peligro">{error}</p>}
     </div>
   );
 }

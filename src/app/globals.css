@@ -1,5 +1,54 @@
 @import "tailwindcss";
 
+/* Sistema de diseño: consola operativa oscura (estilo centro de operaciones).
+   El color se reserva para estados; todo lo demás es gris azulado. */
+@theme {
+  --color-fondo: #0b1015;
+  --color-panel: #121920;
+  --color-panel-2: #18212a;
+  --color-realce: #1f2a35;
+  --color-borde: #253240;
+  --color-borde-fuerte: #364657;
+  --color-texto: #e3eaf1;
+  --color-texto-2: #a7b4c2;
+  --color-texto-3: #758595;
+  --color-acento: #2d8cf0;
+  --color-acento-2: #6cb2ff;
+  --color-ok: #2fb37a;
+  --color-alerta: #e3a33b;
+  --color-peligro: #ef5350;
+  --color-voz: #a78bfa;
+  --font-sans: var(--fuente-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--fuente-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html { color-scheme: dark; }
+  body { background: var(--color-fondo); color: var(--color-texto); font-feature-settings: "cv11", "ss01"; }
+  input, select, textarea {
+    background-color: var(--color-panel-2);
+    color: var(--color-texto);
+    border-color: var(--color-borde-fuerte);
+  }
+  input::placeholder, textarea::placeholder { color: var(--color-texto-3); }
+  :focus-visible { outline: 2px solid var(--color-acento); outline-offset: 2px; }
+  ::selection { background: color-mix(in srgb, var(--color-acento) 40%, transparent); }
+  * { scrollbar-color: var(--color-borde-fuerte) transparent; scrollbar-width: thin; }
+  table { font-variant-numeric: tabular-nums; }
+  thead th { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-texto-3); }
+}
+
+/* Encabezado de panel: mayúsculas pequeñas con espaciado, como las consolas de operación. */
+.rotulo { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-texto-3); }
+/* Fondo cuadriculado sutil para zonas de mapa. */
+.reticula {
+  background-image:
+    linear-gradient(var(--color-borde) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-borde) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+}
+
 @keyframes aparecer {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
@@ -31,3 +80,7 @@
 @media (prefers-reduced-motion: reduce) {
   .linea-viva { animation: none; }
 }
+
+@keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.animar-parpadeo { animation: parpadeo 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .animar-parpadeo { animation: none; } }

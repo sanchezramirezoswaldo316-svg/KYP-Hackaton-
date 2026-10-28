@@ -5,8 +5,8 @@ export default function NuevoProveedor() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Nuevo proveedor</h1>
-        <p className="text-slate-600">Llena sus datos y verás en vivo cómo lo revisamos en cada fuente.</p>
+        <h1 className="text-xl font-semibold tracking-tight">Nuevo proveedor</h1>
+        <p className="text-texto-2">Llena sus datos y verás en vivo cómo lo revisamos en cada fuente.</p>
       </div>
       <Tarjeta><FormularioAlta /></Tarjeta>
     </div>

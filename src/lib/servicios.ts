@@ -122,7 +122,7 @@ export async function aplicarPoliticas(caso: Caso, hallazgos: Hallazgo[], activa
     if (pol.accion === "bloquear") {
       const decidido = await decidirCaso(caso.id, "bloqueado", actor, `Aplicada automáticamente: ${pol.descripcion}`);
       const p = await db.proveedores.obtener(caso.proveedor_id);
-      await db.alertas.crear({ tipo: "politica_aplicada", proveedor_id: caso.proveedor_id, mensaje: `🤖 Se bloqueó a ${p?.razon_social ?? "un proveedor"} por la política «${pol.nombre}»`, creado_en: new Date().toISOString(), leida: false });
+      await db.alertas.crear({ tipo: "politica_aplicada", proveedor_id: caso.proveedor_id, mensaje: `Se bloqueó a ${p?.razon_social ?? "un proveedor"} por la política «${pol.nombre}»`, creado_en: new Date().toISOString(), leida: false });
       return decidido;
     }
     await solicitarDocumentos(caso.proveedor_id, caso.id, actor);

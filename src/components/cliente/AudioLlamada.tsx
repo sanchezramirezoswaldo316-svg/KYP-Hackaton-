@@ -16,8 +16,8 @@ export function AudioLlamada({ llamadaId }: { llamadaId: string }) {
     finally { setOcupado(false); }
   }
   return <div className="space-y-2 text-sm">
-    {!src && <button disabled={ocupado} onClick={cargar} className="rounded border border-slate-300 px-3 py-2 disabled:opacity-50">{ocupado ? 'Cargando audio…' : 'Cargar grabación de la llamada'}</button>}
+    {!src && <button disabled={ocupado} onClick={cargar} className="rounded border border-borde-fuerte px-3 py-2 disabled:opacity-50">{ocupado ? 'Cargando audio…' : 'Cargar grabación de la llamada'}</button>}
     {src && <audio aria-label="Grabación de verificación" controls src={src} onError={() => { setError('No se pudo reproducir la grabación. Vuelve a cargarla.'); setSrc(null); }} />}
-    {error && <p role="alert" className="text-red-700">{error}</p>}
+    {error && <p role="alert" className="text-peligro">{error}</p>}
   </div>;
 }

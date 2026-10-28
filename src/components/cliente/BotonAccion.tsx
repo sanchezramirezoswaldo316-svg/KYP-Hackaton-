@@ -2,17 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Icono, type NombreIcono } from "@/components/Icono";
 import { enviar } from "./peticion.ts";
 
-export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario", cuerpo }: {
-  url: string; texto: string; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario"; cuerpo?: unknown;
+export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario", cuerpo, icono }: {
+  url: string; texto: string; icono?: NombreIcono; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario"; cuerpo?: unknown;
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const clase = variante === "primario"
-    ? "bg-blue-700 text-white hover:bg-blue-800"
-    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
+    ? "bg-acento text-white hover:bg-acento/85"
+    : "border border-borde-fuerte bg-panel text-texto-2 hover:bg-panel-2";
 
   async function ejecutar() {
     if (confirmar && !window.confirm(confirmar)) return;
@@ -30,10 +31,10 @@ export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "s
 
   return (
     <span className="inline-flex flex-col">
-      <button onClick={ejecutar} disabled={ocupado} className={`rounded px-3 py-2 text-sm font-medium disabled:opacity-50 ${clase}`}>
-        {ocupado ? (textoOcupado ?? "Procesando…") : texto}
+      <button onClick={ejecutar} disabled={ocupado} className={`inline-flex items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium disabled:opacity-50 ${clase}`}>
+        {icono && <Icono nombre={icono} className={`h-4 w-4 ${ocupado ? "animate-spin" : ""}`} />}{ocupado ? (textoOcupado ?? "Procesando…") : texto}
       </button>
-      {error && <span className="mt-1 text-xs text-red-700">{error}</span>}
+      {error && <span className="mt-1 text-xs text-peligro">{error}</span>}
     </span>
   );
 }

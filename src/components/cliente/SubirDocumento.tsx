@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Icono } from "@/components/Icono";
 
 export function SubirDocumento({ token }: { token: string }) {
   const router = useRouter();
@@ -31,16 +32,16 @@ export function SubirDocumento({ token }: { token: string }) {
 
   return (
     <form onSubmit={subir} className="space-y-3">
-      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50 p-6 text-center hover:bg-blue-100">
-        <span className="text-4xl" aria-hidden>📄</span>
+      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed border-acento/40 bg-acento/10 p-6 text-center hover:bg-acento/15">
+        <Icono nombre="subir" className="h-8 w-8 text-acento-2" trazo={1.5} />
         <span className="font-medium">{archivo ? archivo.name : "Elige el PDF de tu opinión de cumplimiento"}</span>
-        <span className="text-xs text-slate-500">Solo PDF, máximo 5 MB</span>
+        <span className="text-xs text-texto-3">Solo PDF, máximo 5 MB</span>
         <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
       </label>
-      <button disabled={!archivo || ocupado} className="w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">
+      <button disabled={!archivo || ocupado} className="w-full rounded bg-acento px-4 py-3 font-semibold text-white hover:bg-acento/85 disabled:opacity-50">
         {ocupado ? "Enviando…" : "Enviar documento"}
       </button>
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-peligro">{error}</p>}
     </form>
   );
 }

@@ -24,21 +24,21 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
     <div className="space-y-5">
       <AutoRefrescar activo={enLlamada} />
       <div>
-        <h1 className="text-2xl font-semibold">Cambios de cuenta bancaria</h1>
-        <p className="text-slate-600">
+        <h1 className="text-xl font-semibold tracking-tight">Cambios de cuenta bancaria</h1>
+        <p className="text-texto-3">
           Un fraude común: alguien se hace pasar por un proveedor y pide cambiar su <Termino t="CLABE" /> para quedarse con el pago.
           Cuando llega una solicitud, <strong>el pago se congela</strong>. {simular
             ? "En esta demo simulamos la verificación y guardamos el resultado como evidencia de prueba; no se realiza una llamada telefónica."
             : "El agente llama al teléfono registrado desde el alta, nunca al número que viene en la solicitud."}
         </p>
       </div>
-      {simular && <details className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+      {simular && <details className="rounded border border-alerta/40 bg-alerta/10 p-4">
         <summary className="cursor-pointer font-medium">Escuchar demostración de voz pregrabada</summary>
         <p className="my-2 text-sm">Audio sintético con datos ficticios generado con ElevenLabs. No es una llamada real ni evidencia de esta solicitud.</p>
         <audio controls preload="none" src="/api/voz/demo/audio" aria-label="Demostración pregrabada y sintética" />
-        <a className="mt-2 block text-sm text-blue-800 underline" href="/api/voz/demo/audio" download="DEMO-PREGRABADA-SINTETICA.mp3">Descargar audio de respaldo</a>
+        <a className="mt-2 block text-sm text-acento-2 underline" href="/api/voz/demo/audio" download="DEMO-PREGRABADA-SINTETICA.mp3">Descargar audio de respaldo</a>
       </details>}
-      <Tarjeta titulo="📩 Registrar una solicitud recibida">
+      <Tarjeta icono="correo" titulo="Registrar una solicitud recibida">
         <div data-tour="form-clabe">
           <FormularioClabe
             seleccionado={proveedor}
@@ -48,13 +48,13 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
         </div>
       </Tarjeta>
       {solicitudes.length === 0 ? (
-        <p className="text-sm text-slate-600">Aún no hay solicitudes.</p>
+        <p className="text-sm text-texto-2">Aún no hay solicitudes.</p>
       ) : (
         solicitudes.sort((a, b) => b.creado_en.localeCompare(a.creado_en)).map((s) => {
           const p = porId.get(s.proveedor_id);
           const f = facturas.filter((x) => x.proveedor_id === s.proveedor_id).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
           return (
-            <Tarjeta key={s.id} titulo={p?.razon_social} acciones={<Link href={`/expediente/${s.proveedor_id}`} className="text-sm text-blue-800 underline">Ver expediente</Link>}>
+            <Tarjeta key={s.id} titulo={p?.razon_social} acciones={<Link href={`/expediente/${s.proveedor_id}`} className="font-mono text-xs text-acento-2 hover:underline">VER EXPEDIENTE →</Link>}>
               <LineaTiempoClabe s={s} llamada={llamadas.find((l) => l.solicitud_id === s.id)} monto={f?.monto ?? null} simular={simular} fallo={fallos.some(b => b.entidad_id === s.id)} />
             </Tarjeta>
           );
