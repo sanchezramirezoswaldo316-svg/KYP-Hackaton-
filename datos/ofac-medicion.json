@@ -1,0 +1,40 @@
+{
+  "hardware": {
+    "cpu": "Apple M2",
+    "cores": 8,
+    "ram_bytes": 8589934592,
+    "plataforma": "darwin",
+    "arch": "arm64",
+    "runtime": "v24.3.0"
+  },
+  "snapshot": {
+    "registros": 17561,
+    "sha256": "96dade5a1cde8c9746937b4859ad75d8f2a34eed1a4046cc1f2240a830f70bda",
+    "descargado_en": "2026-10-28T05:26:28.518Z"
+  },
+  "proveedores": 500,
+  "calentamientos": 1,
+  "repeticiones": 5,
+  "lectura_json_ms": 6.3436670000000035,
+  "indexacion_ms": 88.03475,
+  "busqueda_500": {
+    "min_ms": 1294.5636669999985,
+    "mediana_ms": 1317.686417,
+    "max_ms": 1371.5811669999985
+  },
+  "consulta_individual": {
+    "min_ms": 0.12712499999997817,
+    "mediana_ms": 2.6795419999998558,
+    "max_ms": 13.037000000000262
+  },
+  "lote_listas_y_puntaje_500": {
+    "min_ms": 1284.3273750000008,
+    "mediana_ms": 1313.0975000000008,
+    "max_ms": 1321.1292080000003
+  },
+  "resultados": {
+    "sin_coincidencia": 499,
+    "coincidencia_parecida": 1
+  },
+  "limite": "Medición local en memoria; no incluye HTTP, BD, interfaz, IA ni despliegue. No predice producción."
+}
