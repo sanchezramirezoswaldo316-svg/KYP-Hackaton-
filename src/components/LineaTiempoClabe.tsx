@@ -12,24 +12,24 @@ type Paso = { icono: string; titulo: string; texto: string; estado: "hecho" | "a
 function pasos(s: SolicitudClabe, l: Llamada | undefined): Paso[] {
   const llamando = s.estado === "en_llamada" && !l;
   const resultado: Paso = !l
-    ? { icono: "❔", titulo: "Resultado", texto: "Esperando la llamada", estado: "pendiente" }
+    ? { icono: "4", titulo: "Resultado", texto: "Esperando la llamada", estado: "pendiente" }
     : l.resultado === "confirmado"
-      ? { icono: "✅", titulo: "Confirmado", texto: "El proveedor reconoció el cambio. Pagos reactivados.", estado: "ok" }
-      : { icono: "🚫", titulo: "Fraude detenido", texto: l.resultado === "sin_respuesta" ? "Nadie contestó: el pago sigue congelado." : "El proveedor NO pidió el cambio. El pago sigue congelado.", estado: "fraude" };
+      ? { icono: "4", titulo: "Confirmado", texto: "El proveedor reconoció el cambio. Pagos reactivados.", estado: "ok" }
+      : { icono: "4", titulo: "Fraude detenido", texto: l.resultado === "sin_respuesta" ? "Nadie contestó: el pago sigue congelado." : "El proveedor NO pidió el cambio. El pago sigue congelado.", estado: "fraude" };
   return [
-    { icono: "📩", titulo: "Solicitud recibida", texto: `Piden cambiar la cuenta a ${enmascararClabe(s.clabe_nueva)}`, estado: "hecho" },
-    { icono: "⏸️", titulo: "Pago congelado", texto: "Nadie puede pagar a la cuenta nueva todavía", estado: "hecho" },
-    { icono: "📞", titulo: "Llamada al número registrado", texto: llamando ? "Llamando ahora…" : l ? "Llamada terminada" : "Pendiente", estado: llamando ? "actual" : l ? "hecho" : "pendiente" },
+    { icono: "1", titulo: "Solicitud recibida", texto: `Piden cambiar la cuenta a ${enmascararClabe(s.clabe_nueva)}`, estado: "hecho" },
+    { icono: "2", titulo: "Pago congelado", texto: "Nadie puede pagar a la cuenta nueva todavía", estado: "hecho" },
+    { icono: "3", titulo: "Llamada al número registrado", texto: llamando ? "Llamando ahora…" : l ? "Llamada terminada" : "Pendiente", estado: llamando ? "actual" : l ? "hecho" : "pendiente" },
     resultado,
   ];
 }
 
 const ESTILO = {
-  hecho: "border-blue-300 bg-blue-50",
-  actual: "border-blue-500 bg-white ring-4 ring-blue-200",
-  pendiente: "border-dashed border-slate-300 bg-white text-slate-400",
-  ok: "border-emerald-400 bg-emerald-50",
-  fraude: "border-red-400 bg-red-50",
+  hecho: "border-borde bg-panel",
+  actual: "border-acento bg-acento-fondo ring-2 ring-acento-fondo",
+  pendiente: "border-dashed border-borde-fuerte bg-panel text-tinta-3",
+  ok: "border-borde-fuerte bg-panel",
+  fraude: "border-tinta bg-superficie",
 };
 
 export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: { s: SolicitudClabe; llamada?: Llamada; monto: number | null; simular: boolean; demo?: boolean }) {
@@ -42,7 +42,7 @@ export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: {
       <ol className="grid gap-2 sm:grid-cols-4">
         {ps.map((p, i) => (
           <li key={i} className={`animar-aparecer rounded-lg border-2 p-3 ${ESTILO[p.estado]}`} style={{ animationDelay: `${i * 150}ms` }}>
-            <div className={`text-2xl ${p.estado === "actual" ? "animar-llamando" : ""}`} aria-hidden>{p.icono}</div>
+            <div className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold ${p.estado === "actual" ? "animar-llamando border-acento bg-acento text-white" : "border-borde-fuerte"}`} aria-hidden>{p.icono}</div>
             <div className="font-semibold">{p.titulo}</div>
             <div className="text-xs">{p.texto}</div>
           </li>
@@ -50,7 +50,7 @@ export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: {
       </ol>
 
       {fraude && monto !== null && (
-        <div className="animar-aparecer rounded-xl bg-red-600 p-4 text-center text-white">
+        <div className="animar-aparecer rounded-panel bg-tinta p-4 text-center text-white">
           <div className="text-sm uppercase tracking-wide">Posible fraude detenido</div>
           <div className="text-3xl font-bold">Se evitó desviar {pesos(monto)}</div>
           <div className="text-sm opacity-90">monto de su última factura</div>
@@ -58,28 +58,28 @@ export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: {
       )}
 
       {llamando && (
-        <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">Llamando al teléfono registrado…</p>
+        <p className="rounded-control border border-acento bg-acento-fondo px-3 py-2 text-sm text-acento">Llamando al teléfono registrado…</p>
       )}
       {!llamada && !llamando && s.estado !== "pausada" && (
-        <p className="text-sm text-slate-500">Aún no hay llamada registrada.</p>
+        <p className="text-sm text-tinta-3">Aún no hay llamada registrada.</p>
       )}
       {llamada && (
-        <div className="rounded-xl bg-slate-100 p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-            Conversación de la llamada {llamada.simulada && <span className="rounded bg-amber-200 px-1.5 text-xs text-amber-900">Simulada (demo)</span>}
+        <div className="rounded-panel bg-superficie p-3">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-tinta-2">
+            Conversación de la llamada {llamada.simulada && <span className="rounded-control border border-borde-fuerte px-1.5 text-xs text-tinta-2">Simulada (demo)</span>}
           </div>
           <AudioLlamada llamada={llamada} demo={demo} />
           <div className="mt-2">
             <div className="max-w-prose"><TranscripcionLlamada texto={llamada.transcripcion} /></div>
           </div>
           <p className="mt-2 text-xs text-tinta-3">Llamada grabada con aviso al proveedor.</p>
-          {llamada.resumen && <p className="mt-2 text-xs text-slate-600">Resumen: {llamada.resumen}</p>}
+          {llamada.resumen && <p className="mt-2 text-xs text-tinta-2">Resumen: {llamada.resumen}</p>}
         </div>
       )}
 
       {simular && !llamada && (s.estado === "pausada" || s.estado === "en_llamada") && (
-        <div data-tour="simular" className="rounded-lg border border-amber-300 bg-amber-50 p-3">
-          <p className="mb-2 text-sm text-amber-900">La voz real no está conectada. Elige qué respondería el proveedor en la llamada:</p>
+        <div data-tour="simular" className="rounded-panel border border-borde bg-superficie p-3">
+          <p className="mb-2 text-sm text-tinta-2">La voz real no está conectada. Elige qué respondería el proveedor en la llamada:</p>
           <SimularLlamada solicitudId={s.id} />
         </div>
       )}

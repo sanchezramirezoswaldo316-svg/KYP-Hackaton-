@@ -29,26 +29,26 @@ export const dynamic = "force-dynamic";
 const ORDEN_NIVEL = { peligro: 0, alerta: 1, ok: 2, info: 3 };
 
 function chipRiesgo(puntaje: number | undefined) {
-  if (puntaje == null) return { texto: "Sin puntaje", clase: "bg-slate-100 text-slate-700 ring-slate-300" };
-  if (puntaje <= UMBRAL_LIBERAR) return { texto: "Riesgo bajo", clase: "bg-emerald-100 text-emerald-900 ring-emerald-300" };
-  if (puntaje <= UMBRAL_REVISAR) return { texto: "Riesgo medio", clase: "bg-amber-100 text-amber-900 ring-amber-300" };
-  return { texto: "Riesgo alto", clase: "bg-red-100 text-red-900 ring-red-300" };
+  if (puntaje == null) return { texto: "Sin puntaje", clase: "border border-borde-fuerte text-tinta-3" };
+  if (puntaje <= UMBRAL_LIBERAR) return { texto: "Riesgo bajo", clase: "border border-borde-fuerte text-tinta-3" };
+  if (puntaje <= UMBRAL_REVISAR) return { texto: "Riesgo medio", clase: "border border-tinta text-tinta" };
+  return { texto: "Riesgo alto", clase: "bg-tinta text-white" };
 }
 
 function SeccionDecision({ c, solicitud }: { c: Caso; solicitud?: SolicitudClabe }) {
   const clabe = c.tipo === "clabe";
   return (
-    <section data-tour="decision" className={`rounded-panel border p-5 ${clabe ? "border-alto bg-alto-fondo" : "border-borde bg-panel"}`}>
+    <section data-tour="decision" className={`rounded-panel border p-5 ${clabe ? "border-acento bg-acento-fondo" : "border-borde bg-panel"}`}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
           <h2 className="text-sm font-semibold">Tu decisión</h2>
         {clabe && (
           <>
-            <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">Cambio de CLABE</span>
-            <span className="font-mono text-sm text-orange-950">{enmascararClabe(solicitud?.clabe_nueva ?? null)}</span>
+            <span className="rounded-control border border-acento px-2 py-0.5 text-xs font-semibold text-acento">Cambio de CLABE</span>
+            <span className="font-mono text-sm text-acento">{enmascararClabe(solicitud?.clabe_nueva ?? null)}</span>
           </>
         )}
       </div>
-      <p className="mb-3 text-sm text-slate-700">
+      <p className="mb-3 text-sm text-tinta-2">
         {clabe ? "Alguien pidió cambiar la cuenta bancaria de este proveedor. " : ""}
         El sistema sugiere: <Semaforo decision={c.decision_sugerida} />. Tu decisión queda registrada con tu nombre y la hora.
       </p>
@@ -81,14 +81,14 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
       <AutoRefrescar activo={enLlamada} />
       <header className="rounded-panel border border-borde bg-panel p-5 lg:flex lg:items-start lg:justify-between lg:gap-6">
         <div>
-          <Link href="/bandeja" className="text-sm text-blue-800 hover:underline">← Bandeja</Link>
+          <Link href="/bandeja" className="text-sm text-tinta-2 hover:underline">← Bandeja</Link>
           <h1 className="mt-1 text-xl font-semibold">{p.razon_social}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-tinta-2">
             <span><Termino t="RFC" />: <span className="font-mono">{p.rfc}</span></span>
-            <span className="text-slate-400">·</span>
+            <span className="text-tinta-3">·</span>
             <span>{pesos(p.monto_anual)} al año</span>
             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${riesgo.clase}`}>{riesgo.texto}</span>
-            {decisionActual ? <Semaforo decision={decisionActual} /> : <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-300">Sin decisión</span>}
+            {decisionActual ? <Semaforo decision={decisionActual} /> : <span className="rounded-control border border-borde-fuerte px-2.5 py-0.5 text-xs font-semibold text-tinta-3">Sin decisión</span>}
             <EstadoSimple estado={p.estado} />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 border-t border-borde pt-4 sm:grid-cols-4">
@@ -99,9 +99,9 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver extracción en vivo</Link>
+          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded-control border border-borde-fuerte bg-panel px-3 py-2 text-sm font-medium text-tinta hover:bg-hover">Ver extracción en vivo</Link>
           <Reverificar id={p.id} nombre={p.razon_social} />
-          <a href={`/api/expediente/${p.id}/pdf`} className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">Descargar expediente</a>
+          <a href={`/api/expediente/${p.id}/pdf`} className="rounded-control bg-marca px-3 py-2 text-sm font-medium text-white hover:bg-marca-2">Descargar expediente</a>
         </div>
       </header>
 
@@ -111,13 +111,13 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
           <div className="space-y-3">
             <Semaforo decision={v.decision} grande />
             <p className="text-lg">{SEMAFORO[v.decision].frase}</p>
-            <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+            <p className="rounded-panel bg-superficie p-3 text-sm text-tinta-2">
               {v.resumen}
-              <span className="mt-1 block text-xs text-slate-500">{v.resumen_origen === "ia" ? "Resumen redactado por IA a partir de las pruebas" : "Resumen automático"} · revisado {fecha(v.fecha)}</span>
+              <span className="mt-1 block text-xs text-tinta-3">{v.resumen_origen === "ia" ? "Resumen redactado por IA a partir de las pruebas" : "Resumen automático"} · revisado {fecha(v.fecha)}</span>
             </p>
             {v.motivos.some((m) => m.puntos > 0) && (
               <details className="text-sm">
-                <summary className="cursor-pointer text-slate-600">¿Cómo se calculó el <Termino t="Puntaje">puntaje</Termino>?</summary>
+                <summary className="cursor-pointer text-tinta-2">¿Cómo se calculó el <Termino t="Puntaje">puntaje</Termino>?</summary>
                 <ul className="mt-2 space-y-1">{v.motivos.filter((m) => m.puntos > 0).map((m) => <li key={m.regla}><span className="font-mono font-semibold">+{m.puntos}</span> {m.descripcion}</li>)}</ul>
               </details>
             )}
@@ -130,10 +130,10 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
       ))}
 
       {e.solicitudes.length > 0 && (
-        <section data-tour="clabe-timeline" className="space-y-4 rounded-2xl border border-orange-200 bg-white p-5">
+        <section data-tour="clabe-timeline" className="space-y-4 rounded-panel border border-borde bg-panel p-5">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold">Cambios de cuenta bancaria (<Termino t="CLABE" />)</h2>
-            <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">Cambio de CLABE</span>
+            <span className="rounded-control border border-acento px-2 py-0.5 text-xs font-semibold text-acento">Cambio de CLABE</span>
           </div>
           {e.solicitudes.map((s) => (
             <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} />
@@ -143,7 +143,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
 
       {e.solicitudes.length === 0 && (
         <Tarjeta titulo="Llamada de verificación">
-          <p className="text-sm text-slate-500">Este expediente no tiene una llamada registrada. Las llamadas solo se solicitan para confirmar cambios de CLABE.</p>
+          <p className="text-sm text-tinta-3">Este expediente no tiene una llamada registrada. Las llamadas solo se solicitan para confirmar cambios de CLABE.</p>
         </Tarjeta>
       )}
 
@@ -155,9 +155,9 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
         <div className="lg:col-span-2">
           <Tarjeta titulo="Hallazgos por fuente">
             {!v ? (
-              <p className="text-sm text-slate-500">Aún no hay verificación para este proveedor.</p>
+              <p className="text-sm text-tinta-3">Aún no hay verificación para este proveedor.</p>
             ) : hallazgos.length === 0 ? (
-              <p className="text-sm text-slate-500">No se registraron hallazgos.</p>
+              <p className="text-sm text-tinta-3">No se registraron hallazgos.</p>
             ) : (
               <ul data-tour="evidencia" className="space-y-2">
                 {hallazgos.map((h, i) => <HallazgoSimple key={i} h={h} retraso={i * 120} />)}
@@ -169,14 +169,14 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
         <div className="space-y-5">
           <Tarjeta titulo="Datos del proveedor">
             <dl className="space-y-2 text-sm">
-              <div><dt className="text-slate-500">Qué nos vende</dt><dd>{p.giro_declarado ?? "—"}</dd></div>
-              <div><dt className="text-slate-500">Página web</dt><dd>{p.sitio_web ? <a href={p.sitio_web} target="_blank" rel="noreferrer" className="text-blue-800 underline">{p.sitio_web}</a> : "—"}</dd></div>
-              <div><dt className="text-slate-500">Teléfono registrado</dt><dd>{p.telefono_registrado}</dd></div>
-              <div><dt className="text-slate-500">Cuenta (CLABE)</dt><dd className="font-mono">{enmascararClabe(p.clabe)}</dd></div>
-              <div><dt className="text-slate-500">Le compramos al año</dt><dd>{pesos(p.monto_anual)}</dd></div>
-              {pago && <div><dt className="text-slate-500">Próximo pago</dt><dd className={pago.dias <= 7 ? "font-semibold text-orange-700" : ""}>{pesos(pago.monto)} {enDias(pago.dias)} ({fecha(pago.vence)})</dd></div>}
+              <div><dt className="text-tinta-3">Qué nos vende</dt><dd>{p.giro_declarado ?? "—"}</dd></div>
+              <div><dt className="text-tinta-3">Página web</dt><dd>{p.sitio_web ? <a href={p.sitio_web} target="_blank" rel="noreferrer" className="text-tinta underline">{p.sitio_web}</a> : "—"}</dd></div>
+              <div><dt className="text-tinta-3">Teléfono registrado</dt><dd>{p.telefono_registrado}</dd></div>
+              <div><dt className="text-tinta-3">Cuenta (CLABE)</dt><dd className="font-mono">{enmascararClabe(p.clabe)}</dd></div>
+              <div><dt className="text-tinta-3">Le compramos al año</dt><dd>{pesos(p.monto_anual)}</dd></div>
+              {pago && <div><dt className="text-tinta-3">Próximo pago</dt><dd className={pago.dias <= 7 ? "font-semibold text-acento" : ""}>{pesos(pago.monto)} {enDias(pago.dias)} ({fecha(pago.vence)})</dd></div>}
             </dl>
-            <Link href={`/clabe?proveedor=${p.id}`} className="mt-3 inline-block text-sm text-blue-800 underline">Registrar un cambio de cuenta</Link>
+            <Link href={`/clabe?proveedor=${p.id}`} className="mt-3 inline-block text-sm text-tinta underline">Registrar un cambio de cuenta</Link>
           </Tarjeta>
 
           <Tarjeta titulo="Documentos del proveedor">
@@ -185,7 +185,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
               {!documentos.some((d) => d.estado === "enviada") && (
                 <BotonAccion url="/api/documentos" cuerpo={{ proveedor_id: p.id, caso_id: casoAbierto?.id }} texto="Pedir su opinión 32-D" textoOcupado="Creando solicitud…" />
               )}
-              {documentos.length === 0 && <p className="text-xs text-slate-500">Se le envía un enlace a su portal para que suba el PDF; si no responde, recibe recordatorios cada 3 días.</p>}
+              {documentos.length === 0 && <p className="text-xs text-tinta-3">Se le envía un enlace a su portal para que suba el PDF; si no responde, recibe recordatorios cada 3 días.</p>}
             </div>
           </Tarjeta>
 
@@ -195,9 +195,9 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
                 {e.casos.filter((c) => c.decidido_por).map((c) => (
                   <li key={c.id}>
                     <strong>{c.estado === "aprobado" ? "Aprobado" : c.estado === "bloqueado" ? "Bloqueado" : "En pausa"}</strong>
-                    {c.tipo === "clabe" && <span className="ml-2 rounded-full bg-orange-100 px-1.5 py-0.5 text-xs font-semibold text-orange-900">Cambio de CLABE</span>}
-                    <span className="text-xs text-slate-500"> · {c.tipo === "clabe" ? "cambio de cuenta" : "alta"} · {fecha(c.decidido_en)}</span>
-                    <p className="text-xs text-slate-600">{c.decidido_por}{c.comentario && `: "${c.comentario}"`}</p>
+                    {c.tipo === "clabe" && <span className="ml-2 rounded-control border border-acento px-1.5 py-0.5 text-xs font-semibold text-acento">Cambio de CLABE</span>}
+                    <span className="text-xs text-tinta-3"> · {c.tipo === "clabe" ? "cambio de cuenta" : "alta"} · {fecha(c.decidido_en)}</span>
+                    <p className="text-xs text-tinta-2">{c.decidido_por}{c.comentario && `: "${c.comentario}"`}</p>
                   </li>
                 ))}
               </ul>
@@ -212,11 +212,11 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
 
           <Tarjeta titulo="Bitácora">
             {e.bitacora.length === 0 ? (
-              <p className="text-sm text-slate-500">Sin eventos todavía.</p>
+              <p className="text-sm text-tinta-3">Sin eventos todavía.</p>
             ) : (
               <ol className="space-y-2 text-xs">
                 {e.bitacora.slice(0, 25).map((b) => (
-                  <li key={b.id}><span className="text-slate-500">{fecha(b.creado_en)}</span><br /><strong>{b.actor}</strong> · {b.accion.replaceAll("_", " ")}</li>
+                  <li key={b.id}><span className="text-tinta-3">{fecha(b.creado_en)}</span><br /><strong>{b.actor}</strong> · {b.accion.replaceAll("_", " ")}</li>
                 ))}
               </ol>
             )}

@@ -14,11 +14,11 @@ function turnos(texto: string): Turno[] {
 export function TranscripcionLlamada({ texto }: { texto: string }) {
   const partes = turnos(texto);
   if (partes.length === 0) {
-    return <p className="text-sm text-slate-500">Sin transcripción.</p>;
+    return <p className="text-sm text-tinta-3">Sin transcripción.</p>;
   }
   const conRoles = partes.some((p) => p.rol);
   if (!conRoles) {
-    return <p className="whitespace-pre-wrap text-sm text-slate-800">{texto}</p>;
+    return <p className="whitespace-pre-wrap text-sm text-tinta-2">{texto}</p>;
   }
   return (
     <ol className="space-y-2">
@@ -26,8 +26,8 @@ export function TranscripcionLlamada({ texto }: { texto: string }) {
         const agente = p.rol !== "proveedor";
         return (
           <li key={i} className={`flex ${agente ? "justify-start" : "justify-end"}`}>
-            <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${agente ? "rounded-bl-sm bg-white" : "rounded-br-sm bg-emerald-200"}`}>
-              <div className="text-[10px] font-semibold uppercase text-slate-500">{agente ? "Agente" : "Proveedor"}</div>
+            <div className={`max-w-[80%] rounded-control px-3 py-2 text-sm ${agente ? "rounded-bl-sm bg-panel" : "rounded-br-sm bg-superficie"}`}>
+              <div className="text-[10px] font-semibold uppercase text-tinta-3">{agente ? "Agente" : "Proveedor"}</div>
               <p className="whitespace-pre-wrap">{p.texto}</p>
             </div>
           </li>
