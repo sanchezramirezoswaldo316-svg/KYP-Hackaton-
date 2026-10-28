@@ -104,14 +104,18 @@ const ESTADO_PROVEEDOR: Record<Exclude<EstadoCaso, "pendiente">, EstadoProveedor
 
 export async function decidirCaso(casoId: string, estado: Exclude<EstadoCaso, "pendiente">, actor: string, comentario: string | null) {
   const db = almacen();
+  const comentarioFinal = comentario?.trim() || null;
   const caso = await db.casos.obtener(casoId);
   if (!caso) throw new ErrorValidacion("El caso no existe");
   if (caso.estado !== "pendiente" && caso.estado !== "pausado") throw new ErrorValidacion("El caso ya fue resuelto");
-  if (estado === "aprobado" && caso.decision_sugerida === "bloquear" && !comentario) {
+  if (estado === "bloqueado" && !comentarioFinal) {
+    throw new ErrorValidacion("Para bloquear el caso, escribe el motivo");
+  }
+  if (estado === "aprobado" && caso.decision_sugerida === "bloquear" && !comentarioFinal) {
     throw new ErrorValidacion("Para aprobar en contra de una sugerencia de bloqueo, escribe un comentario que lo justifique");
   }
 
-  const actualizado = await db.casos.actualizar(casoId, { estado, decidido_por: actor, decidido_en: new Date().toISOString(), comentario });
+  const actualizado = await db.casos.actualizar(casoId, { estado, decidido_por: actor, decidido_en: new Date().toISOString(), comentario: comentarioFinal });
 
   if (caso.tipo === "clabe" && caso.solicitud_id) {
     const s = await db.solicitudes.obtener(caso.solicitud_id);
@@ -128,7 +132,7 @@ export async function decidirCaso(casoId: string, estado: Exclude<EstadoCaso, "p
     await db.proveedores.actualizar(caso.proveedor_id, { estado: ESTADO_PROVEEDOR[estado] });
   }
 
-  await registrar(actor, `caso_${estado}`, "caso", casoId, { proveedor_id: caso.proveedor_id, tipo: caso.tipo, comentario });
+  await registrar(actor, `caso_${estado}`, "caso", casoId, { proveedor_id: caso.proveedor_id, tipo: caso.tipo, comentario: comentarioFinal });
   return actualizado;
 }
 
