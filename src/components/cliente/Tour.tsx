@@ -22,6 +22,11 @@ async function rutaPrimerCaso(): Promise<string> {
   return c ? `/expediente/${c.proveedor_id}` : "/bandeja";
 }
 
+async function rutaMapaPrimerCaso(): Promise<string> {
+  const r = await rutaPrimerCaso();
+  return r.startsWith("/expediente/") ? `/en-vivo?proveedor=${r.split("/").pop()}` : "/en-vivo";
+}
+
 async function crearIntentoFraude(): Promise<string> {
   const provs = (await (await fetch("/api/proveedores")).json()) as { id: string; estado: string; clabe: string | null }[];
   const p = provs.find((x) => x.estado === "aprobado" && x.clabe) ?? provs[0];
@@ -37,6 +42,7 @@ const PASOS: Paso[] = [
   { ruta: "/carga", objetivo: "carga-ejemplo", titulo: "Este es el lunes de Ana 👩‍💼", texto: "Ana es la única gestora de proveedores de su empresa. Hoy llegaron 500 proveedores nuevos. Toca el botón azul para revisarlos todos." },
   { ruta: "/carga", objetivo: "embudo", titulo: "500 revisados en segundos", texto: "Cada cuadrito es un proveedor. El sistema los compara con la lista negra del SAT y las sanciones internacionales. Los verdes se aprobaron solos: nadie tuvo que revisarlos." },
   { ruta: "/bandeja", objetivo: "bandeja", titulo: "Ana solo ve lo que importa", texto: "En lugar de 500, a Ana le llegan unos cuantos casos dudosos, ordenados del más peligroso al menos peligroso, explicados en palabras simples." },
+  { ruta: rutaMapaPrimerCaso, objetivo: "mapa", titulo: "🛰️ Así se extrae la información", texto: "Veamos por dentro el caso más urgente: el sistema consulta cada fuente en tiempo real. Los paquetes azules son preguntas; los de color, datos que regresan. Abajo aparecen los datos extraídos." },
   { ruta: rutaPrimerCaso, objetivo: "velocimetro", titulo: "¿Qué tan riesgoso es?", texto: "El medidor va de 0 (confiable) a 100 (peligro). Este proveedor está en rojo." },
   { ruta: rutaPrimerCaso, objetivo: "evidencia", titulo: "Y por qué, con pruebas", texto: "Cada prueba viene de una fuente oficial y está explicada sin tecnicismos. Si quieres el detalle técnico, está un clic más abajo." },
   { ruta: rutaPrimerCaso, objetivo: "decision", titulo: "Ana decide en un clic", texto: "Aprobar, pausar o bloquear. Su decisión queda registrada con su nombre y la hora, y se genera un expediente listo para una auditoría del SAT." },

@@ -21,7 +21,11 @@ Plataforma de verificación de proveedores con **gestión por excepción**: un s
 ## Pensada para cualquier persona
 
 - **Portada** que explica el problema, la solución y el resultado en 10 segundos.
-- **Demo guiada "El lunes de Ana"** (botón ▶ en el menú): 8 pasos que resaltan cada parte de la pantalla.
+- **Demo guiada "El lunes de Ana"** (botón ▶ en el menú): 9 pasos que resaltan cada parte de la pantalla.
+- **🛰️ Extracción en vivo** (`/en-vivo`):
+  - Un mapa que muestra en tiempo real cómo se consulta cada fuente, con paquetes que viajan entre el proveedor y cada fuente.
+  - Tarjetas con los datos extraídos y una consola con los tiempos reales del servidor.
+  - El servidor transmite cada evento al momento (`POST /api/en-vivo`, NDJSON).
 - **Lenguaje simple:** semáforo 🟢🟡🔴, frases cotidianas en lugar de términos técnicos y explicaciones ⓘ al pasar el cursor. El detalle técnico queda a un clic.
 - **Animaciones que muestran el proceso:**
   - el escaneo fuente por fuente al dar de alta un proveedor;

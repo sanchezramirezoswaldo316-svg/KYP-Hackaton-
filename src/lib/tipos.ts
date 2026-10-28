@@ -33,6 +33,8 @@ export interface Hallazgo {
   detalle: string;
   fecha_fuente: string | null;
   evidencia_url?: string | null;
+  // Datos extraídos de la fuente, para mostrarlos (por ejemplo, "Estatus": "definitivo").
+  datos?: Record<string, string>;
 }
 
 export interface Motivo {

@@ -7,7 +7,7 @@ import type {
 } from "./tipos.ts";
 import { clabeValida, normalizarRfc, normalizarTelefono, rfcValido } from "./validacion.ts";
 import type { EntradaAlta } from "./servicios-tipos.ts";
-import { verificarProveedor } from "./verificacion/index.ts";
+import { verificarProveedor, type EventoVerificacion } from "./verificacion/index.ts";
 import { iniciarLlamada, vozConfigurada } from "./voz/elevenlabs.ts";
 
 export const SISTEMA = "Sistema KYP";
@@ -31,7 +31,7 @@ export function validarAlta(e: EntradaAlta): string[] {
   return errores;
 }
 
-export async function altaProveedor(e: EntradaAlta, actor: string, fuentesExternas = true) {
+export async function altaProveedor(e: EntradaAlta, actor: string, fuentesExternas = true, alEvento?: (ev: EventoVerificacion) => void) {
   const errores = validarAlta(e);
   if (errores.length) throw new ErrorValidacion(errores.join("; "));
   const db = almacen();
@@ -55,12 +55,12 @@ export async function altaProveedor(e: EntradaAlta, actor: string, fuentesExtern
       await db.facturas.crear({ proveedor_id: proveedor.id, folio: e.factura_folio, monto: Number(e.factura_monto), fecha: new Date().toISOString().slice(0, 10) });
     }
   }
-  return verificar(proveedor, actor, fuentesExternas);
+  return verificar(proveedor, actor, fuentesExternas, [], alEvento);
 }
 
-export async function verificar(proveedor: Proveedor, actor: string, fuentesExternas = true, hallazgosExtra: Hallazgo[] = []) {
+export async function verificar(proveedor: Proveedor, actor: string, fuentesExternas = true, hallazgosExtra: Hallazgo[] = [], alEvento?: (ev: EventoVerificacion) => void) {
   const db = almacen();
-  const v = await db.verificaciones.crear(await verificarProveedor(proveedor, { fuentesExternas, hallazgosExtra }));
+  const v = await db.verificaciones.crear(await verificarProveedor(proveedor, { fuentesExternas, hallazgosExtra, alEvento }));
   await registrar(actor, "verificacion", "proveedor", proveedor.id, { puntaje: v.puntaje, decision: v.decision, fuentes_externas: fuentesExternas });
 
   // Cierra casos de alta pendientes anteriores: la nueva verificación los reemplaza.

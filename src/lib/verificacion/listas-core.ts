@@ -39,7 +39,10 @@ const NOMBRES_69: Record<string, string> = {
 export function consultar69B(datos: Datos69B, rfc: string): Hallazgo {
   const r = datos.rfc[rfc];
   if (!r) {
-    return { fuente: "sat_69b", resultado: "sin_coincidencia", detalle: `No aparece en el listado 69-B (${datos.registros.toLocaleString("es-MX")} RFC revisados)`, fecha_fuente: datos.actualizacion };
+    return {
+      fuente: "sat_69b", resultado: "sin_coincidencia", detalle: `No aparece en el listado 69-B (${datos.registros.toLocaleString("es-MX")} RFC revisados)`, fecha_fuente: datos.actualizacion,
+      datos: { "RFC buscado": rfc, "Registros revisados": datos.registros.toLocaleString("es-MX"), "Lista al": datos.actualizacion ?? "—", "Coincidencia": "ninguna" },
+    };
   }
   const [estatus, nombre, fecha] = r;
   return {
@@ -47,16 +50,23 @@ export function consultar69B(datos: Datos69B, rfc: string): Hallazgo {
     resultado: estatus,
     detalle: `${nombre}: listado 69-B, estatus "${NOMBRES_69B[estatus]}"${fecha ? `, publicado en el DOF el ${fecha}` : ""}`,
     fecha_fuente: fecha ?? datos.actualizacion,
+    datos: { "RFC buscado": rfc, "Nombre en la lista": nombre, "Estatus": NOMBRES_69B[estatus], "Publicado en el DOF": fecha ?? "—" },
   };
 }
 
 export function consultar69(datos: Datos69, rfc: string): Hallazgo {
   const r = datos.rfc[rfc];
   if (!r) {
-    return { fuente: "sat_69", resultado: "sin_coincidencia", detalle: "No aparece en los listados del Art. 69 (no localizados, exigibles, sentencias)", fecha_fuente: null };
+    return {
+      fuente: "sat_69", resultado: "sin_coincidencia", detalle: "No aparece en los listados del Art. 69 (no localizados, exigibles, sentencias)", fecha_fuente: null,
+      datos: { "RFC buscado": rfc, "Registros revisados": datos.registros.toLocaleString("es-MX"), "Coincidencia": "ninguna" },
+    };
   }
   const supuestos = r.map(([s, f]) => `${NOMBRES_69[s] ?? s}${f ? ` (desde ${f})` : ""}`).join("; ");
-  return { fuente: "sat_69", resultado: "listado", detalle: `Listado en el Art. 69 del CFF: ${supuestos}`, fecha_fuente: r[0][1] };
+  return {
+    fuente: "sat_69", resultado: "listado", detalle: `Listado en el Art. 69 del CFF: ${supuestos}`, fecha_fuente: r[0][1],
+    datos: { "RFC buscado": rfc, "Supuesto": r.map(([s]) => NOMBRES_69[s] ?? s).join(", "), "Desde": r.map(([, f]) => f ?? "—").join(", ") },
+  };
 }
 
 export const UMBRAL_HOMONIMO = 0.82;
@@ -93,13 +103,17 @@ export function consultarOfac(indice: IndiceOfac, razonSocial: string): Hallazgo
     if (s > mejorSim) { mejorSim = s; mejor = i; }
   }
 
+  const base = { "Nombre buscado": q || razonSocial, "Registros revisados": indice.datos.registros.toLocaleString("es-MX"), "Candidatos comparados": candidatos.size.toLocaleString("es-MX") };
   if (mejor >= 0 && mejorSim === 1) {
     const [id, nombre, , programa] = indice.datos.entidades[mejor];
-    return { fuente: "ofac", resultado: "coincidencia_exacta", detalle: `Coincide con "${nombre}" (SDN #${id}, programa ${programa})`, fecha_fuente: fecha };
+    return { fuente: "ofac", resultado: "coincidencia_exacta", detalle: `Coincide con "${nombre}" (SDN #${id}, programa ${programa})`, fecha_fuente: fecha, datos: { ...base, "Coincide con": nombre, "Similitud": "100%", "Programa": programa } };
   }
   if (mejor >= 0 && mejorSim >= UMBRAL_HOMONIMO) {
     const [id, nombre, , programa] = indice.datos.entidades[mejor];
-    return { fuente: "ofac", resultado: "coincidencia_parecida", detalle: `Nombre parecido (${Math.round(mejorSim * 100)}%) a "${nombre}" (SDN #${id}, programa ${programa}). Posible homónimo: revisar`, fecha_fuente: fecha };
+    return { fuente: "ofac", resultado: "coincidencia_parecida", detalle: `Nombre parecido (${Math.round(mejorSim * 100)}%) a "${nombre}" (SDN #${id}, programa ${programa}). Posible homónimo: revisar`, fecha_fuente: fecha, datos: { ...base, "Se parece a": nombre, "Similitud": `${Math.round(mejorSim * 100)}%`, "Programa": programa } };
   }
-  return { fuente: "ofac", resultado: "sin_coincidencia", detalle: `Sin coincidencias en la lista SDN (${indice.datos.registros.toLocaleString("es-MX")} registros)`, fecha_fuente: fecha };
+  return {
+    fuente: "ofac", resultado: "sin_coincidencia", detalle: `Sin coincidencias en la lista SDN (${indice.datos.registros.toLocaleString("es-MX")} registros)`, fecha_fuente: fecha,
+    datos: { ...base, "Más parecido": mejor >= 0 ? `${Math.round(mejorSim * 100)}% (no alcanza ${Math.round(UMBRAL_HOMONIMO * 100)}%)` : "ninguno" },
+  };
 }
