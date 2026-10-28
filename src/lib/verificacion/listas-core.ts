@@ -1,7 +1,7 @@
 // Lógica de consulta de listas oficiales, independiente de cómo se cargan los datos (testeable).
 
 import type { Estatus69B, Hallazgo } from "../tipos.ts";
-import { normalizarNombre, similitud } from "./nombres.ts";
+import { normalizarNombre, bigramas } from "./nombres.ts";
 
 export interface Datos69B {
   actualizacion: string | null;
@@ -37,7 +37,7 @@ const NOMBRES_69: Record<string, string> = {
 };
 
 export function consultar69B(datos: Datos69B, rfc: string): Hallazgo {
-  const r = datos.rfc[rfc];
+  const r = datos.rfc[rfc.trim().toUpperCase()];
   if (!r) {
     return { fuente: "sat_69b", resultado: "sin_coincidencia", detalle: `No aparece en el listado 69-B (${datos.registros.toLocaleString("es-MX")} RFC revisados)`, fecha_fuente: datos.actualizacion };
   }
@@ -51,7 +51,7 @@ export function consultar69B(datos: Datos69B, rfc: string): Hallazgo {
 }
 
 export function consultar69(datos: Datos69, rfc: string): Hallazgo {
-  const r = datos.rfc[rfc];
+  const r = datos.rfc[rfc.trim().toUpperCase()];
   if (!r) {
     return { fuente: "sat_69", resultado: "sin_coincidencia", detalle: "No aparece en los listados del Art. 69 (no localizados, exigibles, sentencias)", fecha_fuente: null };
   }
@@ -65,6 +65,8 @@ export interface IndiceOfac {
   datos: DatosOfac;
   normalizados: string[];
   porToken: Map<string, number[]>;
+  porBigrama: Map<string, [number, number][]>;
+  totales: number[];
 }
 
 export function indexarOfac(datos: DatosOfac): IndiceOfac {
@@ -72,34 +74,66 @@ export function indexarOfac(datos: DatosOfac): IndiceOfac {
   const porToken = new Map<string, number[]>();
   normalizados.forEach((n, i) => {
     for (const t of new Set(n.split(" "))) {
-      if (t.length < 3) continue;
+      if (!t) continue;
       const lista = porToken.get(t);
       if (lista) lista.push(i);
       else porToken.set(t, [i]);
     }
   });
-  return { datos, normalizados, porToken };
+  const porBigrama = new Map<string, [number, number][]>();
+  const totales = normalizados.map((n, i) => {
+    let total = 0;
+    for (const [b, cantidad] of bigramas(n)) {
+      total += cantidad;
+      const entradas = porBigrama.get(b) ?? [];
+      entradas.push([i, cantidad]);
+      porBigrama.set(b, entradas);
+    }
+    return total;
+  });
+  return { datos, normalizados, porToken, porBigrama, totales };
 }
 
 export function consultarOfac(indice: IndiceOfac, razonSocial: string): Hallazgo {
   const fecha = indice.datos.descargado_en.slice(0, 10);
   const q = normalizarNombre(razonSocial);
-  const candidatos = new Set<number>();
-  for (const t of q.split(" ")) for (const i of indice.porToken.get(t) ?? []) candidatos.add(i);
-
-  let mejor = -1, mejorSim = 0;
-  for (const i of candidatos) {
-    const s = similitud(q, indice.normalizados[i]);
-    if (s > mejorSim) { mejorSim = s; mejor = i; }
+  // Acumular intersección multiconjunto permite calcular Dice sin recorrer
+  // toda la lista ni reconstruir bigramas para cada candidato.
+  const comunes = new Map<number, number>();
+  const consultaBigramas = bigramas(q);
+  const total = [...consultaBigramas.values()].reduce((s, n) => s + n, 0);
+  if (q) for (const [b, cantidad] of consultaBigramas) {
+    for (const [i, frecuencia] of indice.porBigrama.get(b) ?? []) {
+      // Cota superior de Dice por longitudes: descartar solo lo imposible.
+      const longitud = indice.totales[i];
+      if (2 * Math.min(total, longitud) / (total + longitud) < UMBRAL_HOMONIMO) continue;
+      comunes.set(i, (comunes.get(i) ?? 0) + Math.min(cantidad, frecuencia));
+    }
   }
+  // También contempla nombres canónicos de una letra sin bigramas.
+  if (q) for (const i of indice.porToken.get(q) ?? []) comunes.set(i, comunes.get(i) ?? 0);
 
-  if (mejor >= 0 && mejorSim === 1) {
-    const [id, nombre, , programa] = indice.datos.entidades[mejor];
-    return { fuente: "ofac", resultado: "coincidencia_exacta", detalle: `Coincide con "${nombre}" (SDN #${id}, programa ${programa})`, fecha_fuente: fecha };
+  let mejor = -1, mejorSim = 0, mejorExacta = false;
+  const desempatar = (i: number, j: number) => {
+    const a = indice.datos.entidades[i], b = indice.datos.entidades[j];
+    return a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0) || (a[3] < b[3] ? -1 : a[3] > b[3] ? 1 : 0);
+  };
+  for (const [i, comun] of comunes) {
+    const exacta = q !== "" && q === indice.normalizados[i];
+    const s = exacta ? 1 : total + indice.totales[i] ? 2 * comun / (total + indice.totales[i]) : 0;
+    if (!exacta && s < UMBRAL_HOMONIMO) continue;
+    if (mejor < 0 || (exacta && !mejorExacta) || (exacta === mejorExacta && (s > mejorSim || (s === mejorSim && desempatar(i, mejor) < 0)))) {
+      mejor = i; mejorSim = s; mejorExacta = exacta;
+    }
   }
-  if (mejor >= 0 && mejorSim >= UMBRAL_HOMONIMO) {
+  if (mejor >= 0) {
     const [id, nombre, , programa] = indice.datos.entidades[mejor];
-    return { fuente: "ofac", resultado: "coincidencia_parecida", detalle: `Nombre parecido (${Math.round(mejorSim * 100)}%) a "${nombre}" (SDN #${id}, programa ${programa}). Posible homónimo: revisar`, fecha_fuente: fecha };
+    return {
+      fuente: "ofac", resultado: mejorExacta ? "coincidencia_exacta" : "coincidencia_parecida",
+      detalle: `${mejorExacta ? "Nombre canónico igual" : `Nombre parecido (similitud Dice ${mejorSim.toFixed(2)}; no es probabilidad de sanción)`} a "${nombre}" (SDN #${id}, programa ${programa}). ${mejorExacta ? "Identidad no confirmada; pendiente de revisión humana" : "Posible homónimo: revisar"}`,
+      fecha_fuente: fecha,
+      evidencia_url: `https://sanctionssearch.ofac.treas.gov/Details.aspx?id=${id}`,
+    };
   }
   return { fuente: "ofac", resultado: "sin_coincidencia", detalle: `Sin coincidencias en la lista SDN (${indice.datos.registros.toLocaleString("es-MX")} registros)`, fecha_fuente: fecha };
 }

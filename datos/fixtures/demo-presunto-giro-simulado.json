@@ -1,0 +1,48 @@
+{
+  "rfc": "SID1505291A4",
+  "simulado": true,
+  "guia": "Usar hallazgos_listas + web simulada; sustituir sin_sitio, no añadirlo. No inyectado en API ni datos oficiales.",
+  "hallazgos": [
+    {
+      "fuente": "sat_69b",
+      "resultado": "presunto",
+      "detalle": "SERVICIOS INDUSTRIALES DISEINCO, S.A. DE C.V.: listado 69-B, estatus \"presunto\", publicado en el DOF el 2025-10-24",
+      "fecha_fuente": "2025-10-24"
+    },
+    {
+      "fuente": "sat_69",
+      "resultado": "sin_coincidencia",
+      "detalle": "No aparece en los listados del Art. 69 (no localizados, exigibles, sentencias)",
+      "fecha_fuente": null
+    },
+    {
+      "fuente": "ofac",
+      "resultado": "sin_coincidencia",
+      "detalle": "Sin coincidencias en la lista SDN (17,561 registros)",
+      "fecha_fuente": "2026-10-28"
+    },
+    {
+      "fuente": "web",
+      "resultado": "giro_no_coincide",
+      "detalle": "SIMULADO: fixture de ensayo, no consulta Firecrawl ni evidencia oficial",
+      "fecha_fuente": null
+    }
+  ],
+  "resultado_esperado": {
+    "puntaje": 80,
+    "decision": "bloquear",
+    "bloqueo_directo": false,
+    "motivos": [
+      {
+        "regla": "69b_presunto",
+        "puntos": 60,
+        "descripcion": "Listado 69-B como presunto"
+      },
+      {
+        "regla": "web_giro",
+        "puntos": 20,
+        "descripcion": "El giro de su página web no coincide con lo facturado"
+      }
+    ]
+  }
+}

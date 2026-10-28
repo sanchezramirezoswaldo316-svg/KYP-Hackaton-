@@ -21,7 +21,7 @@ export const REGLAS: Regla[] = [
   { id: "ofac_exacta", fuente: "ofac", resultado: "coincidencia_exacta", puntos: 100, bloqueo_directo: true, descripcion: "Coincidencia exacta en lista OFAC" },
   { id: "ofac_parecida", fuente: "ofac", resultado: "coincidencia_parecida", puntos: 25, descripcion: "Coincidencia parecida en OFAC: revisar homónimo" },
   { id: "web_giro", fuente: "web", resultado: "giro_no_coincide", puntos: 20, descripcion: "El giro de su página web no coincide con lo facturado" },
-  { id: "web_sin_sitio", fuente: "web", resultado: "sin_sitio", puntos: 0, descripcion: "Sin página web (informativo; muchas pymes no tienen)" },
+  { id: "web_sin_sitio", fuente: "web", resultado: "sin_sitio", puntos: 10, descripcion: "El proveedor no registró página web" },
   { id: "noticias", fuente: "noticias", resultado: "noticias_negativas", puntos: 15, descripcion: "Noticias negativas relevantes" },
   { id: "dominio_reciente", fuente: "dominio", resultado: "dominio_reciente", puntos: 10, descripcion: "Dominio con menos de 6 meses" },
 ];
@@ -33,9 +33,10 @@ export function calcularPuntaje(hallazgos: Hallazgo[]): ResultadoPuntaje {
   const motivos: Motivo[] = [];
   let bloqueo_directo = false;
 
-  for (const h of hallazgos) {
-    const regla = REGLAS.find((r) => r.fuente === h.fuente && r.resultado === h.resultado);
-    if (!regla) continue;
+  // Cada regla aporta una sola vez, aunque haya varias evidencias del mismo resultado.
+  // El orden del catálogo mantiene motivos estables sin alterar los hallazgos originales.
+  for (const regla of REGLAS) {
+    if (!hallazgos.some((h) => h.fuente === regla.fuente && h.resultado === regla.resultado)) continue;
     motivos.push({ regla: regla.id, puntos: regla.puntos, descripcion: regla.descripcion });
     if (regla.bloqueo_directo) bloqueo_directo = true;
   }
