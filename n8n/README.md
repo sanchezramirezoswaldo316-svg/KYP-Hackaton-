@@ -4,6 +4,16 @@ La app ya hace la verificación completa por sí sola: listas SAT/OFAC, Firecraw
 
 Exporta aquí cada flujo como JSON (`monitoreo-sat.json`, `alertas.json`, etc.) para que quede versionado.
 
+## Prototipo de alta de Alan
+
+`alta-proveedor-prototipo.json` es una copia exportada del flujo de n8n de Alan. Recibe `POST /kyp-alta`, usa una rama de datos ficticios solo con `modo_demo: true` y una rama real para Firecrawl, RDAP y Claude. El flujo está **inactivo** y el nodo que enviaría hallazgos a la app está **desactivado**.
+
+La copia versionada no incluye referencias a las credenciales de la instancia de Alan. Después de importarla en otra instancia, hay que seleccionar las credenciales de Firecrawl y Claude antes de ejecutar la rama real. Tampoco incluye claves ni el valor de `WEBHOOK_SECRET`.
+
+Se ajustó la salida real a los tipos de esta app: `fuente` usa `web`, `noticias` y `dominio`; el dominio de menos de 182 días produce `dominio_reciente` y los demás `dominio_antiguo`. El nodo de retorno, todavía desactivado, está preparado para enviar solo `{ proveedor_id, hallazgos }`. `resumen_ia` permanece en la salida de n8n, pero `/api/webhooks/verificacion` no lo acepta actualmente.
+
+**Antes de conectar el prototipo:** acordar con Oswaldo si la app seguirá verificando las fuentes por sí misma o si delegará el alta a n8n. `POST /api/proveedores` ya consulta Firecrawl, noticias y dominio. Activar además el retorno de este flujo después del alta crearía otra verificación y podría contar dos veces las mismas señales de riesgo. El `proveedor_id` enviado a n8n debe ser un ID real creado por la app, no un ID ficticio de prueba.
+
 ## API disponible
 
 | Acción | Llamada |
