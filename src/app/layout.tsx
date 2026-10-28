@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { BannerModo } from "@/components/BannerModo";
 import { Navegacion } from "@/components/Navegacion";
+import { Tour } from "@/components/cliente/Tour";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "KYP · Know Your Provider",
-  description: "Verificación de proveedores con gestión por excepción",
+  description: "¿Sabes a quién le estás pagando? Revisión automática de proveedores contra el SAT y sanciones internacionales.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Navegacion />
         <BannerModo />
         <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <Tour />
       </body>
     </html>
   );

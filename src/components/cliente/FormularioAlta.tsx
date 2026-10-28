@@ -1,46 +1,59 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
+import { useCallback, useState } from "react";
+import { Escaner } from "./Escaner";
 import { enviar } from "./peticion.ts";
 
 const CAMPOS = [
-  { nombre: "rfc", etiqueta: "RFC", requerido: true, ayuda: "12 caracteres (moral) o 13 (física)" },
-  { nombre: "razon_social", etiqueta: "Razón social", requerido: true },
-  { nombre: "telefono_registrado", etiqueta: "Teléfono del representante", requerido: true, ayuda: "A este número llamará el agente de voz" },
-  { nombre: "sitio_web", etiqueta: "Página web", ayuda: "Se analiza con Firecrawl" },
-  { nombre: "giro_declarado", etiqueta: "Qué factura (giro)", ayuda: "Se compara con su página web" },
-  { nombre: "clabe", etiqueta: "CLABE", ayuda: "18 dígitos" },
-  { nombre: "monto_anual", etiqueta: "Monto anual estimado (MXN)", tipo: "number" },
-  { nombre: "factura_folio", etiqueta: "Folio de su última factura", ayuda: "Lo usa el agente para confirmar identidad" },
+  { nombre: "rfc", etiqueta: "RFC", requerido: true, ayuda: "La identificación fiscal: 12 caracteres (empresa) o 13 (persona)" },
+  { nombre: "razon_social", etiqueta: "Nombre de la empresa", requerido: true },
+  { nombre: "telefono_registrado", etiqueta: "Teléfono del representante", requerido: true, ayuda: "A este número llamaremos si alguien pide cambiar su cuenta" },
+  { nombre: "sitio_web", etiqueta: "Página web", ayuda: "Revisaremos si lo que dice hacer coincide con lo que vende" },
+  { nombre: "giro_declarado", etiqueta: "¿Qué nos vende?", ayuda: "Ej.: harina de trigo, transporte, empaques" },
+  { nombre: "clabe", etiqueta: "Cuenta bancaria (CLABE)", ayuda: "18 dígitos" },
+  { nombre: "monto_anual", etiqueta: "¿Cuánto le compramos al año? (MXN)", tipo: "number" },
+  { nombre: "factura_folio", etiqueta: "Folio de su última factura", ayuda: "Sirve para confirmar su identidad por teléfono" },
   { nombre: "factura_monto", etiqueta: "Monto de su última factura (MXN)", tipo: "number" },
 ] as const;
 
+type Respuesta = { proveedor: { id: string; razon_social: string }; verificacion: never };
+
 export function FormularioAlta() {
-  const router = useRouter();
-  const [ocupado, setOcupado] = useState(false);
+  const [datos, setDatos] = useState<Record<string, string> | null>(null);
+  const [id, setId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function enviarFormulario(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const datos = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
-    setOcupado(true);
-    setError(null);
+  const ejecutar = useCallback(async () => {
     try {
-      const r = await enviar<{ proveedor: { id: string } }>("/api/proveedores", {
+      const r = await enviar<Respuesta>("/api/proveedores", {
         ...datos,
-        monto_anual: Number(datos.monto_anual) || 0,
-        factura_monto: Number(datos.factura_monto) || null,
+        monto_anual: Number(datos!.monto_anual) || 0,
+        factura_monto: Number(datos!.factura_monto) || null,
       });
-      router.push(`/expediente/${r.proveedor.id}`);
+      setId(r.proveedor.id);
+      return r;
     } catch (e) {
       setError((e as Error).message);
-      setOcupado(false);
+      setDatos(null);
+      throw e;
     }
+  }, [datos]);
+
+  if (datos) {
+    return (
+      <Escaner
+        nombre={datos.razon_social}
+        ejecutar={ejecutar}
+        alTerminar={() => id && (
+          <Link href={`/expediente/${id}`} className="inline-block rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Ver expediente completo →</Link>
+        )}
+      />
+    );
   }
 
   return (
-    <form onSubmit={enviarFormulario} className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={(e) => { e.preventDefault(); setError(null); setDatos(Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>); }} className="grid gap-4 sm:grid-cols-2">
       {CAMPOS.map((c) => (
         <label key={c.nombre} className="block text-sm">
           <span className="font-medium">{c.etiqueta}{"requerido" in c && c.requerido && " *"}</span>
@@ -49,9 +62,7 @@ export function FormularioAlta() {
         </label>
       ))}
       <div className="sm:col-span-2">
-        <button disabled={ocupado} className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50">
-          {ocupado ? "Verificando en todas las fuentes…" : "Dar de alta y verificar"}
-        </button>
+        <button className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">🔍 Dar de alta y revisar</button>
         {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
       </div>
     </form>

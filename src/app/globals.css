@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes latido {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes llamando {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-14deg); }
+  40% { transform: rotate(14deg); }
+  60% { transform: rotate(-8deg); }
+  80% { transform: rotate(8deg); }
+}
+
+.animar-aparecer { animation: aparecer 0.45s ease both; }
+.animar-latido { animation: latido 1.6s ease-in-out infinite; }
+.animar-llamando { animation: llamando 1s ease-in-out infinite; display: inline-block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-aparecer, .animar-latido, .animar-llamando { animation: none !important; }
+  * { transition-duration: 0ms !important; }
+}

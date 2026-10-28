@@ -18,6 +18,19 @@ Plataforma de verificación de proveedores con **gestión por excepción**: un s
 - **Expediente PDF** con toda la evidencia, la bitácora y una huella SHA-256.
 - **ERP simulado** con facturas liberadas, en pausa o bloqueadas, y **panel de productividad** con horas manuales contra horas con KYP.
 
+## Pensada para cualquier persona
+
+- **Portada** que explica el problema, la solución y el resultado en 10 segundos.
+- **Demo guiada "El lunes de Ana"** (botón ▶ en el menú): 8 pasos que resaltan cada parte de la pantalla.
+- **Lenguaje simple:** semáforo 🟢🟡🔴, frases cotidianas en lugar de términos técnicos y explicaciones ⓘ al pasar el cursor. El detalle técnico queda a un clic.
+- **Animaciones que muestran el proceso:**
+  - el escaneo fuente por fuente al dar de alta un proveedor;
+  - el velocímetro de riesgo;
+  - la cuadrícula de 500 proveedores pintándose;
+  - la llamada como conversación de chat;
+  - 30 auditores que se vuelven 1.
+- Las animaciones respetan la preferencia del sistema de "reducir movimiento".
+
 ## Arrancar
 
 ```bash

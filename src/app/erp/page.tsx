@@ -9,6 +9,7 @@ import { estadoPago } from "@/lib/servicios.ts";
 export const dynamic = "force-dynamic";
 
 const TONO = { liberada: "verde", pausada: "ambar", bloqueada: "rojo" } as const;
+const TEXTO = { liberada: "✅ Lista para pago", pausada: "⏸️ Congelada", bloqueada: "⛔ Bloqueada" } as const;
 
 export default async function Erp() {
   await listo();
@@ -22,13 +23,13 @@ export default async function Erp() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">ERP simulado · Cuentas por pagar</h1>
-        <p className="text-sm text-slate-600">Así recibiría el ERP (SAP, NetSuite, CONTPAQi) las órdenes de KYP. La conexión real es fase Enterprise.</p>
+        <h1 className="text-2xl font-semibold">💳 Pagos a proveedores</h1>
+        <p className="text-slate-600">Así se vería en el sistema contable de la empresa (SAP, CONTPAQi…): las facturas de proveedores con riesgo no se pagan hasta que una persona decida. <span className="text-xs text-slate-500">(Simulación: la conexión real es fase Enterprise.)</span></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {(["liberada", "pausada", "bloqueada"] as const).map((e) => (
           <div key={e} className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="text-sm capitalize text-slate-500">{e}s</div>
+            <div className="text-sm text-slate-500">{TEXTO[e]}</div>
             <div className="text-xl font-semibold">{pesos(totales[e])}</div>
           </div>
         ))}
@@ -45,7 +46,7 @@ export default async function Erp() {
                   <td className="p-3"><Link href={`/expediente/${p.id}`} className="text-blue-800 hover:underline">{p.razon_social}</Link></td>
                   <td className="p-3 text-slate-600">{fecha(f.fecha)}</td>
                   <td className="p-3 text-right">{pesos(f.monto)}</td>
-                  <td className="p-3"><Etiqueta tono={TONO[e]}>{e}</Etiqueta></td>
+                  <td className="p-3"><Etiqueta tono={TONO[e]}>{TEXTO[e]}</Etiqueta></td>
                 </tr>
               );
             })}
