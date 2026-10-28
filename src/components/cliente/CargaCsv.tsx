@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MAX_CSV_BYTES, validarFilasCsv, type FilaValidada } from "@/lib/csv.ts";
+import { DatoClave } from "@/components/ui/DatoClave";
 import { enviar } from "./peticion.ts";
 
 const BLOQUE = 50;
@@ -103,12 +104,14 @@ export function CargaCsv() {
   return (
     <div className="space-y-5">
       {estado === "inicio" && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <button data-tour="carga-ejemplo" onClick={usarEjemplo} className="animar-latido rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow hover:bg-blue-800">
-            ▶ Usar los 500 proveedores de ejemplo
+        <div className="rounded-control border border-dashed border-borde-fuerte bg-lienzo p-6 text-center">
+          <p className="text-sm font-medium">Arrastra un CSV o selecciona un archivo</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <button data-tour="carga-ejemplo" onClick={usarEjemplo} className="min-h-9 rounded-control bg-marca px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[.97] hover:bg-marca-2">
+            Usar proveedores de ejemplo
           </button>
-          <span className="text-sm text-slate-500">o sube tu archivo:</span>
-          <input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && desdeArchivo(e.target.files[0])} className="text-sm" />
+          <label className="cursor-pointer rounded-control border border-borde-fuerte bg-panel px-4 py-2 text-sm font-medium hover:bg-white"><span>Seleccionar CSV</span><input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && desdeArchivo(e.target.files[0])} className="sr-only" /></label>
+          </div>
         </div>
       )}
       {estado === "inicio" && (
@@ -144,17 +147,10 @@ export function CargaCsv() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5 text-center">
-              <div className="text-5xl font-bold text-emerald-700">{aprobados}</div>
-              <div className="text-lg font-semibold text-emerald-900">✅ Aprobados solos</div>
-              <p className="text-sm text-emerald-800">Nadie tuvo que revisarlos: no hay señales de riesgo.</p>
-            </div>
-            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 text-center">
-              <div className="text-5xl font-bold text-amber-700">{dudosos}</div>
-              <div className="text-lg font-semibold text-amber-900">👩‍💼 Necesitan a una persona</div>
-              <p className="text-sm text-amber-800">{cuenta("bloquear")} con señales graves y {cuenta("revisar")} por revisar.</p>
-            </div>
+          <div className="grid gap-4 border-y border-borde py-4 sm:grid-cols-3">
+            <DatoClave etiqueta="Válidas / aprobadas" valor={aprobados} detalle="Resueltas automáticamente" />
+            <DatoClave etiqueta="Revisión humana" valor={dudosos} detalle={`${cuenta("bloquear")} bloqueo · ${cuenta("revisar")} revisión`} />
+            <DatoClave etiqueta="Con errores" valor={cuenta("error")} detalle="No se enviaron" />
           </div>
 
           {terminado && (
