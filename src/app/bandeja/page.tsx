@@ -42,7 +42,7 @@ export default async function Bandeja() {
             const barra = c.decision_sugerida === "bloquear" ? "bg-red-500" : "bg-amber-400";
             return (
               <li key={c.id} className="animar-aparecer" style={{ animationDelay: `${Math.min(i, 10) * 60}ms` }}>
-                <Link href={`/expediente/${p.id}`} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
+                <Link href={`/expediente/${c.proveedor_id}`} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
                   <span className={`w-2 shrink-0 ${barra}`} />
                   <div className="flex flex-1 flex-wrap items-center gap-4 p-4">
                     <div className="min-w-0 flex-1">
