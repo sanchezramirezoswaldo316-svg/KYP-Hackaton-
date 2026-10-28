@@ -22,7 +22,7 @@ Alcance: rama `codex/axel-verificacion-voz`, servicios de CLABE, callbacks, evid
 
 ## Validaciones
 
-- 32 pruebas Node: incluye cuatro resultados, teléfono registrado, pausa antes de marcar, correlación, firma, duplicados, conflictos, fallos, recuperación de estado, PostgreSQL y errores del cliente.
+- 106 pruebas Node sobre el conjunto integrado: incluye cuatro resultados, teléfono registrado, pausa antes de marcar, correlación, firma, duplicados, conflictos, fallos, recuperación de estado, PostgreSQL y errores del cliente.
 - 14 comprobaciones HTTP: firma, JSON, agente, correlación, webhook genérico, audio, Basic malformado, validación de CLABE, 404 y origen cruzado.
 - Dos comprobaciones HTTP adicionales con `--sin-password`: página y POST bloqueados cuando hay telefonía sin contraseña.
 - TypeScript, ESLint y build Next aprobados después de los cambios; lockfile comprobado con npm ci --dry-run.
@@ -48,4 +48,4 @@ La comprobación de merge con las ramas remotas conocidas se realiza antes de su
 
 ## Actualización de integración local
 
-Se incorporó main hasta 2d24fe0, preservando automatización, portal y puntaje. Las dos migraciones de voz se renombraron a 0003/0004 para no colisionar con 0002_automatizacion del equipo. Las 102 pruebas conjuntas pasan; también se verificó por HTTP el recorrido local y los contratos de n8n con un receptor ficticio. Ver DEMO-LOCAL.md. No se ha validado telefonía ni cuentas externas reales.
+Se incorporó main hasta bb5a259 (incluye la última integración de Samuel), preservando automatización, portal y puntaje. Las dos migraciones de voz se renombraron a 0003/0004 para no colisionar con 0002_automatizacion del equipo. Las 106 pruebas conjuntas pasan; también se verificó por HTTP el recorrido local y los contratos de n8n con un receptor ficticio. Ver DEMO-LOCAL.md. No se ha validado telefonía ni cuentas externas reales.
