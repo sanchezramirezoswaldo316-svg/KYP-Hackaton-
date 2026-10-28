@@ -45,9 +45,11 @@
 - `datos/fixtures/demo-presunto-giro-simulado.json` entrega un RFC presunto real del snapshot y un hallazgo web explícitamente simulado, con resultado 80 calculado. El ensayo sustituye `sin_sitio` por `giro_no_coincide`; no sumar ambas señales si se pretende mostrar 80.
 - El flujo CSV actual no inyecta este fixture ni evidencia web. Pendiente decidir cómo presentarlo, identificado como simulado, o aportar web real. No alterar API/pantallas/servicios desde el módulo de Ulises. Esta escena es independiente del lote 470/30.
 
-## Hallazgo del cierre: marcador durante recuperación
+## Corrección del marcador durante recuperación
 
 - Responsable: Ulises, revisión de integración por Oswaldo.
-- Reproducción aislada: interrupción después de escribir `datos/ulises-generacion.json` y antes de quitar journal. `recuperar` restaura los tres JSON anteriores, pero deja el marcador nuevo.
-- Pendiente técnico: guardar/restaurar el marcador o distinguir commit completo inequívocamente; agregar prueba de esta ventana. No se ha corregido en la auditoría ni queda cubierto por las 83 pruebas verdes. Contratos compartidos no requieren cambios.
-- No certificar aún publicación/recuperación completamente terminada. Detalles en `datos/ENTREGA_ULISES.md`.
+- El journal v2 conserva el marcador anterior byte por byte (base64) o su ausencia. Recuperar restaura los tres JSON y después el marcador; retira el bloqueo únicamente al completar ambos pasos.
+- La publicación y restauración del marcador usan archivo temporal y rename. Si falla la recuperación, se conserva el respaldo/bloqueo para reintentar sin un escritor activo.
+- Pruebas nuevas cubren fallo posterior al marcador, interrupción abrupta, marcador previo presente/ausente, recuperación repetida y nueva publicación exitosa.
+- Journals antiguos sin metadatos del marcador se rechazan sin tocar destinos ni quitar bloqueo: requieren recuperación manual. No se inventa la generación anterior.
+- Este cierre no cambia los pendientes de vigencia SAT, integración en vivo ni garantías físicas de fsync.

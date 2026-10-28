@@ -80,7 +80,7 @@ test('publicación fallida recupera todos los bytes; recuperación idempotente',
     // Simular interrupción posterior al respaldo preparado y escritura parcial.
     await mkdir(journal);
     for(const name of ARCHIVOS) await writeFile(path.join(journal,name),'original');
-    await writeFile(path.join(journal,'preparado.json'),JSON.stringify(ARCHIVOS));
+    await writeFile(path.join(journal,'preparado.json'),JSON.stringify({version:2,archivos:ARCHIVOS,marcador:null}));
     await writeFile(path.join(dir,ARCHIVOS[0]),'parcial');
     await recuperar(dir,journal);
     for(const name of ARCHIVOS) assert.equal(await readFile(path.join(dir,name),'utf8'),'original');
@@ -125,4 +125,59 @@ test('lector frío no acepta conjunto bloqueado y caché conserva generación í
     const estable=spawnSync(process.execPath,['--input-type=module','-e',`import assert from 'node:assert/strict'; import fs from 'node:fs'; import {revisar69B,revisar69,infoListas} from ${JSON.stringify(modulo)}; const antes=infoListas(); const h=revisar69B('AAA010101AAA'); fs.writeFileSync('src/data/sat-69.json','inválido'); assert.deepEqual(infoListas(),antes); assert.deepEqual(revisar69B(' aaa010101aaa '),h); revisar69('AAA010101AAA');`],{cwd:dir,encoding:'utf8'});
     assert.equal(estable.status,0,estable.stderr);
   } finally { await rm(dir,{recursive:true,force:true}); }
+});
+
+for (const anterior of [null, '{ "generacion": "anterior", "extra": true }\n']) {
+  test(`fallo tras publicar marcador restaura listas y marcador ${anterior === null ? 'ausente' : 'byte a byte'}`, async () => {
+    const raiz = await mkdtemp(path.join(tmpdir(), 'sat-marcador-'));
+    const dir = path.join(raiz, 'listas');
+    const journal = path.join(raiz, 'respaldo');
+    const marca = path.join(raiz, 'ulises-generacion.json');
+    try {
+      await mkdir(dir);
+      for (const name of ARCHIVOS) await writeFile(path.join(dir, name), 'original');
+      if (anterior !== null) await writeFile(marca, anterior);
+      const conjunto = Object.fromEntries(ARCHIVOS.map(n => [n, {descargado_en:'nueva'}]));
+      await assert.rejects(publicar(dir, conjunto, undefined, journal, async () => {
+        assert.equal(JSON.parse(await readFile(marca, 'utf8')).generacion, 'nueva');
+        throw new Error('caída después del marcador');
+      }), /caída después del marcador/);
+      for (const name of ARCHIVOS) assert.equal(await readFile(path.join(dir, name), 'utf8'), 'original');
+      if (anterior === null) await assert.rejects(readFile(marca), {code:'ENOENT'});
+      else assert.equal(await readFile(marca, 'utf8'), anterior);
+      await assert.rejects(readFile(path.join(journal, 'preparado.json')), {code:'ENOENT'});
+      await recuperar(dir, journal);
+      // Simular caída abrupta: quedan journal preparado, listas y marcador nuevos.
+      await mkdir(journal);
+      for (const name of ARCHIVOS) {
+        await writeFile(path.join(journal, name), 'original');
+        await writeFile(path.join(dir, name), 'nuevo');
+      }
+      await writeFile(path.join(journal, 'preparado.json'), JSON.stringify({
+        version:2, archivos:ARCHIVOS, marcador:anterior === null ? null : Buffer.from(anterior).toString('base64'),
+      }));
+      await writeFile(marca, '{"generacion":"nueva"}');
+      await recuperar(dir, journal);
+      await recuperar(dir, journal);
+      for (const name of ARCHIVOS) assert.equal(await readFile(path.join(dir, name), 'utf8'), 'original');
+      if (anterior === null) await assert.rejects(readFile(marca), {code:'ENOENT'});
+      else assert.equal(await readFile(marca, 'utf8'), anterior);
+      await publicar(dir, conjunto, undefined, journal);
+      assert.equal(JSON.parse(await readFile(marca, 'utf8')).generacion, 'nueva');
+      for (const name of ARCHIVOS) assert.equal(JSON.parse(await readFile(path.join(dir, name), 'utf8')).descargado_en, 'nueva');
+    } finally { await rm(raiz, {recursive:true, force:true}); }
+  });
+}
+
+test('respaldo antiguo sin marcador conserva bloqueo y archivos para recuperación manual', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'sat-journal-antiguo-'));
+  const journal = path.join(dir, 'respaldo');
+  try {
+    await mkdir(journal);
+    for (const name of ARCHIVOS) await writeFile(path.join(dir, name), 'sin tocar');
+    await writeFile(path.join(journal, 'preparado.json'), JSON.stringify(ARCHIVOS));
+    await assert.rejects(recuperar(dir, journal), /antiguo o inválido/);
+    for (const name of ARCHIVOS) assert.equal(await readFile(path.join(dir, name), 'utf8'), 'sin tocar');
+    assert.deepEqual(JSON.parse(await readFile(path.join(journal, 'preparado.json'), 'utf8')), ARCHIVOS);
+  } finally { await rm(dir, {recursive:true, force:true}); }
 });

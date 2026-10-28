@@ -2,7 +2,7 @@
 
 Fecha: 2026-10-28. Rama `ulises/puntaje`; base `cc67a9a`. Revisión contra secciones 8 y 15 de `Proyecto_KYP_Documento_General.pdf`, README, contratos y línea base local. `main` no tiene commits adicionales respecto de esa base; no se consultó el remoto en esta etapa. No se encontraron AGENTS.md aplicables en las revisiones del workspace.
 
-**Estado: validación automatizada verde y diff disponible para revisión; no declarar cerrada la recuperación de listas.** Se reprodujo un hallazgo pendiente del marcador de generación, descrito abajo. La descarga oficial reciente y la integración en vivo tampoco se certifican.
+**Estado: corregido el rollback del marcador de generación y añadidas pruebas de regresión.** La auditoría original de 83 pruebas se conserva como evidencia histórica; la corrección posterior pasa 86 pruebas en una copia aislada del workspace. La descarga oficial reciente y la integración en vivo tampoco se certifican.
 
 ## Qué cambió y qué se comprobó
 
@@ -30,7 +30,7 @@ Entorno: macOS arm64, Apple M2, 8 GiB, Node v24.3.0, npm 11.4.2. Dependencias ya
 | `git diff --check` | Sin errores. |
 | Comparación de contratos/dependencias/snapshots con `cc67a9a` | Idénticos byte a byte. |
 | Revisión de rutas y escaneo de credenciales | Sin rutas fuera de perímetro; no se detectaron credenciales en los archivos cambiados mediante revisión y patrones de claves privadas/tokens conocidos. No equivale a auditar todo el historial. |
-| Recuperación tras interrupción posterior al marcador | **Hallazgo pendiente reproducido**, no cubierto por el éxito de las 83 pruebas. |
+| Recuperación tras interrupción posterior al marcador | Hallazgo de la auditoría original, corregido posteriormente con tres pruebas nuevas; véase la sección de corrección. |
 
 El primer intento del auxiliar de auditoría excedió el buffer predeterminado de Node al leer un JSON histórico vía git. Se repitió con buffer suficiente y terminó correctamente; no fue un fallo del módulo ni dejó un bloqueo pendiente. Persiste la advertencia previa MODULE_TYPELESS_PACKAGE_JSON; no se cambió package.json.
 
@@ -58,13 +58,13 @@ No se ejecutó `npm run listas` contra fuentes de red ni se modificaron los snap
 - Medición OFAC registrada en la etapa anterior: ~1.318 s por 500 búsquedas locales, índice ~88 ms, mismo snapshot OFAC pero anterior composición del CSV. No se repitió con el nuevo CSV en este cierre y no se presenta como medición del endpoint ni rendimiento de producción.
 - No se comprobó Firecrawl, n8n, LLM, Supabase, UI en navegador, llamadas, despliegue ni webhooks en vivo. La evidencia web del ensayo es simulada.
 
-## Hallazgo pendiente de recuperación (Ulises)
+## Corrección de recuperación (Ulises)
 
-Prioridad: corregir antes de considerar cerrada la publicación/recuperación de listas. `scripts/ulises/publicacion.mjs` guarda/restaura los tres JSON, pero no guarda/restaura `datos/ulises-generacion.json`.
+El journal v2 guarda las tres listas y los bytes del marcador anterior (o su ausencia). Rollback restaura ambos antes de quitar el bloqueo; el marcador se escribe mediante temporal y rename. Si la recuperación falla, se conserva el journal para reintentar.
 
-Reproducción aislada realizada: simular una caída después de reemplazar los tres archivos y escribir el marcador nuevo, pero antes de retirar el journal. Con respaldos marcados `anterior` y marcador `nueva`, ejecutar `recuperar`. Resultado observado: los tres JSON vuelven a `anterior`; el marcador sigue en `nueva`. No se mezclaron los tres JSON, pero el identificador de la versión publicada deja de corresponder a sus bytes.
+Las nuevas pruebas reproducen la ventana posterior al marcador con fallo controlado e interrupción abrupta, incluyendo marcador anterior presente/ausente, idempotencia y publicación posterior exitosa. Las pruebas de regresión fallan con el código original y pasan con la corrección. Suite posterior: 86/86 en copia aislada; lint correcto. La tabla de 83 pruebas anterior corresponde a la auditoría previa, no a esta corrección.
 
-Pendiente: incorporar el marcador al protocolo de commit/rollback (o reconocer commit completo de forma inequívoca) y añadir prueba de interrupción en esa ventana. No se cambió la implementación durante esta auditoría ni se ocultó el hallazgo tras las pruebas verdes. La recuperación sigue requiriendo ausencia de escritor activo; no hay garantía ante corrupción física ni pérdida de energía sin fsync.
+Journals antiguos sin copia del marcador se rechazan sin quitar el bloqueo ni modificar destinos; requieren recuperación manual. La recuperación sigue requiriendo ausencia de escritor activo. No se añade garantía ante corrupción física o pérdida de energía sin fsync.
 
 ## Resultados y reinicio de demo
 
@@ -86,7 +86,7 @@ Para mostrar 500: entorno local dedicado en memoria → panel **Reiniciar demo**
 - Alan aporta hallazgos/evidencia web en el contrato vigente; IA puede describir/comparar contenido, nunca calcular puntos. El fixture separado identifica qué es simulado. No requiere modificaciones de tipos.
 - Oswaldo conserva revisión humana, pagos, persistencia y decisión final. Un error del lector durante publicación debe tratarse como fallo técnico, no convertirse en sin_coincidencia. Procesos con caché conservan su conjunto; reiniciar para adoptar una nueva generación.
 - Política del PDF implementada: pesos, umbrales, bloqueos sugeridos, revisión humana. Políticas **adicionales no activadas**: revisión técnica sin puntos ante fallo oficial, antigüedad máxima por fuente y precedencia entre hallazgos contradictorios. Hoy `[]` y solo `error` dan 0/liberar. Reglas contradictorias distintas conservan sus efectos; el motor no declara cuál estatus es vigente. El parser rechaza eventos ambiguos en una nueva importación; no depura silenciosamente hallazgos externos del contrato.
-- Los pendientes detallados están en `datos/pendientes-integracion.md`, incluido el marcador de generación. Sin tablas/migraciones nuevas ni autorización global sobre verificacion.
+- Los pendientes detallados están en `datos/pendientes-integracion.md`, incluida la corrección del marcador de generación. Sin tablas/migraciones nuevas ni autorización global sobre verificacion.
 
 ## Guion fiscal de 40 segundos (ensayo offline identificado)
 
@@ -104,4 +104,4 @@ La preparación encontró el repositorio anidado limpio en cc67a9a. El delta act
 
 `src/lib/tipos.ts`, `servicios-tipos.ts`, `verificacion/index.ts`, `servicios.ts`, almacen, app, components, PDF, voz, n8n, Supabase, configuraciones, .env y dependencias están fuera del diff. No hubo push, PR abierto, merge ni despliegue. Los archivos nuevos sin seguimiento también forman parte de la entrega: deben incluirse al preparar el commit; `git diff` por sí solo no los muestra.
 
-Título y descripción propuestos en `datos/PR_ULISES.md`. La revisión debe conservar visible el pendiente de recuperación y la validación SAT reciente aún no realizada.
+Título y descripción propuestos en `datos/PR_ULISES.md`. La revisión debe conservar visibles los límites de recuperación y la validación SAT reciente aún no realizada.
