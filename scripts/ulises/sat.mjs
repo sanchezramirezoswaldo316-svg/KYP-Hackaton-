@@ -35,6 +35,10 @@ export const COLUMNAS_DOF = {
   presunto:'Publicación DOF presuntos', desvirtuado:'Publicación DOF desvirtuados',
   definitivo:'Publicación DOF definitivos', sentencia_favorable:'Publicación DOF sentencia favorable',
 };
+/**
+ * @param {Uint8Array} bytes
+ * @param {{ tipo: string, url: string, supuesto?: string, descargado_en: string }} opciones
+ */
 export function importarSat(bytes, {tipo, url, supuesto, descargado_en}) {
   let text;
   try { text = new TextDecoder('utf-8', {fatal:true}).decode(bytes); }
@@ -49,6 +53,7 @@ export function importarSat(bytes, {tipo, url, supuesto, descargado_en}) {
   const estado = tipo === '69b' ? col('Situación del contribuyente') : null;
   const fechas = tipo === '69b' ? Object.fromEntries(Object.entries(COLUMNAS_DOF).map(([e,c])=>[e,col(c)])) : {publicacion:col('Fecha de primera publicación')};
   if (tipo !== '69b' && !['no_localizado','exigible','sentencia'].includes(supuesto)) throw new Error('Supuesto fuera del MVP');
+  /** @type {Record<string, any>} */
   const rfc = {}; const errores = []; let validos=0, duplicados=0;
   for (const [i,row] of rows.slice(start+1).entries()) {
     try {
@@ -90,6 +95,7 @@ export function importarSat(bytes, {tipo, url, supuesto, descargado_en}) {
   return {fuente:`SAT · Art. ${tipo === '69b' ? '69-B' : '69'} CFF`,url,actualizacion,publicado_en:actualizacion,descargado_en,sha256:createHash('sha256').update(bytes).digest('hex'),parser_version:VERSION,conteos,registros:Object.keys(rfc).length,rfc};
 }
 export function agrupar69(listas) {
+  /** @type {Record<string, any>} */
   const rfc = {};
   for (const lista of listas) for (const [key,values] of Object.entries(lista.rfc)) {
     rfc[key] ??= [];

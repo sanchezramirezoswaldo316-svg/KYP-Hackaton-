@@ -4,10 +4,17 @@ import { readFileSync } from 'node:fs';
 import { generarDemo, contextoListas } from '../../../scripts/ulises/demo.mjs';
 import { filasAAltas } from '../csv.ts';
 import { calcularPuntaje } from '../puntaje/reglas.ts';
+import type { Hallazgo, ResultadoPuntaje } from '../tipos.ts';
 import { clabeValida, rfcValido, normalizarTelefono } from '../validacion.ts';
 const leer=(n:string)=>JSON.parse(readFileSync(`src/data/${n}.json`,'utf8'));
 const listas={sat69b:leer('sat-69b'),sat69:leer('sat-69'),ofac:leer('ofac-sdn')};
 const demo=generarDemo(listas);
+interface CasoDemo {
+  rfc: string; categoria: string; origen: { fuente: string; evidencia: string };
+  hallazgos_listas: Hallazgo[]; resultado_solo_listas: ResultadoPuntaje; resultado_esperado: ResultadoPuntaje;
+}
+const casosDemo: CasoDemo[] = demo.manifiesto.casos;
+const filasDemo: { rfc: string; razon_social: string }[] = demo.filas;
 
 test('regeneración determinista, fecha no altera datos funcionales y artefactos coinciden',()=>{
   const otra=generarDemo(listas,{generado_en:'2030-01-01T00:00:00Z'});
@@ -36,7 +43,7 @@ test('470/30 calculado con consultas reales y motor, incluyendo cruces',()=>{
   const evaluar=contextoListas(listas);
   const conteos={liberar:0,revisar:0,bloquear:0};
   for(const f of demo.filas){
-    const c=demo.manifiesto.casos.find(c=>c.rfc===f.rfc)!;
+    const c=casosDemo.find(c=>c.rfc===f.rfc)!;
     const hs=evaluar(f);
     assert.deepEqual(c.hallazgos_listas,hs);
     assert.deepEqual(c.resultado_solo_listas,calcularPuntaje(hs));
@@ -49,15 +56,15 @@ test('470/30 calculado con consultas reales y motor, incluyendo cruces',()=>{
 });
 test('escenarios base sin penalización informativa, selección sin reemplazo y evidencia histórica',()=>{
   for(const [categoria,puntos] of [['presunto',60],['definitivo',100],['desvirtuado',0],['sentencia_favorable',0],['sat69',30],['homonimo_ofac',25]] as const){
-    const casos=demo.manifiesto.casos.filter(c=>c.categoria===categoria);
+    const casos=casosDemo.filter(c=>c.categoria===categoria);
     assert.ok(casos.length>0);
     for(const c of casos){assert.equal(c.resultado_solo_listas.puntaje,puntos);assert.equal(c.resultado_esperado.puntaje,Math.min(100,puntos+10));}
   }
-  for(const c of demo.manifiesto.casos){
+  for(const c of casosDemo){
     if(c.origen.fuente==='sat_69b'){
       assert.equal(c.origen.evidencia,'histórica');
       assert.equal(listas.sat69b.rfc[c.rfc][0],c.categoria);
-      assert.equal(demo.filas.find(f=>f.rfc===c.rfc)!.razon_social,listas.sat69b.rfc[c.rfc][1]);
+      assert.equal(filasDemo.find(f=>f.rfc===c.rfc)!.razon_social,listas.sat69b.rfc[c.rfc][1]);
     }
     if(c.categoria==='desvirtuado'||c.categoria==='sentencia_favorable')assert.equal(c.resultado_esperado.decision,'liberar');
     if(c.categoria==='limpio_sintetico')assert.ok(c.hallazgos_listas.every(h=>h.resultado==='sin_coincidencia'));

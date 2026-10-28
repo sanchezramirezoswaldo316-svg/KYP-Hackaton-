@@ -3,6 +3,11 @@ import { importarSat, agrupar69, parseCsv } from './ulises/sat.mjs';
 import { publicar, recuperar } from './ulises/publicacion.mjs';
 const SAT = 'http://omawww.sat.gob.mx/cifras_sat/Documents';
 const descargado_en = new Date().toISOString();
+/**
+ * @param {string} url
+ * @param {(url: string, init: { signal: AbortSignal }) => Promise<Response>} [fetcher]
+ * @param {number} [timeout]
+ */
 export async function descargar(url, fetcher = fetch, timeout = 30000) {
   try {
     const res = await fetcher(url,{signal:AbortSignal.timeout(timeout)});

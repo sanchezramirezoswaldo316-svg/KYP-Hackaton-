@@ -36,6 +36,13 @@ export async function recuperar(dir, journal = path.resolve('datos/ulises-public
   // Solo desbloquear después de recuperar tanto listas como marcador.
   await rm(journal,{recursive:true});
 }
+/**
+ * @param {string} dir
+ * @param {Record<string, { descargado_en: string }>} conjunto
+ * @param {(nombre: string) => Promise<void>} [antesDeRenombrar]
+ * @param {string} [journal]
+ * @param {() => Promise<void>} [despuesDeMarcar]
+ */
 export async function publicar(dir, conjunto, antesDeRenombrar = async()=>{}, journal = path.resolve('datos/ulises-publicacion'), despuesDeMarcar = async()=>{}) {
   const fechas = ARCHIVOS.map(n => conjunto[n]?.descargado_en);
   if (!fechas[0] || !fechas.every(f => f === fechas[0])) throw new Error('Conjunto incompleto o generaciones mezcladas');

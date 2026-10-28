@@ -21,7 +21,7 @@ test('BOM, comas, multilinea, cuatro estatus, hash de bytes y publicación separ
   assert.equal(d.descargado_en,opciones.descargado_en);
   assert.equal(d.sha256,createHash('sha256').update(b).digest('hex'));
   assert.deepEqual(Object.values(d.rfc).map((x: unknown)=> (x as string[])[0]),['presunto','definitivo','desvirtuado','sentencia_favorable']);
-  assert.match(d.rfc.AAA010101AAA[1],/,.*\n/s);
+  assert.match(d.rfc.AAA010101AAA[1],/,[\s\S]*\n/);
   assert.equal(consultar69B(d,' aaa010101aaa ').resultado,'presunto');
 });
 test('latin1 y agrupación sin duplicados de varias causas',()=>{
