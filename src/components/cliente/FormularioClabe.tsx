@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { enviar } from "./peticion.ts";
 
-export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string }) {
+export function FormularioClabe({ proveedores, seleccionado, simulada = false }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string; simulada?: boolean }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
@@ -16,7 +16,7 @@ export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { 
     setOcupado(true);
     setMensaje(null);
     try {
-      const r = await enviar<{ llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos);
+      const r = await enviar<{ llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos, 30000);
       setMensaje(
         r.llamada.iniciada
           ? { tipo: "ok", texto: "Pago en pausa. El agente de voz está llamando al teléfono registrado en el alta." }
@@ -53,9 +53,9 @@ export function FormularioClabe({ proveedores, seleccionado }: { proveedores: { 
       </label>
       <div className="sm:col-span-3">
         <button disabled={ocupado} className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50">
-          {ocupado ? "Registrando…" : "⏸️ Congelar pago y llamar al proveedor"}
+          {ocupado ? "Registrando…" : (simulada ? "⏸️ Pausar pago e iniciar demo" : "⏸️ Congelar pago y llamar al proveedor")}
         </button>
-        {mensaje && <p className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-emerald-700" : "text-red-700"}`}>{mensaje.texto}</p>}
+        {mensaje && <p role={mensaje.tipo === "error" ? "alert" : "status"} className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-emerald-700" : "text-red-700"}`}>{mensaje.texto}</p>}
       </div>
     </form>
   );
