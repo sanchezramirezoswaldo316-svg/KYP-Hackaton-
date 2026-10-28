@@ -8,7 +8,7 @@ import { enviar } from "./peticion.ts";
 
 const BLOQUE = 50;
 const CONCURRENCIA = 2;
-const COLOR = { liberar: "bg-emerald-500", revisar: "bg-amber-400", bloquear: "bg-red-600", error: "bg-slate-700" } as const;
+const COLOR = { liberar: "bg-tinta", revisar: "bg-acento", bloquear: "bg-tinta", error: "bg-tinta-3" } as const;
 
 interface Resultado { fila?: number; rfc: string; ok: boolean; decision?: "liberar" | "revisar" | "bloquear"; error?: string }
 
@@ -104,7 +104,7 @@ export function CargaCsv() {
   return (
     <div className="space-y-5">
       {estado === "inicio" && (
-        <div className="rounded-control border border-dashed border-borde-fuerte bg-lienzo p-6 text-center">
+        <div className="rounded-control border border-dashed border-borde-fuerte bg-superficie p-6 text-center">
           <p className="text-sm font-medium">Arrastra un CSV o selecciona un archivo</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
           <button data-tour="carga-ejemplo" onClick={usarEjemplo} className="min-h-9 rounded-control bg-marca px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[.97] hover:bg-marca-2">
@@ -115,35 +115,35 @@ export function CargaCsv() {
         </div>
       )}
       {estado === "inicio" && (
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-tinta-2">
           <input type="checkbox" checked={externas} onChange={(e) => setExternas(e.target.checked)} />
           Incluir página web, noticias y dominio (más lento)
         </label>
       )}
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       {estado !== "inicio" && (
         <div data-tour="embudo" className="space-y-5">
           <div>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="font-semibold">Cada cuadrito es un proveedor</h3>
-              <span className="text-sm text-slate-600">{mostrados} de {total} procesados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
+              <span className="text-sm text-tinta-2">{mostrados} de {total} procesados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
             </div>
-            <div role="progressbar" aria-label="Progreso de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje} className="mb-3 h-2 overflow-hidden rounded-full bg-slate-200">
-              <div className="h-full rounded-full bg-blue-700 transition-[width]" style={{ width: `${porcentaje}%` }} />
+            <div role="progressbar" aria-label="Progreso de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje} className="mb-3 h-1 overflow-hidden rounded-sm bg-seleccion">
+              <div className="h-full rounded-sm bg-acento transition-[width]" style={{ width: `${porcentaje}%` }} />
             </div>
             <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(12px, 1fr))" }} aria-hidden>
               {Array.from({ length: total }, (_, i) => {
                 const r = visibles[i];
-                const c = r ? COLOR[r.ok ? r.decision! : "error"] : "bg-slate-200";
-                return <span key={i} className={`aspect-square rounded-[3px] transition-colors duration-300 ${c} ${r && r.decision !== "liberar" ? "ring-2 ring-offset-1 ring-amber-300" : ""}`} />;
+                const c = r ? COLOR[r.ok ? r.decision! : "error"] : "bg-seleccion";
+                return <span key={i} className={`aspect-square rounded-[3px] transition-colors duration-300 ${c}`} />;
               })}
             </div>
-            <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-600">
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-emerald-500 align-middle" />Confiable</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-amber-400 align-middle" />Revisar</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-red-600 align-middle" />Peligro</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-slate-200 align-middle" />En espera</span>
+            <div className="mt-2 flex flex-wrap gap-4 text-xs text-tinta-2">
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-tinta align-middle" />Resuelto</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-acento align-middle" />Revisar</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-tinta-3 align-middle" />Error</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-seleccion align-middle" />En espera</span>
             </div>
           </div>
 
@@ -154,18 +154,18 @@ export function CargaCsv() {
           </div>
 
           {terminado && (
-            <div className="animar-aparecer rounded-xl bg-blue-900 p-5 text-center text-white">
+            <div className="animar-aparecer rounded-panel bg-tinta p-5 text-center text-white">
               <p className="text-lg">De {total} proveedores, solo <strong className="text-2xl">{dudosos}</strong> necesitan atención humana.</p>
               <p className="text-sm opacity-80">Eso es el {total ? Math.round((aprobados / total) * 100) : 0}% resuelto en automático.</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <Link href="/bandeja" className="rounded bg-white px-4 py-2 font-medium text-blue-900 hover:bg-blue-50">Ver los {dudosos} casos →</Link>
+                <Link href="/bandeja" className="rounded-control bg-white px-4 py-2 font-medium text-tinta hover:bg-hover">Ver los {dudosos} casos</Link>
                 <button onClick={() => setEstado("inicio")} className="rounded border border-white/40 px-4 py-2 text-sm hover:bg-white/10">Cargar otro archivo</button>
               </div>
             </div>
           )}
           {cuenta("error") > 0 && terminado && (
             <details className="text-sm">
-              <summary className="cursor-pointer text-red-700">{cuenta("error")} filas con errores</summary>
+              <summary className="cursor-pointer text-error">{cuenta("error")} filas con errores</summary>
               <ul className="mt-2 list-disc pl-5">{visibles.filter((r) => !r.ok).map((e) => <li key={`${e.fila}-${e.rfc}`}>Fila {e.fila} · {e.rfc}: {e.error}</li>)}</ul>
             </details>
           )}

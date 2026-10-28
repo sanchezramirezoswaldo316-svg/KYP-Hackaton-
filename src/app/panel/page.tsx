@@ -20,7 +20,7 @@ import { generarResumen } from "@/lib/monitoreo.ts";
 export const dynamic = "force-dynamic";
 
 const COLORES: Record<EstadoProveedor, string> = {
-  aprobado: "bg-emerald-500", en_revision: "bg-amber-400", pausado: "bg-orange-500", bloqueado: "bg-red-600", pendiente: "bg-slate-400",
+  aprobado: "bg-tinta", en_revision: "bg-acento", pausado: "bg-acento", bloqueado: "bg-tinta", pendiente: "bg-tinta-3",
 };
 
 export default async function Panel() {
@@ -35,10 +35,10 @@ export default async function Panel() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Panel de resultados</h1>
-          <p className="text-slate-600">El sistema revisa a todos; la gestora decide solo los casos dudosos.</p>
+          <p className="text-tinta-2">El sistema revisa a todos; la gestora decide solo los casos dudosos.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/bandeja" className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">Ir a la bandeja ({m.pendientes})</Link>
+          <Link href="/bandeja" className="rounded-control bg-marca px-4 py-2 text-sm font-medium text-white hover:bg-marca-2">Ir a la bandeja ({m.pendientes})</Link>
           {modo === "memoria" && <BotonAccion url="/api/demo/reiniciar" texto="Reiniciar demo" confirmar="Se borrarán todos los datos de la demo. ¿Continuar?" />}
           {modo === "supabase" && m.proveedores === 0 && <BotonAccion url="/api/demo/sembrar" texto="Cargar datos de ejemplo" />}
         </div>
@@ -52,10 +52,10 @@ export default async function Panel() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icono: "🔍", titulo: "Proveedores revisados", valor: <Contador valor={m.verificados} />, detalle: `de ${m.proveedores.toLocaleString("es-MX")} registrados` },
-          { icono: "⚡", titulo: "Aprobados solos", valor: <Contador valor={m.porcentajeAutomatico} formato="porcentaje" />, detalle: `${m.automaticos.toLocaleString("es-MX")} sin que nadie los revisara` },
-          { icono: "👩‍💼", titulo: "Esperan a una persona", valor: <Contador valor={m.pendientes} />, detalle: `${m.casosAtendidos} decididos por la gestora · ${m.porPolitica} por políticas` },
-          { icono: "🛡️", titulo: "Dinero protegido", valor: <Contador valor={m.montoProtegido} formato="millones" />, detalle: "compras anuales a proveedores con alerta" },
+          { titulo: "Proveedores revisados", valor: <Contador valor={m.verificados} />, detalle: `de ${m.proveedores.toLocaleString("es-MX")} registrados` },
+          { titulo: "Aprobados solos", valor: <Contador valor={m.porcentajeAutomatico} formato="porcentaje" />, detalle: `${m.automaticos.toLocaleString("es-MX")} sin que nadie los revisara` },
+          { titulo: "Esperan a una persona", valor: <Contador valor={m.pendientes} />, detalle: `${m.casosAtendidos} decididos por la gestora · ${m.porPolitica} por políticas` },
+          { titulo: "Dinero protegido", valor: <Contador valor={m.montoProtegido} formato="millones" />, detalle: "compras anuales a proveedores con alerta" },
         ].map((t) => (
           <div key={t.titulo} className="rounded-panel border border-borde bg-panel p-4"><DatoClave etiqueta={t.titulo} valor={t.valor} detalle={t.detalle} /></div>
         ))}
@@ -63,11 +63,11 @@ export default async function Panel() {
 
       <Tarjeta titulo="Horas de trabajo: a mano vs. con KYP">
         <BarrasHoras manual={m.horasManual} kyp={m.horasKyp} />
-        <p className="mt-2 text-xs text-slate-500">Supuestos: {HORAS_MANUAL_POR_REVISION} h por revisión a mano y {MINUTOS_POR_EXCEPCION} min por cada caso que llega a la bandeja.</p>
+        <p className="mt-2 text-xs text-tinta-3">Supuestos: {HORAS_MANUAL_POR_REVISION} h por revisión a mano y {MINUTOS_POR_EXCEPCION} min por cada caso que llega a la bandeja.</p>
       </Tarjeta>
 
       <Tarjeta titulo="Resumen de hoy" acciones={<Link href="/automatizacion" className="text-sm text-marca underline">Automatización →</Link>}>
-        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700">{resumen.texto}</pre>
+        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-tinta-2">{resumen.texto}</pre>
       </Tarjeta>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -79,7 +79,7 @@ export default async function Panel() {
           </div>
           <ul className="grid grid-cols-2 gap-1 text-sm">
             {Object.entries(m.porEstado).map(([e, n]) => (
-              <li key={e} className="flex items-center gap-2"><span className={`h-3 w-3 rounded-sm ${COLORES[e as EstadoProveedor]}`} />{ESTADO_SIMPLE[e as EstadoProveedor].emoji} {ESTADO_SIMPLE[e as EstadoProveedor].texto}: <strong>{n}</strong></li>
+              <li key={e} className="flex items-center gap-2"><span className={`h-3 w-3 rounded-sm ${COLORES[e as EstadoProveedor]}`} />{ESTADO_SIMPLE[e as EstadoProveedor].texto}: <strong>{n}</strong></li>
             ))}
           </ul>
         </PanelUi>
@@ -88,10 +88,10 @@ export default async function Panel() {
           <table className="w-full text-sm">
             <tbody>
               {listas.map((l) => (
-                <tr key={l.fuente} className="border-t border-slate-100 first:border-0">
+                <tr key={l.fuente} className="border-t border-borde first:border-0">
                   <td className="py-1.5">{l.fuente}</td>
                   <td className="py-1.5 text-right">{l.registros.toLocaleString("es-MX")}</td>
-                  <td className="py-1.5 pl-3 text-right text-xs text-slate-500">{l.actualizacion ? `al ${fecha(l.actualizacion)}` : `desc. ${fecha(l.descargado_en.slice(0, 10))}`}</td>
+                  <td className="py-1.5 pl-3 text-right text-xs text-tinta-3">{l.actualizacion ? `al ${fecha(l.actualizacion)}` : `desc. ${fecha(l.descargado_en.slice(0, 10))}`}</td>
                 </tr>
               ))}
             </tbody>
