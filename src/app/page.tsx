@@ -37,6 +37,7 @@ export default function Portada() {
         <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">Revisamos a todos tus proveedores en segundos para que no pagues facturas falsas ni caigas en fraudes de cuentas bancarias.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <BotonTour grande />
+          <Link href="/en-vivo" className="rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50">🛰️ Ver cómo funciona por dentro</Link>
           <Link href="/panel" className="rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50">Entrar al panel</Link>
         </div>
       </section>

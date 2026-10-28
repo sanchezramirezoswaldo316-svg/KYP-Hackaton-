@@ -1,19 +1,23 @@
 // Expediente: qué tan riesgoso es, por qué (en palabras simples), la decisión y la evidencia.
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DocumentoProveedor } from "@/components/DocumentoProveedor";
 import { HallazgoSimple } from "@/components/HallazgoSimple";
 import { LineaTiempoClabe } from "@/components/LineaTiempoClabe";
 import { EstadoSimple, Semaforo } from "@/components/Semaforo";
 import { Tarjeta } from "@/components/Tarjeta";
 import { Termino } from "@/components/Termino";
 import { AutoRefrescar } from "@/components/cliente/AutoRefrescar";
+import { BotonAccion } from "@/components/cliente/BotonAccion";
 import { BotonesDecision } from "@/components/cliente/BotonesDecision";
 import { Reverificar } from "@/components/cliente/Reverificar";
 import { Velocimetro } from "@/components/cliente/Velocimetro";
+import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { explicarHallazgo, SEMAFORO } from "@/lib/explicar.ts";
 import { cargarExpediente } from "@/lib/expediente.ts";
-import { fecha, pesos } from "@/lib/formato.ts";
+import { enDias, fecha, pesos } from "@/lib/formato.ts";
+import { proximosPagos } from "@/lib/servicios.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
 import { vozConfigurada } from "@/lib/voz/elevenlabs.ts";
 
@@ -30,6 +34,9 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
   const abiertos = e.casos.filter((c) => c.estado === "pendiente" || c.estado === "pausado");
   const simular = !vozConfigurada();
   const montoFactura = e.facturas[0]?.monto ?? null;
+  const documentos = (await almacen().documentos.listar({ proveedor_id: p.id })).sort((a, b) => b.enviada_en.localeCompare(a.enviada_en));
+  const pago = (await proximosPagos()).get(p.id);
+  const casoAbierto = abiertos.find((c) => c.tipo === "alta");
   const enLlamada = e.solicitudes.some((s) => s.estado === "en_llamada" && !e.llamadas.some((l) => l.solicitud_id === s.id));
   const hallazgos = v ? [...v.hallazgos].sort((a, b) => ORDEN_NIVEL[explicarHallazgo(a).nivel] - ORDEN_NIVEL[explicarHallazgo(b).nivel]) : [];
 
@@ -46,6 +53,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href={`/en-vivo?proveedor=${p.id}`} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">🛰️ Ver extracción en vivo</Link>
           <Reverificar id={p.id} nombre={p.razon_social} />
           <a href={`/api/expediente/${p.id}/pdf`} className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">📄 Descargar expediente</a>
         </div>
@@ -122,8 +130,19 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
               <div><dt className="text-slate-500">Teléfono registrado</dt><dd>{p.telefono_registrado}</dd></div>
               <div><dt className="text-slate-500">Cuenta (CLABE)</dt><dd className="font-mono">{enmascararClabe(p.clabe)}</dd></div>
               <div><dt className="text-slate-500">Le compramos al año</dt><dd>{pesos(p.monto_anual)}</dd></div>
+              {pago && <div><dt className="text-slate-500">Próximo pago</dt><dd className={pago.dias <= 7 ? "font-semibold text-orange-700" : ""}>{pesos(pago.monto)} {enDias(pago.dias)} ({fecha(pago.vence)})</dd></div>}
             </dl>
             <Link href={`/clabe?proveedor=${p.id}`} className="mt-3 inline-block text-sm text-blue-800 underline">Registrar un cambio de cuenta</Link>
+          </Tarjeta>
+
+          <Tarjeta titulo="📄 Documentos del proveedor">
+            <div className="space-y-2">
+              {documentos.map((d) => <DocumentoProveedor key={d.id} d={d} rfc={p.rfc} />)}
+              {!documentos.some((d) => d.estado === "enviada") && (
+                <BotonAccion url="/api/documentos" cuerpo={{ proveedor_id: p.id, caso_id: casoAbierto?.id }} texto="📨 Pedir su opinión 32-D" textoOcupado="Creando solicitud…" />
+              )}
+              {documentos.length === 0 && <p className="text-xs text-slate-500">Se le envía un enlace a su portal para que suba el PDF; si no responde, recibe recordatorios cada 3 días.</p>}
+            </div>
           </Tarjeta>
 
           {e.casos.some((c) => c.decidido_por) && (

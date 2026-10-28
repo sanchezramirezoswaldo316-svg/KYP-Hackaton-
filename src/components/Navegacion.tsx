@@ -6,11 +6,13 @@ import { BotonTour } from "./cliente/Tour";
 
 const enlaces = [
   { href: "/panel", texto: "📊 Panel" },
+  { href: "/en-vivo", texto: "🛰️ En vivo" },
   { href: "/bandeja", texto: "👩‍💼 Bandeja" },
   { href: "/proveedores", texto: "🏢 Proveedores" },
   { href: "/carga", texto: "📥 Revisar muchos" },
   { href: "/clabe", texto: "🏦 Cambios de cuenta" },
   { href: "/erp", texto: "💳 Pagos" },
+  { href: "/automatizacion", texto: "⚙️ Automatización" },
 ];
 
 export function Navegacion() {

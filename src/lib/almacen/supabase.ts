@@ -47,5 +47,8 @@ export function crearAlmacenSupabase(url: string, key: string): Almacen {
     solicitudes: coleccion(db, "solicitudes_clabe", "creado_en"),
     llamadas: coleccion(db, "llamadas", "creado_en"),
     bitacora: coleccion(db, "bitacora", "creado_en"),
+    politicas: coleccion(db, "politicas", "clave"),
+    documentos: coleccion(db, "solicitudes_documentos", "enviada_en"),
+    alertas: coleccion(db, "alertas", "creado_en"),
   };
 }

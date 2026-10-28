@@ -1,9 +1,12 @@
-// Protección opcional con contraseña (APP_PASSWORD). Los webhooks quedan fuera: se autentican con su propio secreto.
+// Protección opcional con contraseña (APP_PASSWORD) para todo lo interno.
 import { NextResponse, type NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
   const clave = process.env.APP_PASSWORD;
-  if (!clave || req.nextUrl.pathname.startsWith("/api/webhooks/")) return NextResponse.next();
+  const ruta = req.nextUrl.pathname;
+  // Sin contraseña de la app: webhooks (su propio secreto), portal del proveedor (enlace único) y la tarea de Vercel Cron (CRON_SECRET).
+  const publica = ruta.startsWith("/api/webhooks/") || ruta.startsWith("/portal/") || ruta.startsWith("/api/portal/") || (ruta === "/api/tareas/diaria" && req.method === "GET");
+  if (!clave || publica) return NextResponse.next();
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Basic ")) {
     const [, pass] = atob(auth.slice(6)).split(":");

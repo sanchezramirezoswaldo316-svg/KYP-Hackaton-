@@ -33,6 +33,8 @@ export interface Hallazgo {
   detalle: string;
   fecha_fuente: string | null;
   evidencia_url?: string | null;
+  // Datos extraídos de la fuente, para mostrarlos (por ejemplo, "Estatus": "definitivo").
+  datos?: Record<string, string>;
 }
 
 export interface Motivo {
@@ -82,6 +84,8 @@ export interface Factura {
   folio: string;
   monto: number;
   fecha: string;
+  // Fecha en que toca pagarla (ERP simulado). null si se desconoce.
+  vence: string | null;
 }
 
 export type EstadoSolicitud = "pausada" | "en_llamada" | "verificada" | "rechazada";
@@ -132,4 +136,58 @@ export interface WebhookLlamada {
   transcripcion: string;
   conversation_id?: string | null;
   resumen?: string | null;
+}
+
+// ---------- Automatización ----------
+
+export type AccionPolitica = "bloquear" | "solicitar_documentos";
+
+// Estado de activación de una política del catálogo (src/lib/politicas.ts).
+export interface Politica {
+  id: string;
+  clave: string;
+  activa: boolean;
+  actualizado_por: string | null;
+  actualizado_en: string | null;
+}
+
+export type EstadoDocumento = "enviada" | "recibida" | "vencida";
+
+export interface AnalisisDocumento {
+  es_opinion_32d: boolean;
+  sentido: "positivo" | "negativo" | "no_concluyente";
+  rfc: string;
+  fecha_emision: string;
+  explicacion: string;
+}
+
+// Documento que se le pide al proveedor por su portal (enlace con token).
+export interface SolicitudDocumento {
+  id: string;
+  proveedor_id: string;
+  caso_id: string | null;
+  token: string;
+  documento: "opinion_32d";
+  estado: EstadoDocumento;
+  solicitada_por: string;
+  enviada_en: string;
+  notificada: boolean;
+  recordatorios: number;
+  ultimo_recordatorio_en: string | null;
+  recibida_en: string | null;
+  archivo_nombre: string | null;
+  archivo_sha256: string | null;
+  archivo_base64: string | null;
+  analisis: AnalisisDocumento | null;
+}
+
+export type TipoAlerta = "cambio_lista" | "documento_recibido" | "solicitud_vencida" | "politica_aplicada";
+
+export interface Alerta {
+  id: string;
+  tipo: TipoAlerta;
+  proveedor_id: string | null;
+  mensaje: string;
+  creado_en: string;
+  leida: boolean;
 }
