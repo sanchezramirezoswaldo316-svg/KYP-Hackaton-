@@ -66,3 +66,24 @@ button, a, input, select, textarea { outline-offset: 2px; }
 @keyframes aparecer-nodo { from { opacity: 0; } to { opacity: 1; } }
 .aparecer-nodo { animation: aparecer-nodo 0.5s ease both; }
 @media (prefers-reduced-motion: reduce) { .aparecer-nodo { animation: none; } }
+
+/* Monitor de llamadas (ElevenLabs): rótulos de panel, cuadrícula de la escena, ondas de voz,
+   parpadeo de "en llamada", sello de fraude detenido y franja de espera de la transcripción. */
+.rotulo { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-tinta-3); }
+.reticula {
+  background-image:
+    linear-gradient(var(--color-borde) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-borde) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+}
+@keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.animar-parpadeo { animation: parpadeo 1.4s ease-in-out infinite; }
+@keyframes onda-voz { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 100% { transform: translate(-50%, -50%) scale(2.1); opacity: 0; } }
+.onda-voz { animation: onda-voz 1.6s ease-out infinite; }
+.onda-voz-2 { animation: onda-voz 1.6s ease-out 0.8s infinite; }
+@keyframes sello { 0% { transform: rotate(-12deg) scale(1.6); opacity: 0; } 60% { transform: rotate(-12deg) scale(0.95); opacity: 1; } 100% { transform: rotate(-12deg) scale(1); opacity: 1; } }
+.animar-sello { animation: sello 0.6s ease-out both; }
+@keyframes franja-espera { from { background-position: 0 0; } to { background-position: 40px 0; } }
+.franja-espera { background-image: repeating-linear-gradient(90deg, var(--color-seleccion) 0 20px, var(--color-superficie) 20px 40px); animation: franja-espera 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .animar-parpadeo, .onda-voz, .onda-voz-2, .animar-sello, .franja-espera { animation: none; } }

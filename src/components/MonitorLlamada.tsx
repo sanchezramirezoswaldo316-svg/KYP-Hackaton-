@@ -72,12 +72,12 @@ function Nodo({ icono, color, activo, x, y, titulo, sub }: { icono: NombreIcono;
 // Agente y proveedor real unidos por la línea de la llamada; el número de la solicitud queda fuera.
 function Escena({ v, p, s }: { v: VistaLlamada; p: Proveedor; s: SolicitudClabe }) {
   const enLlamada = v.fase === "llamando";
-  const linea = enLlamada ? "#a78bfa" : v.fase === "terminada" ? COLOR[estadoLlamada(v).nivel] : "#364657";
+  const linea = enLlamada ? "#a78bfa" : v.fase === "terminada" ? COLOR[estadoLlamada(v).nivel] : "#a3a3a3";
   return (
     <div className="relative h-[360px] min-w-[640px] reticula bg-superficie">
       <svg aria-hidden viewBox="0 0 1000 360" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
         <line x1="170" y1="160" x2="830" y2="130" stroke={linea} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeDasharray="10 4" className={enLlamada ? "linea-viva" : ""} />
-        {s.telefono_en_solicitud && <line x1="170" y1="160" x2="690" y2="300" stroke="#364657" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeDasharray="3 7" />}
+        {s.telefono_en_solicitud && <line x1="170" y1="160" x2="600" y2="300" stroke="#a3a3a3" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeDasharray="3 7" />}
       </svg>
       <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-borde bg-superficie px-2 py-0.5 font-mono text-[10.5px] tracking-wider whitespace-nowrap text-tinta-2">
         LÍNEA SEGURA · NÚMERO DEL ALTA
@@ -86,8 +86,8 @@ function Escena({ v, p, s }: { v: VistaLlamada; p: Proveedor; s: SolicitudClabe 
       <Nodo icono="persona" color={COLOR.acento} activo={false} x="83%" y="36%" titulo="Proveedor real" sub={`${enmascararTelefono(p.telefono_registrado)} · registrado en el alta`} />
       {s.telefono_en_solicitud && (
         <>
-          <div className="absolute top-[64%] left-[43%] flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-tinta bg-superficie text-tinta"><Icono nombre="error" className="h-4 w-4" trazo={2} /></div>
-          <div className="absolute top-[83%] left-[69%] h-0 w-0">
+          <div className="absolute top-[64%] left-[39%] flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-tinta bg-superficie text-tinta"><Icono nombre="error" className="h-4 w-4" trazo={2} /></div>
+          <div className="absolute top-[83%] left-[60%] h-0 w-0">
             <div className="absolute top-0 left-0 flex h-[52px] w-[52px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-dashed border-borde-fuerte bg-panel text-tinta"><Icono nombre="escudoX" className="h-6 w-6" trazo={1.5} /></div>
             <div className="absolute top-0 left-9 -translate-y-1/2 whitespace-nowrap">
               <div className="font-mono text-xs text-tinta-3 line-through">{s.telefono_en_solicitud}</div>
@@ -106,7 +106,7 @@ const enmascararTelefono = (t: string) => {
 };
 
 const RUTA: { id: Paso; titulo: string; icono: NombreIcono; x: number; y: number }[] = [
-  { id: "marcar", titulo: "Llamar al número registrado", icono: "llamadaSaliente", x: 9, y: 28 },
+  { id: "marcar", titulo: "Llamar al número registrado", icono: "llamadaSaliente", x: 11, y: 28 },
   { id: "contesto", titulo: "¿Contestó?", icono: "telefono", x: 29, y: 28 },
   { id: "reconoce", titulo: "¿Reconoce el cambio?", icono: "persona", x: 50, y: 28 },
   { id: "datos", titulo: "¿Datos coinciden?", icono: "numero", x: 71, y: 28 },
@@ -115,7 +115,7 @@ const RUTA: { id: Paso; titulo: string; icono: NombreIcono; x: number; y: number
   { id: "fraude", titulo: "Fraude detenido", icono: "escudoX", x: 50, y: 78 },
   { id: "no_coinciden", titulo: "Datos no coinciden", icono: "alerta", x: 71, y: 78 },
 ];
-const COLOR_PASO: Record<EstadoPaso, string> = { hecho: COLOR.ok, actual: COLOR.acento, pendiente: "#364657", ok: COLOR.ok, alerta: COLOR.alerta, peligro: COLOR.peligro, apagado: "#1f2a35" };
+const COLOR_PASO: Record<EstadoPaso, string> = { hecho: COLOR.ok, actual: COLOR.acento, pendiente: "#a3a3a3", ok: COLOR.ok, alerta: COLOR.alerta, peligro: COLOR.peligro, apagado: "#e5e5e5" };
 
 function Ruta({ v }: { v: VistaLlamada }) {
   const arista = (de: Paso, a: Paso) => {
@@ -142,7 +142,7 @@ function Ruta({ v }: { v: VistaLlamada }) {
             <div key={r.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${r.x}%`, top: `${r.y}%` }}>
               <div
                 className={`flex items-center gap-2 rounded px-3 py-2.5 text-[13px] font-medium whitespace-nowrap ${vivo ? "animar-parpadeo" : ""} ${s === "apagado" ? "text-tinta-3/60" : s === "pendiente" ? "text-tinta-2" : "text-tinta"}`}
-                style={{ border: `${s === "pendiente" || s === "apagado" ? "1px dashed" : "1.5px solid"} ${s === "apagado" ? "#364657" : c}`, background: s === "apagado" ? "var(--color-fondo)" : s === "pendiente" ? "var(--color-panel)" : `linear-gradient(${c}1c, ${c}1c), var(--color-panel)`, boxShadow: brilla || vivo ? `0 0 24px ${c}55` : "none" }}
+                style={{ border: `${s === "pendiente" || s === "apagado" ? "1px dashed" : "1.5px solid"} ${s === "apagado" ? "#d4d4d4" : c}`, background: s === "apagado" ? "var(--color-superficie)" : s === "pendiente" ? "var(--color-panel)" : `linear-gradient(${c}1c, ${c}1c), var(--color-panel)`, boxShadow: brilla || vivo ? `0 0 24px ${c}55` : "none" }}
               >
                 <Icono nombre={r.icono} className="h-4 w-4" />{r.titulo}
               </div>
@@ -300,7 +300,7 @@ export function MonitorLlamada({ v, p, s, llamada, monto, caso, simular }: {
               <li key={i} className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex items-center">
                   <span className="h-2.5 w-2.5 shrink-0 rounded-[1px]" style={{ background: COLOR[e.nivel] }} />
-                  <span className="h-px flex-1" style={{ background: i === v.eventos.length - 1 ? "transparent" : "#364657" }} />
+                  <span className="h-px flex-1" style={{ background: i === v.eventos.length - 1 ? "transparent" : "#d4d4d4" }} />
                 </div>
                 <div className="pr-3">
                   <div className="font-mono text-[11px] text-tinta-3">{fecha(e.fecha)}</div>
