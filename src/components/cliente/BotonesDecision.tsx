@@ -16,9 +16,17 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function decidir(estado: string) {
-    setOcupado(true);
+  async function decidir(estado: (typeof BOTONES)[number]["estado"]) {
     setError(null);
+    if (estado === "bloqueado") {
+      if (!comentario.trim()) {
+        setError("Escribe el motivo antes de bloquear.");
+        return;
+      }
+      if (!window.confirm("¿Confirmas bloquear este caso? El motivo quedará en la bitácora.")) return;
+    }
+
+    setOcupado(true);
     try {
       await enviar(`/api/casos/${casoId}/decision`, { estado, comentario });
       router.refresh();
@@ -34,7 +42,8 @@ export function BotonesDecision({ casoId }: { casoId: string }) {
       <input
         value={comentario}
         onChange={(e) => setComentario(e.target.value)}
-        placeholder="Comentario (opcional, queda en la bitácora)"
+        placeholder="Motivo obligatorio al bloquear; comentario opcional en otros casos"
+        aria-label="Motivo o comentario de la decisión"
         className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
       />
       <div className="flex flex-wrap gap-2">

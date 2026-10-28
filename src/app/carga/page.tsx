@@ -1,7 +1,7 @@
 import { Tarjeta } from "@/components/Tarjeta";
 import { Termino } from "@/components/Termino";
 import { CargaCsv } from "@/components/cliente/CargaCsv";
-import { COLUMNAS } from "@/lib/csv.ts";
+import { COLUMNAS, MAX_CSV_BYTES, MAX_CSV_FILAS } from "@/lib/csv.ts";
 
 export default function Carga() {
   return (
@@ -19,6 +19,9 @@ export default function Carga() {
       <details className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <summary className="cursor-pointer font-medium">Formato del archivo</summary>
         <p className="mt-2 text-slate-600">Columnas (por nombre, en cualquier orden): <code className="text-xs">{COLUMNAS.join(", ")}</code>. Obligatorias: rfc, razon_social y telefono_registrado.</p>
+        <p className="mt-2 text-slate-600">
+          Máximo {Math.floor(MAX_CSV_BYTES / 1024 / 1024)} MB y {MAX_CSV_FILAS.toLocaleString("es-MX")} filas. Se validan RFC y CLABE; las filas inválidas o con celdas que empiezan con =, +, - o @ no se envían.
+        </p>
         <p className="mt-2">
           <a href="/demo/proveedores-demo.csv" download className="text-blue-800 underline">Descargar el archivo de ejemplo</a>
           <span className="text-slate-500"> · incluye empresas reales de las listas públicas del SAT y un nombre parecido a uno sancionado por EE. UU.; teléfonos, cuentas y montos son ficticios.</span>
