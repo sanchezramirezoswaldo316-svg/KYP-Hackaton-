@@ -1,22 +1,29 @@
 // Lógica de negocio. Todas las acciones importantes quedan en la bitácora.
 
 import { almacen } from "./almacen/index.ts";
+import { registrar } from "./bitacora.ts";
 import type {
   Caso, Decision, EstadoCaso, EstadoProveedor, Hallazgo, Llamada,
   Proveedor, ResultadoLlamada, SolicitudClabe, Verificacion,
 } from "./tipos.ts";
 import { clabeValida, normalizarRfc, normalizarTelefono, rfcValido } from "./validacion.ts";
+import { solicitarDocumentos } from "./documentos.ts";
+import { CATALOGO, politicasQueAplican } from "./politicas.ts";
 import type { EntradaAlta } from "./servicios-tipos.ts";
 import { verificarProveedor, type EventoVerificacion } from "./verificacion/index.ts";
 import { iniciarLlamada, vozConfigurada } from "./voz/elevenlabs.ts";
 
 export const SISTEMA = "Sistema KYP";
 
-async function registrar(actor: string, accion: string, entidad: string, entidad_id: string | null, detalle: Record<string, unknown> | null = null) {
-  await almacen().bitacora.crear({ actor, accion, entidad, entidad_id, detalle, creado_en: new Date().toISOString() });
-}
 
 export class ErrorValidacion extends Error {}
+
+// ERP simulado: si el archivo no trae fecha de pago, se asigna una entre 1 y 30 días,
+// derivada del folio para que sea siempre la misma.
+export function venceSimulado(folio: string, hoy = new Date()): string {
+  const dias = 1 + ([...folio].reduce((s, c) => s + c.charCodeAt(0), 0) % 30);
+  return new Date(hoy.getTime() + dias * 86_400_000).toISOString().slice(0, 10);
+}
 
 // ---------- Alta y verificación ----------
 
@@ -52,7 +59,13 @@ export async function altaProveedor(e: EntradaAlta, actor: string, fuentesExtern
     });
     await registrar(actor, "alta_proveedor", "proveedor", proveedor.id, { rfc });
     if (e.factura_folio && e.factura_monto) {
-      await db.facturas.crear({ proveedor_id: proveedor.id, folio: e.factura_folio, monto: Number(e.factura_monto), fecha: new Date().toISOString().slice(0, 10) });
+      await db.facturas.crear({
+        proveedor_id: proveedor.id,
+        folio: e.factura_folio,
+        monto: Number(e.factura_monto),
+        fecha: new Date().toISOString().slice(0, 10),
+        vence: e.factura_vence || venceSimulado(e.factura_folio),
+      });
     }
   }
   return verificar(proveedor, actor, fuentesExternas, [], alEvento);
@@ -90,8 +103,60 @@ export async function verificar(proveedor: Proveedor, actor: string, fuentesExte
       creado_en: new Date().toISOString(),
     });
     await db.proveedores.actualizar(proveedor.id, { estado: clabePendiente ? "pausado" : "en_revision" });
+    caso = await aplicarPoliticas(caso, v.hallazgos);
   }
   return { proveedor: (await db.proveedores.obtener(proveedor.id))!, verificacion: v, caso };
+}
+
+// ---------- Políticas automáticas ----------
+
+export async function clavesActivas(): Promise<Set<string>> {
+  return new Set((await almacen().politicas.listar({ activa: true })).map((p) => p.clave));
+}
+
+// Aplica las políticas activas a un caso de alta pendiente. Devuelve el caso actualizado.
+export async function aplicarPoliticas(caso: Caso, hallazgos: Hallazgo[], activas?: Set<string>): Promise<Caso> {
+  const db = almacen();
+  for (const pol of politicasQueAplican(hallazgos, activas ?? (await clavesActivas()))) {
+    const actor = `Política: ${pol.nombre}`;
+    if (pol.accion === "bloquear") {
+      const decidido = await decidirCaso(caso.id, "bloqueado", actor, `Aplicada automáticamente: ${pol.descripcion}`);
+      const p = await db.proveedores.obtener(caso.proveedor_id);
+      await db.alertas.crear({ tipo: "politica_aplicada", proveedor_id: caso.proveedor_id, mensaje: `🤖 Se bloqueó a ${p?.razon_social ?? "un proveedor"} por la política «${pol.nombre}»`, creado_en: new Date().toISOString(), leida: false });
+      return decidido;
+    }
+    await solicitarDocumentos(caso.proveedor_id, caso.id, actor);
+  }
+  return caso;
+}
+
+export async function cambiarPolitica(clave: string, activa: boolean, actor: string) {
+  if (!CATALOGO.some((p) => p.clave === clave)) throw new ErrorValidacion("Política desconocida");
+  const db = almacen();
+  const actual = (await db.politicas.listar({ clave }))[0];
+  const cambios = { activa, actualizado_por: actor, actualizado_en: new Date().toISOString() };
+  const r = actual ? await db.politicas.actualizar(actual.id, cambios) : await db.politicas.crear({ clave, ...cambios });
+  await registrar(actor, activa ? "politica_activada" : "politica_desactivada", "politica", clave, null);
+  return r;
+}
+
+// Aplica las políticas activas a los casos que ya estaban en la bandeja.
+export async function aplicarPoliticasAPendientes(actor: string) {
+  const db = almacen();
+  const activas = await clavesActivas();
+  const verificaciones = await ultimasVerificaciones();
+  let bloqueados = 0, documentos = 0;
+  for (const c of await db.casos.listar({ tipo: "alta", estado: "pendiente" })) {
+    const v = verificaciones.get(c.proveedor_id);
+    if (!v) continue;
+    const pol = politicasQueAplican(v.hallazgos, activas)[0];
+    if (!pol) continue;
+    const r = await aplicarPoliticas(c, v.hallazgos, activas);
+    if (r.estado === "bloqueado") bloqueados++;
+    else if (pol.accion === "solicitar_documentos") documentos++;
+  }
+  await registrar(actor, "politicas_aplicadas_a_pendientes", "politica", null, { bloqueados, documentos });
+  return { bloqueados, documentos };
 }
 
 // ---------- Decisiones del gestor ----------
@@ -263,7 +328,8 @@ export async function metricas() {
   const verificados = verificaciones.size;
   const porDecision: Record<Decision, number> = { liberar: 0, revisar: 0, bloquear: 0 };
   for (const v of verificaciones.values()) porDecision[v.decision]++;
-  const casosAtendidos = casos.filter((c) => c.decidido_por && c.decidido_por !== SISTEMA).length;
+  const casosAtendidos = casos.filter((c) => c.decidido_por && c.decidido_por !== SISTEMA && !c.decidido_por.startsWith("Política:")).length;
+  const porPolitica = casos.filter((c) => c.decidido_por?.startsWith("Política:")).length;
   const pendientes = casos.filter((c) => c.estado === "pendiente").length;
   const montoProtegido = proveedores
     .filter((p) => p.estado === "bloqueado" || p.estado === "pausado" || p.estado === "en_revision")
@@ -276,9 +342,30 @@ export async function metricas() {
     porDecision,
     pendientes,
     casosAtendidos,
+    porPolitica,
     horasManual: verificados * HORAS_MANUAL_POR_REVISION,
     horasKyp: ((pendientes + casosAtendidos) * MINUTOS_POR_EXCEPCION) / 60,
     montoProtegido,
     porEstado: proveedores.reduce<Record<string, number>>((m, p) => ({ ...m, [p.estado]: (m[p.estado] ?? 0) + 1 }), {}),
   };
 }
+
+// Próximo pago pendiente de cada proveedor (factura que vence hoy o después).
+export interface ProximoPago { vence: string; dias: number; monto: number; folio: string }
+
+export async function proximosPagos(hoy = new Date()): Promise<Map<string, ProximoPago>> {
+  const inicio = hoy.toISOString().slice(0, 10);
+  const mapa = new Map<string, ProximoPago>();
+  for (const f of await almacen().facturas.listar()) {
+    if (!f.vence || f.vence < inicio) continue;
+    const actual = mapa.get(f.proveedor_id);
+    if (!actual || f.vence < actual.vence) {
+      const dias = Math.round((Date.parse(`${f.vence}T00:00:00Z`) - Date.parse(`${inicio}T00:00:00Z`)) / 86_400_000);
+      mapa.set(f.proveedor_id, { vence: f.vence, dias, monto: f.monto, folio: f.folio });
+    }
+  }
+  return mapa;
+}
+
+export const horasDesde = (iso: string, ahora = Date.now()) => Math.floor((ahora - Date.parse(iso)) / 3_600_000);
+export const HORAS_CASO_ANTIGUO = 48;

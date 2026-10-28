@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BannerModo } from "@/components/BannerModo";
 import { Navegacion } from "@/components/Navegacion";
 import { Tour } from "@/components/cliente/Tour";
+import { ZonaInterna } from "@/components/cliente/ZonaInterna";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,10 +14,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        <Navegacion />
-        <BannerModo />
+        <ZonaInterna>
+          <Navegacion />
+          <BannerModo />
+        </ZonaInterna>
         <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-        <Tour />
+        <ZonaInterna>
+          <Tour />
+        </ZonaInterna>
       </body>
     </html>
   );

@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { enviar } from "./peticion.ts";
 
-export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario" }: {
-  url: string; texto: string; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario";
+export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario", cuerpo }: {
+  url: string; texto: string; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario"; cuerpo?: unknown;
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
@@ -19,7 +19,7 @@ export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "s
     setOcupado(true);
     setError(null);
     try {
-      await enviar(url);
+      await enviar(url, cuerpo);
       router.refresh();
     } catch (e) {
       setError((e as Error).message);

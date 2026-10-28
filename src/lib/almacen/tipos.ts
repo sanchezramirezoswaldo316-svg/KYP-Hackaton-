@@ -1,4 +1,4 @@
-import type { Caso, EventoBitacora, Factura, Llamada, Proveedor, SolicitudClabe, Verificacion } from "../tipos.ts";
+import type { Alerta, Caso, EventoBitacora, Factura, Llamada, Politica, Proveedor, SolicitudClabe, SolicitudDocumento, Verificacion } from "../tipos.ts";
 
 export interface Coleccion<T extends { id: string }> {
   listar(filtro?: Partial<T>): Promise<T[]>;
@@ -16,4 +16,7 @@ export interface Almacen {
   solicitudes: Coleccion<SolicitudClabe>;
   llamadas: Coleccion<Llamada>;
   bitacora: Coleccion<EventoBitacora>;
+  politicas: Coleccion<Politica>;
+  documentos: Coleccion<SolicitudDocumento>;
+  alertas: Coleccion<Alerta>;
 }
