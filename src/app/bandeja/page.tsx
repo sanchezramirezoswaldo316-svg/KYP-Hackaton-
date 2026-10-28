@@ -3,14 +3,17 @@ import Link from "next/link";
 import { Alertas } from "@/components/Alertas";
 import { EstadoDocumento } from "@/components/DocumentoProveedor";
 import { Semaforo } from "@/components/Semaforo";
+import { Chip } from "@/components/ui/Chip";
+import { DatoClave } from "@/components/ui/DatoClave";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Tabla } from "@/components/ui/Tabla";
 import { AutoRefrescar } from "@/components/cliente/AutoRefrescar";
 import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { resumenSimple } from "@/lib/explicar.ts";
 import { enDias, pesos } from "@/lib/formato.ts";
-import { HORAS_CASO_ANTIGUO, horasDesde, proximosPagos, ultimasVerificaciones } from "@/lib/servicios.ts";
+import { horasDesde, proximosPagos, ultimasVerificaciones } from "@/lib/servicios.ts";
 import type { SolicitudDocumento } from "@/lib/tipos.ts";
-import { Icono } from "@/components/Icono";
 
 export const dynamic = "force-dynamic";
 
@@ -36,65 +39,51 @@ export default async function Bandeja() {
   const docPorProveedor = new Map<string, SolicitudDocumento>();
   for (const d of documentos.sort((a, b) => a.enviada_en.localeCompare(b.enviada_en))) docPorProveedor.set(d.proveedor_id, d);
   const aprobadosSolos = [...verificaciones.values()].filter((v) => v.decision === "liberar").length;
-  const porPolitica = casos.filter((c) => c.decidido_por?.startsWith("Política:")).length;
-  const antiguos = abiertos.filter((c) => horasDesde(c.creado_en) >= HORAS_CASO_ANTIGUO).length;
+  const clabeEnPausa = abiertos.filter((c) => c.tipo === "clabe").length;
+  const montoExpuesto = abiertos.reduce((total, c) => total + (pagos.get(c.proveedor_id)?.monto ?? 0), 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AutoRefrescar activo />
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Bandeja de la gestora</h1>
-        <p className="text-texto-3 [&_strong]:font-mono [&_strong]:text-texto">
-          <strong>{abiertos.length}</strong> casos necesitan una decisión. Primero los cambios de cuenta, luego los que tienen un pago esta semana.
-          {aprobadosSolos > 0 && <> Otros <strong>{aprobadosSolos}</strong> se aprobaron solos</>}
-          {porPolitica > 0 && <> y <strong>{porPolitica}</strong> los resolvieron las <Link href="/automatizacion" className="underline">políticas automáticas</Link></>}.
-          {antiguos > 0 && <span className="font-medium text-peligro"> <Icono nombre="reloj" className="inline h-3.5 w-3.5 align-[-2px]" /> {antiguos} llevan más de {HORAS_CASO_ANTIGUO} h esperando.</span>}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div><h1 className="text-xl font-semibold">Bandeja de excepciones</h1><p className="mt-1 text-sm text-tinta-2">{abiertos.length} casos pendientes · ordenados por riesgo y monto</p></div>
+        <span className="text-xs text-tinta-3">Actualizado hace menos de 1 min</span>
+      </header>
+      <div className="grid gap-4 border-y border-borde py-4 sm:grid-cols-2 lg:grid-cols-4">
+        <DatoClave etiqueta="Pendientes" valor={abiertos.length} />
+        <DatoClave etiqueta="En pausa por CLABE" valor={clabeEnPausa} />
+        <DatoClave etiqueta="Monto expuesto" valor={pesos(montoExpuesto)} />
+        <DatoClave etiqueta="Aprobados automáticamente" valor={aprobadosSolos} />
       </div>
       <Alertas alertas={alertas} />
       {abiertos.length === 0 ? (
-        <div className="rounded-md border border-borde bg-panel p-10 text-center text-texto-2"><Icono nombre="escudoOk" className="mx-auto mb-2 h-8 w-8 text-ok" trazo={1.5} />No hay casos pendientes.</div>
+        <EstadoVacio titulo="No hay casos pendientes" texto="Los proveedores con riesgo bajo se aprueban automáticamente." />
       ) : (
-        <ul data-tour="bandeja" className="space-y-2">
-          {abiertos.map((c, i) => {
+        <Tabla>
+          <thead className="border-y border-borde text-left text-xs font-medium text-tinta-3"><tr><th className="px-4 py-3">Caso</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Riesgo</th><th className="px-4 py-3 text-right">Monto anual</th><th className="px-4 py-3">Motivo principal</th><th className="px-4 py-3">Antigüedad</th><th className="px-4 py-3" /></tr></thead>
+          <tbody data-tour="bandeja">
+          {abiertos.map((c) => {
             const p = porId.get(c.proveedor_id);
             if (!p) return null;
             const v = verificaciones.get(p.id);
-            const razones = c.tipo === "clabe" ? [`Alguien pidió cambiar su cuenta bancaria: ${c.motivo.charAt(0).toLowerCase()}${c.motivo.slice(1)}`] : resumenSimple(v?.hallazgos ?? []);
-            const barra = c.decision_sugerida === "bloquear" ? "bg-peligro" : "bg-alerta";
+            const razon = c.tipo === "clabe" ? "Cambio de cuenta bancaria solicitado" : resumenSimple(v?.hallazgos ?? [])[0] ?? "Revisión pendiente";
             const horas = horasDesde(c.creado_en);
             const pago = pagos.get(p.id);
             const doc = docPorProveedor.get(p.id);
             return (
-              <li key={c.id} className="animar-aparecer" style={{ animationDelay: `${Math.min(i, 10) * 60}ms` }}>
-                <Link href={`/expediente/${c.proveedor_id}`} className="flex overflow-hidden rounded-md border border-borde bg-panel transition hover:border-acento/50 hover:bg-panel-2">
-                  <span className={`w-1 shrink-0 ${barra}`} />
-                  <div className="flex flex-1 flex-wrap items-center gap-4 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {c.tipo === "clabe" && <span className="inline-flex items-center gap-1 rounded-sm bg-peligro/15 px-1.5 py-px font-mono text-[10.5px] font-semibold tracking-wider text-peligro uppercase ring-1 ring-peligro/40"><Icono nombre="alerta" className="h-3 w-3" />Posible fraude de cuenta</span>}
-                        <span className="font-semibold">{p.razon_social}</span>
-                      </div>
-                      <ul className="mt-1 space-y-0.5 text-sm text-texto-2">
-                        {razones.map((r) => <li key={r} className="flex gap-2"><span className="mt-2 h-1 w-1 shrink-0 bg-texto-3" aria-hidden />{r}</li>)}
-                      </ul>
-                      <div className="mt-2 flex flex-wrap gap-2 font-mono text-[11px]">
-                        <span className={`rounded-sm px-2 py-0.5 ${horas >= HORAS_CASO_ANTIGUO ? "bg-peligro/15 font-semibold text-peligro" : "bg-realce text-texto-2"} inline-flex items-center gap-1`}><Icono nombre="reloj" className="h-3 w-3" />{antiguedad(horas)}</span>
-                        {pago && <span className={`rounded-sm px-2 py-0.5 ${pago.dias <= DIAS_PAGO_URGENTE ? "bg-alerta/15 font-semibold text-alerta" : "bg-realce text-texto-2"} inline-flex items-center gap-1`}><Icono nombre="dinero" className="h-3 w-3" />{pesos(pago.monto)} por pagarle {enDias(pago.dias)}</span>}
-                        {doc && <EstadoDocumento d={doc} />}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Semaforo decision={c.decision_sugerida} />
-                      <div className="mt-1 font-mono text-[11px] text-texto-3">le compramos {pesos(p.monto_anual)} al año</div>
-                    </div>
-                    <Icono nombre="adelante" className="h-4 w-4 text-texto-3" />
-                  </div>
-                </Link>
-              </li>
+              <tr key={c.id} className={`h-12 border-b border-borde align-middle hover:bg-hover ${c.tipo === "clabe" ? "border-l-2 border-l-acento" : ""}`}>
+                <td className="px-4 py-3"><Link href={`/expediente/${c.proveedor_id}`} className="font-medium text-marca hover:underline">{p.razon_social}</Link><div className="mt-0.5 text-xs text-tinta-3">{p.rfc}</div></td>
+                <td className="px-4 py-3">{c.tipo === "clabe" ? <Chip tono="medio">Pago en pausa</Chip> : <Chip tono="info">Alta</Chip>}</td>
+                <td className="px-4 py-3"><div className="flex items-center gap-2"><Semaforo decision={c.decision_sugerida} /><span className="tabular-nums text-xs text-tinta-3">{v?.puntaje ?? "—"}</span></div></td>
+                <td className="px-4 py-3 text-right tabular-nums">{pesos(p.monto_anual)}</td>
+                <td className="max-w-[220px] truncate px-4 py-3 text-tinta-2" title={razon}>{razon}{doc && <span className="ml-2"><EstadoDocumento d={doc} /></span>}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-tinta-2">{antiguedad(horas)}{pago && <span className="block text-tinta-3">{pesos(pago.monto)} {enDias(pago.dias)}</span>}</td>
+                <td className="px-4 py-3 text-right"><Link href={`/expediente/${c.proveedor_id}`} className="text-sm font-medium text-marca hover:underline">Abrir</Link></td>
+              </tr>
             );
           })}
-        </ul>
+          </tbody>
+        </Tabla>
       )}
     </div>
   );

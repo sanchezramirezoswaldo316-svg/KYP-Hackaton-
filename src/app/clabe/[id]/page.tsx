@@ -36,7 +36,7 @@ export default async function MonitorDeLlamada({ params }: { params: Promise<{ i
       <AutoRefrescar activo={v.fase === "llamando"} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1.5">
-          <Link href="/clabe" className="inline-flex items-center gap-1 font-mono text-[11px] tracking-wider text-texto-3 uppercase hover:text-acento-2">
+          <Link href="/clabe" className="inline-flex items-center gap-1 font-mono text-[11px] tracking-wider text-tinta-3 uppercase hover:text-acento">
             <Icono nombre="atras" className="h-3 w-3" />Cambios de cuenta / Monitor de llamada
           </Link>
           <div className="flex flex-wrap items-center gap-3">
@@ -44,7 +44,7 @@ export default async function MonitorDeLlamada({ params }: { params: Promise<{ i
             <PildoraLlamada v={v} />
           </div>
         </div>
-        <Link href={`/expediente/${p.id}`} className="inline-flex items-center gap-2 rounded border border-borde-fuerte bg-panel px-3 py-2 text-sm font-medium text-texto-2 hover:bg-panel-2">
+        <Link href={`/expediente/${p.id}`} className="inline-flex items-center gap-2 rounded border border-borde-fuerte bg-panel px-3 py-2 text-sm font-medium text-tinta-2 hover:bg-superficie">
           <Icono nombre="documento" />Ver expediente
         </Link>
       </div>

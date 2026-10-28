@@ -1,53 +1,34 @@
 @import "tailwindcss";
 
-/* Sistema de diseño: consola operativa oscura (estilo centro de operaciones).
-   El color se reserva para estados; todo lo demás es gris azulado. */
 @theme {
-  --color-fondo: #0b1015;
-  --color-panel: #121920;
-  --color-panel-2: #18212a;
-  --color-realce: #1f2a35;
-  --color-borde: #253240;
-  --color-borde-fuerte: #364657;
-  --color-texto: #e3eaf1;
-  --color-texto-2: #a7b4c2;
-  --color-texto-3: #758595;
-  --color-acento: #2d8cf0;
-  --color-acento-2: #6cb2ff;
-  --color-ok: #2fb37a;
-  --color-alerta: #e3a33b;
-  --color-peligro: #ef5350;
-  --color-voz: #a78bfa;
-  --font-sans: var(--fuente-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--fuente-mono), ui-monospace, SFMono-Regular, monospace;
+  --color-lienzo: #ffffff;
+  --color-panel: #ffffff;
+  --color-superficie: #fafafa;
+  --color-hover: #f5f5f5;
+  --color-seleccion: #efefef;
+  --color-borde: #e5e5e5;
+  --color-borde-fuerte: #d4d4d4;
+  --color-tinta: #000000;
+  --color-tinta-2: #525252;
+  --color-tinta-3: #6b6b6b;
+  --color-marca: #000000;
+  --color-marca-2: #262626;
+  --color-acento: #4a1d5c;
+  --color-acento-2: #5e2775;
+  --color-acento-fondo: #f4eef7;
+  --color-error: #b3261e;
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --radius-ventana: 10px;
 }
 
-@layer base {
-  html { color-scheme: dark; }
-  body { background: var(--color-fondo); color: var(--color-texto); font-feature-settings: "cv11", "ss01"; }
-  input, select, textarea {
-    background-color: var(--color-panel-2);
-    color: var(--color-texto);
-    border-color: var(--color-borde-fuerte);
-  }
-  input::placeholder, textarea::placeholder { color: var(--color-texto-3); }
-  :focus-visible { outline: 2px solid var(--color-acento); outline-offset: 2px; }
-  ::selection { background: color-mix(in srgb, var(--color-acento) 40%, transparent); }
-  * { scrollbar-color: var(--color-borde-fuerte) transparent; scrollbar-width: thin; }
-  table { font-variant-numeric: tabular-nums; }
-  thead th { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-texto-3); }
-}
-
-/* Encabezado de panel: mayúsculas pequeñas con espaciado, como las consolas de operación. */
-.rotulo { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-texto-3); }
-/* Fondo cuadriculado sutil para zonas de mapa. */
-.reticula {
-  background-image:
-    linear-gradient(var(--color-borde) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-borde) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: -1px -1px;
-}
+* { box-sizing: border-box; }
+body { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+body { background: var(--color-lienzo); color: var(--color-tinta); }
+button, a, input, select, textarea { outline-offset: 2px; }
+:where(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--color-acento); }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.app-main { min-width: 0; }
 
 @keyframes aparecer {
   from { opacity: 0; transform: translateY(8px); }
@@ -65,7 +46,7 @@
   80% { transform: rotate(8deg); }
 }
 
-.animar-aparecer { animation: aparecer 0.45s ease both; }
+.animar-aparecer { animation: aparecer 0.25s cubic-bezier(.23,1,.32,1) both; }
 .animar-latido { animation: latido 1.6s ease-in-out infinite; }
 .animar-llamando { animation: llamando 1s ease-in-out infinite; display: inline-block; }
 
@@ -80,21 +61,3 @@
 @media (prefers-reduced-motion: reduce) {
   .linea-viva { animation: none; }
 }
-
-@keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-.animar-parpadeo { animation: parpadeo 1.4s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .animar-parpadeo { animation: none; } }
-
-@keyframes aparecer-nodo { from { opacity: 0; } to { opacity: 1; } }
-.aparecer-nodo { animation: aparecer-nodo 0.5s ease both; }
-@media (prefers-reduced-motion: reduce) { .aparecer-nodo { animation: none; } }
-
-/* Monitor de llamadas: ondas de voz alrededor de quien habla y sello de fraude detenido. */
-@keyframes onda-voz { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 100% { transform: translate(-50%, -50%) scale(2.1); opacity: 0; } }
-.onda-voz { animation: onda-voz 1.6s ease-out infinite; }
-.onda-voz-2 { animation: onda-voz 1.6s ease-out 0.8s infinite; }
-@keyframes sello { 0% { transform: rotate(-12deg) scale(1.6); opacity: 0; } 60% { transform: rotate(-12deg) scale(0.95); opacity: 1; } 100% { transform: rotate(-12deg) scale(1); opacity: 1; } }
-.animar-sello { animation: sello 0.6s ease-out both; }
-@keyframes franja-espera { from { background-position: 0 0; } to { background-position: 40px 0; } }
-.franja-espera { background-image: repeating-linear-gradient(90deg, var(--color-realce) 0 20px, var(--color-panel-2) 20px 40px); animation: franja-espera 1s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .onda-voz, .onda-voz-2, .animar-sello, .franja-espera { animation: none; } }

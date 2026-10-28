@@ -1,25 +1,24 @@
-import { Icono, type NombreIcono } from "./Icono";
-
-export function Tarjeta({ titulo, children, acciones, icono }: { titulo?: React.ReactNode; children: React.ReactNode; acciones?: React.ReactNode; icono?: NombreIcono }) {
+export function Tarjeta({ titulo, children, acciones, icono: _icono }: { titulo?: string; children: React.ReactNode; acciones?: React.ReactNode; icono?: string }) {
+  void _icono;
   return (
-    <section className="rounded-md border border-borde bg-panel">
+    <section className="rounded-panel border border-borde bg-panel p-4">
       {(titulo || acciones) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-borde px-4 py-2.5">
-          {titulo && <h2 className="rotulo flex items-center gap-2">{icono && <Icono nombre={icono} className="h-3.5 w-3.5 text-acento-2" />}{titulo}</h2>}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          {titulo && <h2 className="text-sm font-semibold">{titulo}</h2>}
           {acciones}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      {children}
     </section>
   );
 }
 
 export function Indicador({ titulo, valor, detalle }: { titulo: string; valor: React.ReactNode; detalle?: string }) {
   return (
-    <div className="rounded-md border border-borde bg-panel px-4 py-3">
-      <div className="rotulo">{titulo}</div>
-      <div className="mt-1.5 font-mono text-2xl font-semibold tabular-nums">{valor}</div>
-      {detalle && <div className="mt-1 text-xs text-texto-3">{detalle}</div>}
+    <div className="rounded-lg border border-borde bg-white p-4">
+      <div className="text-xs text-tinta-3">{titulo}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums">{valor}</div>
+      {detalle && <div className="mt-1 text-xs text-tinta-3">{detalle}</div>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Tarjeta } from "@/components/Tarjeta";
+import { Panel } from "@/components/ui/Panel";
 import { Termino } from "@/components/Termino";
 import { CargaCsv } from "@/components/cliente/CargaCsv";
 import { COLUMNAS, MAX_CSV_BYTES, MAX_CSV_FILAS } from "@/lib/csv.ts";
@@ -7,26 +7,24 @@ export default function Carga() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Revisar muchos proveedores a la vez</h1>
-        <p className="text-texto-2">
+        <h1 className="text-2xl font-semibold">Revisar muchos proveedores a la vez</h1>
+        <p className="text-tinta-3">
           El sistema revisa a todos contra la lista negra del SAT (<Termino t="69-B" />) y las sanciones internacionales (<Termino t="OFAC" />).
           Los confiables se aprueban solos; los dudosos llegan a la bandeja.
         </p>
       </div>
-      <Tarjeta>
+      <Panel titulo="Importar proveedores">
         <CargaCsv />
-      </Tarjeta>
-      <details className="rounded border border-borde bg-panel p-4 text-sm">
-        <summary className="cursor-pointer font-medium">Formato del archivo</summary>
-        <p className="mt-2 text-texto-2">Columnas (por nombre, en cualquier orden): <code className="text-xs">{COLUMNAS.join(", ")}</code>. Obligatorias: rfc, razon_social y telefono_registrado.</p>
-        <p className="mt-2 text-texto-2">
-          Máximo {Math.floor(MAX_CSV_BYTES / 1024 / 1024)} MB y {MAX_CSV_FILAS.toLocaleString("es-MX")} filas. Se validan RFC y CLABE; las filas inválidas o con celdas que empiezan con =, +, - o @ no se envían.
-        </p>
-        <p className="mt-2">
-          <a href="/demo/proveedores-demo.csv" download className="text-acento-2 underline">Descargar el archivo de ejemplo</a>
-          <span className="text-texto-3"> · incluye empresas reales de las listas públicas del SAT y un nombre parecido a uno sancionado por EE. UU.; teléfonos, cuentas y montos son ficticios.</span>
-        </p>
-      </details>
+      </Panel>
+      <Panel titulo="Reglas del archivo">
+        <div className="space-y-1 text-sm text-tinta-2">
+          <p>Máximo {Math.floor(MAX_CSV_BYTES / 1024 / 1024)} MB y {MAX_CSV_FILAS.toLocaleString("es-MX")} filas.</p>
+          <p>Columnas obligatorias: rfc, razon_social y telefono_registrado. El resto puede venir en cualquier orden.</p>
+          <p>Se validan RFC y CLABE; no se aceptan celdas que empiecen con =, +, - o @.</p>
+        </div>
+        <a href="/demo/proveedores-demo.csv" download className="mt-3 inline-block text-sm font-medium text-marca underline">Descargar plantilla de ejemplo</a>
+        <code className="mt-2 block break-words text-xs text-tinta-3">Columnas disponibles: {COLUMNAS.join(", ")}</code>
+      </Panel>
     </div>
   );
 }

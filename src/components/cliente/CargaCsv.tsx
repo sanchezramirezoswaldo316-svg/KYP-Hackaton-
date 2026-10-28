@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MAX_CSV_BYTES, validarFilasCsv, type FilaValidada } from "@/lib/csv.ts";
+import { DatoClave } from "@/components/ui/DatoClave";
 import { enviar } from "./peticion.ts";
-import { Icono } from "@/components/Icono";
 
 const BLOQUE = 50;
 const CONCURRENCIA = 2;
-const COLOR = { liberar: "bg-ok/45", revisar: "bg-alerta", bloquear: "bg-peligro", error: "bg-realce" } as const;
+const COLOR = { liberar: "bg-tinta", revisar: "bg-acento", bloquear: "bg-tinta", error: "bg-tinta-3" } as const;
 
 interface Resultado { fila?: number; rfc: string; ok: boolean; decision?: "liberar" | "revisar" | "bloquear"; error?: string }
 
@@ -104,75 +104,68 @@ export function CargaCsv() {
   return (
     <div className="space-y-5">
       {estado === "inicio" && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <button data-tour="carga-ejemplo" onClick={usarEjemplo} className="animar-latido rounded bg-acento px-5 py-3 font-semibold text-white shadow hover:bg-acento/85">
-            <Icono nombre="reproducir" className="mr-1.5 inline h-4 w-4 align-[-3px]" />Usar los 500 proveedores de ejemplo
+        <div className="rounded-control border border-dashed border-borde-fuerte bg-superficie p-6 text-center">
+          <p className="text-sm font-medium">Arrastra un CSV o selecciona un archivo</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <button data-tour="carga-ejemplo" onClick={usarEjemplo} className="min-h-9 rounded-control bg-marca px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[.97] hover:bg-marca-2">
+            Usar proveedores de ejemplo
           </button>
-          <span className="text-sm text-texto-3">o sube tu archivo:</span>
-          <input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && desdeArchivo(e.target.files[0])} className="text-sm" />
+          <label className="cursor-pointer rounded-control border border-borde-fuerte bg-panel px-4 py-2 text-sm font-medium hover:bg-white"><span>Seleccionar CSV</span><input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && desdeArchivo(e.target.files[0])} className="sr-only" /></label>
+          </div>
         </div>
       )}
       {estado === "inicio" && (
-        <label className="flex items-center gap-2 text-sm text-texto-2">
+        <label className="flex items-center gap-2 text-sm text-tinta-2">
           <input type="checkbox" checked={externas} onChange={(e) => setExternas(e.target.checked)} />
           Incluir página web, noticias y dominio (más lento)
         </label>
       )}
-      {error && <p className="text-sm text-peligro">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       {estado !== "inicio" && (
         <div data-tour="embudo" className="space-y-5">
           <div>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="rotulo">Cada cuadrito es un proveedor</h3>
-              <span className="font-mono text-xs text-texto-2">{mostrados} de {total} procesados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
+              <h3 className="font-semibold">Cada cuadrito es un proveedor</h3>
+              <span className="text-sm text-tinta-2">{mostrados} de {total} procesados{terminado && ` en ${segundos.toFixed(1)} segundos`}</span>
             </div>
-            <div role="progressbar" aria-label="Progreso de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje} className="mb-3 h-1 overflow-hidden rounded-sm bg-borde">
-              <div className="h-full bg-acento transition-[width]" style={{ width: `${porcentaje}%` }} />
+            <div role="progressbar" aria-label="Progreso de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje} className="mb-3 h-1 overflow-hidden rounded-sm bg-seleccion">
+              <div className="h-full rounded-sm bg-acento transition-[width]" style={{ width: `${porcentaje}%` }} />
             </div>
-            <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(10px, 1fr))" }} aria-hidden>
+            <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(12px, 1fr))" }} aria-hidden>
               {Array.from({ length: total }, (_, i) => {
                 const r = visibles[i];
-                const c = r ? COLOR[r.ok ? r.decision! : "error"] : "bg-borde";
-                return <span key={i} className={`aspect-square rounded-[1px] transition-colors duration-300 ${c} ${r && r.decision !== "liberar" ? "outline outline-1 outline-offset-1 outline-texto/40" : ""}`} />;
+                const c = r ? COLOR[r.ok ? r.decision! : "error"] : "bg-seleccion";
+                return <span key={i} className={`aspect-square rounded-[3px] transition-colors duration-300 ${c}`} />;
               })}
             </div>
-            <div className="mt-2 flex flex-wrap gap-4 font-mono text-[11px] text-texto-3 uppercase">
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-ok align-middle" />Confiable</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-alerta align-middle" />Revisar</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-peligro align-middle" />Peligro</span>
-              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-borde align-middle" />En espera</span>
+            <div className="mt-2 flex flex-wrap gap-4 text-xs text-tinta-2">
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-tinta align-middle" />Resuelto</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-acento align-middle" />Revisar</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-tinta-3 align-middle" />Error</span>
+              <span><span className="mr-1 inline-block h-3 w-3 rounded-sm bg-seleccion align-middle" />En espera</span>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="relative overflow-hidden rounded border border-borde bg-panel-2 p-5">
-              <span className="absolute inset-y-0 left-0 w-0.5 bg-ok" aria-hidden />
-              <div className="flex items-center gap-2 text-ok"><Icono nombre="escudoOk" className="h-4 w-4" /><span className="rotulo text-ok!">Aprobados solos</span></div>
-              <div className="mt-1 font-mono text-5xl font-semibold tabular-nums">{aprobados}</div>
-              <p className="text-sm text-texto-3">Nadie tuvo que revisarlos: no hay señales de riesgo.</p>
-            </div>
-            <div className="relative overflow-hidden rounded border border-borde bg-panel-2 p-5">
-              <span className="absolute inset-y-0 left-0 w-0.5 bg-alerta" aria-hidden />
-              <div className="flex items-center gap-2 text-alerta"><Icono nombre="persona" className="h-4 w-4" /><span className="rotulo text-alerta!">Necesitan a una persona</span></div>
-              <div className="mt-1 font-mono text-5xl font-semibold tabular-nums">{dudosos}</div>
-              <p className="text-sm text-texto-3">{cuenta("bloquear")} con señales graves y {cuenta("revisar")} por revisar.</p>
-            </div>
+          <div className="grid gap-4 border-y border-borde py-4 sm:grid-cols-3">
+            <DatoClave etiqueta="Válidas / aprobadas" valor={aprobados} detalle="Resueltas automáticamente" />
+            <DatoClave etiqueta="Revisión humana" valor={dudosos} detalle={`${cuenta("bloquear")} bloqueo · ${cuenta("revisar")} revisión`} />
+            <DatoClave etiqueta="Con errores" valor={cuenta("error")} detalle="No se enviaron" />
           </div>
 
           {terminado && (
-            <div className="animar-aparecer rounded border border-acento/50 bg-acento/10 p-5 text-center">
-              <p className="text-lg">De {total} proveedores, solo <strong className="font-mono text-2xl text-acento-2">{dudosos}</strong> necesitan atención humana.</p>
-              <p className="text-sm text-texto-3">Eso es el {total ? Math.round((aprobados / total) * 100) : 0}% resuelto en automático.</p>
+            <div className="animar-aparecer rounded-panel bg-tinta p-5 text-center text-white">
+              <p className="text-lg">De {total} proveedores, solo <strong className="text-2xl">{dudosos}</strong> necesitan atención humana.</p>
+              <p className="text-sm opacity-80">Eso es el {total ? Math.round((aprobados / total) * 100) : 0}% resuelto en automático.</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <Link href="/bandeja" className="rounded bg-acento px-4 py-2 font-medium text-white hover:bg-acento/85">Ver los {dudosos} casos →</Link>
-                <button onClick={() => setEstado("inicio")} className="rounded border border-borde-fuerte px-4 py-2 text-sm text-texto-2 hover:bg-panel-2">Cargar otro archivo</button>
+                <Link href="/bandeja" className="rounded-control bg-white px-4 py-2 font-medium text-tinta hover:bg-hover">Ver los {dudosos} casos</Link>
+                <button onClick={() => setEstado("inicio")} className="rounded border border-white/40 px-4 py-2 text-sm hover:bg-white/10">Cargar otro archivo</button>
               </div>
             </div>
           )}
           {cuenta("error") > 0 && terminado && (
             <details className="text-sm">
-              <summary className="cursor-pointer text-peligro">{cuenta("error")} filas con errores</summary>
+              <summary className="cursor-pointer text-error">{cuenta("error")} filas con errores</summary>
               <ul className="mt-2 list-disc pl-5">{visibles.filter((r) => !r.ok).map((e) => <li key={`${e.fila}-${e.rfc}`}>Fila {e.fila} · {e.rfc}: {e.error}</li>)}</ul>
             </details>
           )}

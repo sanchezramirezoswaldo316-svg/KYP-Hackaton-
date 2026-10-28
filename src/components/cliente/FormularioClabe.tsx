@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { enviar } from "./peticion.ts";
-import { Icono } from "@/components/Icono";
 
-export function FormularioClabe({ proveedores, seleccionado, simulada = false }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string; simulada?: boolean }) {
+export function FormularioClabe({ proveedores, seleccionado, simulada: _simulada }: { proveedores: { id: string; razon_social: string; rfc: string }[]; seleccionado?: string; simulada?: boolean }) {
+  void _simulada;
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
@@ -17,17 +17,17 @@ export function FormularioClabe({ proveedores, seleccionado, simulada = false }:
     setOcupado(true);
     setMensaje(null);
     try {
-      const r = await enviar<{ solicitud: { id: string }; llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos, 30000);
+      const r = await enviar<{ solicitud?: { id: string }; llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos);
       setMensaje(
         r.llamada.iniciada
           ? { tipo: "ok", texto: "Pago en pausa. El agente de voz está llamando al teléfono registrado en el alta." }
           : r.llamada.error
             ? { tipo: "error", texto: `Pago en pausa, pero la llamada falló: ${r.llamada.error}. El caso pasó a la bandeja.` }
-            : { tipo: "ok", texto: "Pago congelado. La voz real no está conectada: en el monitor puedes simular qué responde el proveedor." },
+            : { tipo: "ok", texto: "Pago congelado. La voz real no está conectada: abajo puedes simular qué responde el proveedor." },
       );
       form.reset();
-      // Abre el monitor de la llamada recién creada.
-      router.push(`/clabe/${r.solicitud.id}`);
+      if (r.solicitud?.id) router.push(`/clabe/${r.solicitud.id}`);
+      else router.refresh();
     } catch (e) {
       setMensaje({ tipo: "error", texto: (e as Error).message });
     } finally {
@@ -51,13 +51,13 @@ export function FormularioClabe({ proveedores, seleccionado, simulada = false }:
       <label className="block text-sm sm:col-span-2">
         <span className="font-medium">Teléfono que viene en la solicitud</span>
         <input name="telefono_en_solicitud" className="mt-1 w-full rounded border border-borde-fuerte px-3 py-2" />
-        <span className="text-xs text-texto-3">Se guarda como evidencia, pero el sistema NUNCA llama a este número: llama al registrado en el alta.</span>
+        <span className="text-xs text-tinta-3">Se guarda como evidencia, pero el sistema NUNCA llama a este número: llama al registrado en el alta.</span>
       </label>
       <div className="sm:col-span-3">
-        <button disabled={ocupado} className="rounded bg-acento px-4 py-2 text-sm font-medium text-white hover:bg-acento/85 disabled:opacity-50">
-          {!ocupado && <Icono nombre="pausa" className="mr-1.5 inline h-4 w-4 align-[-3px]" />}{ocupado ? "Registrando…" : (simulada ? "Pausar pago e iniciar demo" : "Congelar pago y llamar al proveedor")}
+        <button disabled={ocupado} className="rounded bg-marca px-4 py-2 text-sm font-medium text-white hover:bg-marca disabled:opacity-50">
+          {ocupado ? "Registrando…" : "Congelar pago y llamar al proveedor"}
         </button>
-        {mensaje && <p role={mensaje.tipo === "error" ? "alert" : "status"} className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-ok" : "text-peligro"}`}>{mensaje.texto}</p>}
+        {mensaje && <p className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-tinta-2" : "text-error"}`}>{mensaje.texto}</p>}
       </div>
     </form>
   );
