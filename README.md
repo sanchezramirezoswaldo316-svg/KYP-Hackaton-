@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KYP · Know Your Provider
 
-## Getting Started
+Plataforma de verificación de proveedores con **gestión por excepción**: un solo gestor revisa lo que antes requería un equipo de 30 auditores.
 
-First, run the development server:
+- Revisa en automático los listados 69 y 69-B del SAT, la lista OFAC, la página web y las noticias de cada proveedor (Firecrawl).
+- Calcula un **puntaje con reglas explicables**; la IA solo redacta el resumen.
+- Libera en automático a los proveedores limpios y manda los dudosos a la **bandeja del gestor**.
+- Verifica los **cambios de CLABE** con una llamada de voz (ElevenLabs) al teléfono registrado.
+- Genera un **expediente PDF** con evidencia y hash.
+
+## Equipo y responsabilidades
+
+| Persona | Área | Carpetas principales |
+|---|---|---|
+| **Oswaldo** | Líder técnico: base, Supabase, API, panel de productividad, integración y pitch | `src/app/api`, `src/app/page.tsx`, `src/lib/supabase.ts`, `supabase/` |
+| **Ulises** | Motor de verificación: SAT 69/69-B, OFAC, reglas de puntaje, datos de la demo | `src/lib/puntaje`, `datos/` |
+| **Alan** | n8n + Firecrawl + resumen con IA | `n8n/` |
+| **Axel** | Verificación por voz con ElevenLabs | `voz/` |
+| **Samuel** | Interfaz: carga CSV, bandeja, expediente, ERP simulado, PDF | `src/app/bandeja`, `src/app/expediente`, `src/app/carga`, `src/app/erp`, `src/components` |
+
+**Contratos compartidos:** `src/lib/tipos.ts`. Si los cambias, avisa al equipo.
+
+## Arrancar en tu computadora
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # llena los valores
+npm run dev                  # http://localhost:3000
+npm test                     # pruebas del motor de reglas
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sin credenciales, la app funciona con **datos de prueba** (`src/lib/datos-prueba`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Forma de trabajar
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Crea tu rama: `git checkout -b tu-nombre/tema` (ejemplo: `axel/voz`).
+2. Haz commits pequeños y abre un pull request hacia `main`.
+3. Vercel crea un enlace de prueba para cada pull request.
+4. Oswaldo revisa e integra a `main`, que se publica automáticamente.
 
-## Learn More
+## Webhooks
 
-To learn more about Next.js, take a look at the following resources:
+| Ruta | Quién llama | Cuerpo |
+|---|---|---|
+| `POST /api/webhooks/verificacion` | n8n (Alan) | `WebhookVerificacion` |
+| `POST /api/webhooks/llamada` | Flujo de voz (Axel) | `WebhookLlamada` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ambos requieren el header `x-kyp-secret` con el valor de `WEBHOOK_SECRET`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Alcance
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **MVP (hackathon):** carga, verificación SAT/OFAC/Firecrawl, puntaje, bandeja, llamada de voz, PDF, ERP simulado y panel.
+- **Fase 2:** portal del proveedor, opinión 32-D, más listas, transferencia de prueba con CEP y monitoreo continuo.
+- **Enterprise:** e.firma, NOM-151 con PSC acreditado, red de conflictos de interés y conexión real con el ERP.
