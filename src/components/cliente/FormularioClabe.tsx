@@ -17,16 +17,17 @@ export function FormularioClabe({ proveedores, seleccionado, simulada = false }:
     setOcupado(true);
     setMensaje(null);
     try {
-      const r = await enviar<{ llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos, 30000);
+      const r = await enviar<{ solicitud: { id: string }; llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos, 30000);
       setMensaje(
         r.llamada.iniciada
           ? { tipo: "ok", texto: "Pago en pausa. El agente de voz está llamando al teléfono registrado en el alta." }
           : r.llamada.error
             ? { tipo: "error", texto: `Pago en pausa, pero la llamada falló: ${r.llamada.error}. El caso pasó a la bandeja.` }
-            : { tipo: "ok", texto: "Pago congelado. La voz real no está conectada: abajo puedes simular qué responde el proveedor." },
+            : { tipo: "ok", texto: "Pago congelado. La voz real no está conectada: en el monitor puedes simular qué responde el proveedor." },
       );
       form.reset();
-      router.refresh();
+      // Abre el monitor de la llamada recién creada.
+      router.push(`/clabe/${r.solicitud.id}`);
     } catch (e) {
       setMensaje({ tipo: "error", texto: (e as Error).message });
     } finally {

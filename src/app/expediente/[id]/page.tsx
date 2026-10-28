@@ -96,7 +96,10 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
         <section data-tour="clabe-timeline" className="space-y-4 rounded-md border border-borde bg-panel p-5">
           <h2 className="rotulo flex items-center gap-2"><Icono nombre="banco" className="h-3.5 w-3.5 text-acento-2" />Cambios de cuenta bancaria (<Termino t="CLABE" />)</h2>
           {e.solicitudes.map((s) => (
-            <LineaTiempoClabe key={s.id} s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} fallo={e.bitacora.some(b => b.entidad_id === s.id && b.accion === "llamada_fallida")} />
+            <div key={s.id} className="space-y-2">
+            <Link href={`/clabe/${s.id}`} className="inline-flex items-center gap-1.5 font-mono text-xs text-acento-2 hover:underline"><Icono nombre="radar" className="h-3.5 w-3.5" />ABRIR MONITOR DE LA LLAMADA →</Link>
+            <LineaTiempoClabe s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} fallo={e.bitacora.some(b => b.entidad_id === s.id && b.accion === "llamada_fallida")} />
+            </div>
           ))}
         </section>
       )}

@@ -31,12 +31,13 @@ async function rutaMapaPrimerCaso(): Promise<string> {
 async function crearIntentoFraude(): Promise<string> {
   const provs = (await (await fetch("/api/proveedores")).json()) as { id: string; estado: string; clabe: string | null }[];
   const p = provs.find((x) => x.estado === "aprobado" && x.clabe) ?? provs[0];
-  await fetch("/api/clabe", {
+  const r = await fetch("/api/clabe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ proveedor_id: p.id, clabe_nueva: "002010077777777771", telefono_en_solicitud: "+52 55 9999 0000" }),
   });
-  return `/expediente/${p.id}`;
+  const datos = (await r.json().catch(() => null)) as { solicitud?: { id: string } } | null;
+  return datos?.solicitud ? `/clabe/${datos.solicitud.id}` : `/expediente/${p.id}`;
 }
 
 const PASOS: Paso[] = [
@@ -47,7 +48,7 @@ const PASOS: Paso[] = [
   { ruta: rutaPrimerCaso, objetivo: "velocimetro", titulo: "¿Qué tan riesgoso es?", texto: "El medidor va de 0 (confiable) a 100 (peligro). Este proveedor está en rojo." },
   { ruta: rutaPrimerCaso, objetivo: "evidencia", titulo: "Y por qué, con pruebas", texto: "Cada prueba viene de una fuente oficial y está explicada sin tecnicismos. Si quieres el detalle técnico, está un clic más abajo." },
   { ruta: rutaPrimerCaso, objetivo: "decision", titulo: "Ana decide en un clic", texto: "Aprobar, pausar o bloquear. Su decisión queda registrada con su nombre y la hora, y se genera un expediente listo para una auditoría del SAT." },
-  { ruta: "", objetivo: "clabe-timeline", titulo: "Ahora, un intento de fraude", texto: "Alguien se hizo pasar por un proveedor y pidió cambiar su cuenta bancaria. El pago se congeló al instante y el sistema llama al teléfono REAL del proveedor. Prueba: elige qué responde.", preparar: crearIntentoFraude },
+  { ruta: "", objetivo: "clabe-timeline", titulo: "Ahora, un intento de fraude", texto: "Alguien se hizo pasar por un proveedor y pidió cambiar su cuenta bancaria. El pago se congeló al instante y el agente de voz llama al teléfono REAL del proveedor, nunca al de la solicitud. Prueba: elige qué responde y mira cómo se ilumina la ruta.", preparar: crearIntentoFraude },
   { ruta: "/panel", objetivo: "personas", titulo: "El resultado", texto: "Lo que antes requería 30 auditores, hoy lo hace una sola persona, más rápido y con evidencia de cada decisión." },
 ];
 
