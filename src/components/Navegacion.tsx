@@ -12,6 +12,7 @@ const enlaces = [
   { href: "/proveedores", texto: "Proveedores" },
   { href: "/carga", texto: "Carga CSV" },
   { href: "/clabe", texto: "Cambios de cuenta" },
+  { href: "/llamadas", texto: "Monitor de llamadas" },
   { href: "/erp", texto: "Cuentas por pagar" },
   { href: "/automatizacion", texto: "Automatización" },
 ];

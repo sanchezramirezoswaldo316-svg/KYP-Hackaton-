@@ -18,6 +18,7 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
   const [proveedores, solicitudes, llamadas, facturas] = await Promise.all([db.proveedores.listar(), db.solicitudes.listar(), db.llamadas.listar(), db.facturas.listar()]);
   const porId = new Map(proveedores.map((p) => [p.id, p]));
   const simular = !vozConfigurada();
+  const demoLocal = process.env.KYP_DEMO_LOCAL === "1";
   const enLlamada = solicitudes.some((s) => s.estado === "en_llamada" && !llamadas.some((l) => l.solicitud_id === s.id));
 
   return (
@@ -30,6 +31,7 @@ export default async function Clabe({ searchParams }: { searchParams: Promise<{ 
           Cuando llega una solicitud, <strong>el pago se congela</strong> y nuestro agente de voz <strong>llama al teléfono que el proveedor registró desde el principio</strong>, nunca al número que viene en la solicitud.
         </p>
       </div>
+      {demoLocal && <p className="text-sm text-tinta-2">Telefonía simulada · <a href="/api/voz/demo/audio" className="text-tinta underline">Escuchar demostración de voz pregrabada</a></p>}
       <Tarjeta titulo="Registrar una solicitud recibida">
         <div data-tour="form-clabe">
           <FormularioClabe
