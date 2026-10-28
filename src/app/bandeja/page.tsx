@@ -3,12 +3,16 @@ import Link from "next/link";
 import { Alertas } from "@/components/Alertas";
 import { EstadoDocumento } from "@/components/DocumentoProveedor";
 import { Semaforo } from "@/components/Semaforo";
+import { Chip } from "@/components/ui/Chip";
+import { DatoClave } from "@/components/ui/DatoClave";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Tabla } from "@/components/ui/Tabla";
 import { AutoRefrescar } from "@/components/cliente/AutoRefrescar";
 import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { resumenSimple } from "@/lib/explicar.ts";
 import { enDias, pesos } from "@/lib/formato.ts";
-import { HORAS_CASO_ANTIGUO, horasDesde, proximosPagos, ultimasVerificaciones } from "@/lib/servicios.ts";
+import { horasDesde, proximosPagos, ultimasVerificaciones } from "@/lib/servicios.ts";
 import type { SolicitudDocumento } from "@/lib/tipos.ts";
 
 export const dynamic = "force-dynamic";
@@ -35,65 +39,51 @@ export default async function Bandeja() {
   const docPorProveedor = new Map<string, SolicitudDocumento>();
   for (const d of documentos.sort((a, b) => a.enviada_en.localeCompare(b.enviada_en))) docPorProveedor.set(d.proveedor_id, d);
   const aprobadosSolos = [...verificaciones.values()].filter((v) => v.decision === "liberar").length;
-  const porPolitica = casos.filter((c) => c.decidido_por?.startsWith("Política:")).length;
-  const antiguos = abiertos.filter((c) => horasDesde(c.creado_en) >= HORAS_CASO_ANTIGUO).length;
+  const clabeEnPausa = abiertos.filter((c) => c.tipo === "clabe").length;
+  const montoExpuesto = abiertos.reduce((total, c) => total + (pagos.get(c.proveedor_id)?.monto ?? 0), 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AutoRefrescar activo />
-      <div>
-        <h1 className="text-2xl font-semibold">Bandeja de la gestora</h1>
-        <p className="text-slate-600">
-          <strong>{abiertos.length}</strong> casos necesitan una decisión. Primero los cambios de cuenta, luego los que tienen un pago esta semana.
-          {aprobadosSolos > 0 && <> Otros <strong>{aprobadosSolos}</strong> se aprobaron solos</>}
-          {porPolitica > 0 && <> y <strong>{porPolitica}</strong> los resolvieron las <Link href="/automatizacion" className="underline">políticas automáticas</Link></>}.
-          {antiguos > 0 && <span className="font-medium text-red-700"> ⏰ {antiguos} llevan más de {HORAS_CASO_ANTIGUO} h esperando.</span>}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div><h1 className="text-xl font-semibold">Bandeja de excepciones</h1><p className="mt-1 text-sm text-tinta-2">{abiertos.length} casos pendientes · ordenados por riesgo y monto</p></div>
+        <span className="text-xs text-tinta-3">Actualizado hace menos de 1 min</span>
+      </header>
+      <div className="grid gap-4 border-y border-borde py-4 sm:grid-cols-2 lg:grid-cols-4">
+        <DatoClave etiqueta="Pendientes" valor={abiertos.length} />
+        <DatoClave etiqueta="En pausa por CLABE" valor={clabeEnPausa} />
+        <DatoClave etiqueta="Monto expuesto" valor={pesos(montoExpuesto)} />
+        <DatoClave etiqueta="Aprobados automáticamente" valor={aprobadosSolos} />
       </div>
       <Alertas alertas={alertas} />
       {abiertos.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-lg text-slate-600">🎉 No hay casos pendientes.</div>
+        <EstadoVacio titulo="No hay casos pendientes" texto="Los proveedores con riesgo bajo se aprueban automáticamente." />
       ) : (
-        <ul data-tour="bandeja" className="space-y-3">
-          {abiertos.map((c, i) => {
+        <Tabla>
+          <thead className="bg-lienzo text-left text-xs font-medium text-tinta-2"><tr><th className="px-4 py-3">Caso</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Riesgo</th><th className="px-4 py-3 text-right">Monto anual</th><th className="px-4 py-3">Motivo principal</th><th className="px-4 py-3">Antigüedad</th><th className="px-4 py-3" /></tr></thead>
+          <tbody data-tour="bandeja">
+          {abiertos.map((c) => {
             const p = porId.get(c.proveedor_id);
             if (!p) return null;
             const v = verificaciones.get(p.id);
-            const razones = c.tipo === "clabe" ? [`Alguien pidió cambiar su cuenta bancaria: ${c.motivo.charAt(0).toLowerCase()}${c.motivo.slice(1)}`] : resumenSimple(v?.hallazgos ?? []);
-            const barra = c.decision_sugerida === "bloquear" ? "bg-red-500" : "bg-amber-400";
+            const razon = c.tipo === "clabe" ? "Cambio de cuenta bancaria solicitado" : resumenSimple(v?.hallazgos ?? [])[0] ?? "Revisión pendiente";
             const horas = horasDesde(c.creado_en);
             const pago = pagos.get(p.id);
             const doc = docPorProveedor.get(p.id);
             return (
-              <li key={c.id} className="animar-aparecer" style={{ animationDelay: `${Math.min(i, 10) * 60}ms` }}>
-                <Link href={`/expediente/${c.proveedor_id}`} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md">
-                  <span className={`w-2 shrink-0 ${barra}`} />
-                  <div className="flex flex-1 flex-wrap items-center gap-4 p-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {c.tipo === "clabe" && <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">🚨 Posible fraude de cuenta</span>}
-                        <span className="font-semibold">{p.razon_social}</span>
-                      </div>
-                      <ul className="mt-1 space-y-0.5 text-sm text-slate-700">
-                        {razones.map((r) => <li key={r}>• {r}</li>)}
-                      </ul>
-                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span className={`rounded-full px-2 py-0.5 ${horas >= HORAS_CASO_ANTIGUO ? "bg-red-100 font-semibold text-red-800" : "bg-slate-100 text-slate-600"}`}>⏰ {antiguedad(horas)}</span>
-                        {pago && <span className={`rounded-full px-2 py-0.5 ${pago.dias <= DIAS_PAGO_URGENTE ? "bg-orange-100 font-semibold text-orange-800" : "bg-slate-100 text-slate-600"}`}>💸 {pesos(pago.monto)} por pagarle {enDias(pago.dias)}</span>}
-                        {doc && <EstadoDocumento d={doc} />}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Semaforo decision={c.decision_sugerida} />
-                      <div className="mt-1 text-xs text-slate-500">le compramos {pesos(p.monto_anual)} al año</div>
-                    </div>
-                    <span className="text-blue-700" aria-hidden>→</span>
-                  </div>
-                </Link>
-              </li>
+              <tr key={c.id} className={`border-t border-borde align-middle hover:bg-slate-50 ${c.tipo === "clabe" ? "border-l-4 border-l-alto" : ""}`}>
+                <td className="px-4 py-3"><Link href={`/expediente/${c.proveedor_id}`} className="font-medium text-marca hover:underline">{p.razon_social}</Link><div className="mt-0.5 text-xs text-tinta-3">{p.rfc}</div></td>
+                <td className="px-4 py-3">{c.tipo === "clabe" ? <Chip tono="alto">Cambio de CLABE · Pago en pausa</Chip> : <Chip tono="info">Alta</Chip>}</td>
+                <td className="px-4 py-3"><div className="flex items-center gap-2"><Semaforo decision={c.decision_sugerida} /><span className="tabular-nums text-xs text-tinta-3">{v?.puntaje ?? "—"}</span></div></td>
+                <td className="px-4 py-3 text-right tabular-nums">{pesos(p.monto_anual)}</td>
+                <td className="max-w-[220px] truncate px-4 py-3 text-tinta-2" title={razon}>{razon}{doc && <span className="ml-2"><EstadoDocumento d={doc} /></span>}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-tinta-2">{antiguedad(horas)}{pago && <span className="block text-tinta-3">{pesos(pago.monto)} {enDias(pago.dias)}</span>}</td>
+                <td className="px-4 py-3 text-right"><Link href={`/expediente/${c.proveedor_id}`} className="text-sm font-medium text-marca hover:underline">Abrir</Link></td>
+              </tr>
             );
           })}
-        </ul>
+          </tbody>
+        </Tabla>
       )}
     </div>
   );
