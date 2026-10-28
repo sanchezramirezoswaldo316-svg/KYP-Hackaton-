@@ -1,5 +1,5 @@
 {
-  "name": "hackathon-app",
+  "name": "kyp-hackaton",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,13 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/**/*.test.ts"
+    "test": "node --test \"src/**/*.test.ts\"",
+    "listas": "node scripts/actualizar-listas.mjs",
+    "demo": "node scripts/generar-demo.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
     "@supabase/supabase-js": "^2.118.0",
     "next": "15.5.28",
+    "pdf-lib": "^1.17.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

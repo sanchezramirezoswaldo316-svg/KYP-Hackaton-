@@ -1,0 +1,62 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { enviar } from "./peticion.ts";
+
+export function FormularioClabe({ proveedores }: { proveedores: { id: string; razon_social: string; rfc: string }[] }) {
+  const router = useRouter();
+  const [ocupado, setOcupado] = useState(false);
+  const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
+
+  async function enviarFormulario(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const datos = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    setOcupado(true);
+    setMensaje(null);
+    try {
+      const r = await enviar<{ llamada: { iniciada: boolean; error?: string } }>("/api/clabe", datos);
+      setMensaje(
+        r.llamada.iniciada
+          ? { tipo: "ok", texto: "Pago en pausa. El agente de voz está llamando al teléfono registrado en el alta." }
+          : r.llamada.error
+            ? { tipo: "error", texto: `Pago en pausa, pero la llamada falló: ${r.llamada.error}. El caso pasó a la bandeja.` }
+            : { tipo: "ok", texto: "Pago en pausa. La voz no está configurada: simula el resultado de la llamada en la lista de abajo." },
+      );
+      form.reset();
+      router.refresh();
+    } catch (e) {
+      setMensaje({ tipo: "error", texto: (e as Error).message });
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <form onSubmit={enviarFormulario} className="grid gap-4 sm:grid-cols-3">
+      <label className="block text-sm sm:col-span-3">
+        <span className="font-medium">Proveedor *</span>
+        <select name="proveedor_id" required className="mt-1 w-full rounded border border-slate-300 px-3 py-2">
+          <option value="">Selecciona…</option>
+          {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social} · {p.rfc}</option>)}
+        </select>
+      </label>
+      <label className="block text-sm">
+        <span className="font-medium">CLABE nueva solicitada *</span>
+        <input name="clabe_nueva" required pattern="\d{18}" className="mt-1 w-full rounded border border-slate-300 px-3 py-2 font-mono" />
+      </label>
+      <label className="block text-sm sm:col-span-2">
+        <span className="font-medium">Teléfono que viene en la solicitud</span>
+        <input name="telefono_en_solicitud" className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+        <span className="text-xs text-slate-500">Se guarda como evidencia, pero el sistema NUNCA llama a este número: llama al registrado en el alta.</span>
+      </label>
+      <div className="sm:col-span-3">
+        <button disabled={ocupado} className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50">
+          {ocupado ? "Registrando…" : "Registrar solicitud y verificar por voz"}
+        </button>
+        {mensaje && <p className={`mt-2 text-sm ${mensaje.tipo === "ok" ? "text-emerald-700" : "text-red-700"}`}>{mensaje.texto}</p>}
+      </div>
+    </form>
+  );
+}

@@ -1,0 +1,134 @@
+[
+  {
+    "rfc": "COM151011P6O",
+    "razon_social": "Comercializadora de Harinas Altiplano SA de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525555908511",
+    "clabe": "127180190457509841",
+    "monto_anual": 13982000,
+    "factura_folio": "F-20000",
+    "factura_monto": 575333,
+    "giro_declarado": "Harina de trigo y derivados"
+  },
+  {
+    "rfc": "PRO170914EJZ",
+    "razon_social": "Proveedora de Empaques Mixteca S de RL de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525511869564",
+    "clabe": "014180042420054885",
+    "monto_anual": 8994000,
+    "factura_folio": "F-20007",
+    "factura_monto": 161083,
+    "giro_declarado": "Material de empaque y cartón"
+  },
+  {
+    "rfc": "IND230121TO8",
+    "razon_social": "Industrias de Transportes del Bajío SAPI de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525587946090",
+    "clabe": "072180332016671489",
+    "monto_anual": 4740000,
+    "factura_folio": "F-20014",
+    "factura_monto": 1133917,
+    "giro_declarado": "Flete terrestre"
+  },
+  {
+    "rfc": "PRO100904U1X",
+    "razon_social": "Proveedora de Lácteos Santa Fe SA de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525544203453",
+    "clabe": "072180509292077960",
+    "monto_anual": 320000,
+    "factura_folio": "F-20021",
+    "factura_monto": 1032250,
+    "giro_declarado": "Leche y derivados lácteos"
+  },
+  {
+    "rfc": "DIS2402237HE",
+    "razon_social": "Distribuidora de Azúcares Anáhuac S de RL de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525592553060",
+    "clabe": "002180901697951026",
+    "monto_anual": 1688000,
+    "factura_folio": "F-20028",
+    "factura_monto": 94833,
+    "giro_declarado": "Azúcar refinada"
+  },
+  {
+    "rfc": "COM201025ZWY",
+    "razon_social": "Comercializadora de Mantenimiento Industrial La Laguna SAPI de CV",
+    "sitio_web": null,
+    "telefono_registrado": "+525531016542",
+    "clabe": "002180196189201277",
+    "monto_anual": 14248000,
+    "factura_folio": "F-20035",
+    "factura_monto": 95417,
+    "giro_declarado": "Mantenimiento de maquinaria"
+  },
+  {
+    "rfc": "IPC230720HZ0",
+    "razon_social": "IMPACTO PUBLICITARIO CRASH, S.A. DE C.V.",
+    "sitio_web": null,
+    "telefono_registrado": "+525532883866",
+    "clabe": "021180004414378618",
+    "monto_anual": 2197000,
+    "factura_folio": "F-20448",
+    "factura_monto": 864167,
+    "giro_declarado": "Consultoría administrativa"
+  },
+  {
+    "rfc": "LCB171115GN5",
+    "razon_social": "LOGISTICA Y COMERCIALIZACION BENTHOS, S.A. DE C.V.",
+    "sitio_web": null,
+    "telefono_registrado": "+525557550780",
+    "clabe": "002180568470899162",
+    "monto_anual": 11941000,
+    "factura_folio": "F-20483",
+    "factura_monto": 561333,
+    "giro_declarado": "Consultoría administrativa"
+  },
+  {
+    "rfc": "PCM170728I99",
+    "razon_social": "PEBALAR CONSTRUCCIONES Y MANTENIMIENTO INDUSTRIAL, S.A. DE C.V.",
+    "sitio_web": null,
+    "telefono_registrado": "+525575053223",
+    "clabe": "127180086653742891",
+    "monto_anual": 11175000,
+    "factura_folio": "F-20245",
+    "factura_monto": 469667,
+    "giro_declarado": "Servicios de personal"
+  },
+  {
+    "rfc": "VMP1909054C4",
+    "razon_social": "VIDALA M&P, S.A. DE C.V.",
+    "sitio_web": null,
+    "telefono_registrado": "+525574204959",
+    "clabe": "021180159605378149",
+    "monto_anual": 9040000,
+    "factura_folio": "F-20126",
+    "factura_monto": 590500,
+    "giro_declarado": "Material de construcción"
+  },
+  {
+    "rfc": "ZIP120312RS4",
+    "razon_social": "Contribuyente no localizado ZIP120312RS4",
+    "sitio_web": null,
+    "telefono_registrado": "+525528601658",
+    "clabe": "014180278021101341",
+    "monto_anual": 3820000,
+    "factura_folio": "F-20175",
+    "factura_monto": 861250,
+    "giro_declarado": "Comercio al por mayor"
+  },
+  {
+    "rfc": "ECO050223IY0",
+    "razon_social": "ECONOCAMBUSTIBLES DE VERACRUZ, S.A. DE C.V.",
+    "sitio_web": null,
+    "telefono_registrado": "+525549842905",
+    "clabe": "014180253458268885",
+    "monto_anual": 6168000,
+    "factura_folio": "F-20231",
+    "factura_monto": 209667,
+    "giro_declarado": "Comercio al por mayor"
+  }
+]

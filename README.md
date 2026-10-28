@@ -2,53 +2,74 @@
 
 Plataforma de verificación de proveedores con **gestión por excepción**: un solo gestor revisa lo que antes requería un equipo de 30 auditores.
 
-- Revisa en automático los listados 69 y 69-B del SAT, la lista OFAC, la página web y las noticias de cada proveedor (Firecrawl).
-- Calcula un **puntaje con reglas explicables**; la IA solo redacta el resumen.
-- Libera en automático a los proveedores limpios y manda los dudosos a la **bandeja del gestor**.
-- Verifica los **cambios de CLABE** con una llamada de voz (ElevenLabs) al teléfono registrado.
-- Genera un **expediente PDF** con evidencia y hash.
+## Qué hace
 
-## Equipo y responsabilidades
+- **Revisa a cada proveedor** contra:
+  - los listados oficiales del SAT: Art. 69-B y Art. 69;
+  - la lista OFAC, con detección de homónimos;
+  - su página web y noticias (Firecrawl), comparando el giro con IA;
+  - la antigüedad de su dominio.
+- **Calcula un puntaje con reglas explicables.** La IA solo redacta el resumen; nunca decide.
+- **Libera en automático** a los proveedores limpios y manda los dudosos a la **bandeja**. Ahí el gestor decide en un clic, y aprobar en contra de un bloqueo exige un comentario.
+- **Cambios de CLABE:**
+  1. El pago se pausa.
+  2. El agente de voz (ElevenLabs) llama al **teléfono registrado en el alta**.
+  3. Si el proveedor no confirma, el caso llega a la bandeja.
+- **Expediente PDF** con toda la evidencia, la bitácora y una huella SHA-256.
+- **ERP simulado** con facturas liberadas, en pausa o bloqueadas, y **panel de productividad** con horas manuales contra horas con KYP.
 
-| Persona | Área | Carpetas principales |
-|---|---|---|
-| **Oswaldo** | Líder técnico: base, Supabase, API, panel de productividad, integración y pitch | `src/app/api`, `src/app/page.tsx`, `src/lib/supabase.ts`, `supabase/` |
-| **Ulises** | Motor de verificación: SAT 69/69-B, OFAC, reglas de puntaje, datos de la demo | `src/lib/puntaje`, `datos/` |
-| **Alan** | n8n + Firecrawl + resumen con IA | `n8n/` |
-| **Axel** | Verificación por voz con ElevenLabs | `voz/` |
-| **Samuel** | Interfaz: carga CSV, bandeja, expediente, ERP simulado, PDF | `src/app/bandeja`, `src/app/expediente`, `src/app/carga`, `src/app/erp`, `src/components` |
-
-**Contratos compartidos:** `src/lib/tipos.ts`. Si los cambias, avisa al equipo.
-
-## Arrancar en tu computadora
+## Arrancar
 
 ```bash
 npm install
-cp .env.example .env.local   # llena los valores
-npm run dev                  # http://localhost:3000
-npm test                     # pruebas del motor de reglas
+npm run dev        # http://localhost:3000
+npm test           # 24 pruebas
 ```
 
-Sin credenciales, la app funciona con **datos de prueba** (`src/lib/datos-prueba`).
+**Sin ninguna variable de entorno funciona en modo demo:**
+- Datos en memoria con 12 proveedores de ejemplo.
+- Las fuentes externas aparecen como "no consultado".
+- Las llamadas se pueden simular, y quedan marcadas como simuladas.
+
+Para la demo de 500 proveedores, sube `public/demo/proveedores-demo.csv` en **Carga CSV**.
+
+## Configuración (`.env.example`)
+
+| Variable | Qué activa |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Datos persistentes en Supabase. Primero ejecuta `supabase/migrations/0001_inicial.sql` |
+| `FIRECRAWL_API_KEY` | Análisis de la página web y búsqueda de noticias |
+| `ANTHROPIC_API_KEY` | Comparación de giro, evaluación de noticias y resúmenes con Claude |
+| `ELEVENLABS_*`, `EMPRESA_NOMBRE` | Llamadas reales de verificación (ver `voz/README.md`) |
+| `WEBHOOK_SECRET` | Webhooks para n8n (ver `n8n/README.md`) |
+| `APP_PASSWORD` | Contraseña para todo el sitio. Recomendado si la URL es pública |
+
+## Estructura
+
+| Carpeta | Contenido |
+|---|---|
+| `src/lib/verificacion/` | Motor de verificación: listas, OFAC, Firecrawl, dominio, IA |
+| `src/lib/puntaje/` | Reglas de puntaje (función pura, con pruebas) |
+| `src/lib/servicios.ts` | Alta, decisiones, CLABE y llamadas, todo con bitácora |
+| `src/lib/almacen/` | Supabase o memoria, con la misma interfaz |
+| `src/lib/voz/` | Integración con ElevenLabs |
+| `src/lib/pdf.ts` | Expediente PDF |
+| `src/app/` | Pantallas y rutas `/api` |
+| `src/data/` | Listas oficiales procesadas (`npm run listas`) y semilla de la demo (`npm run demo`) |
+| `datos/`, `n8n/`, `voz/` | Guías de cada área |
+
+## Equipo
+
+| Persona | Área | Siguiente paso |
+|---|---|---|
+| **Oswaldo** | Integración, Supabase, Vercel, pitch | Crear Supabase, cargar variables en Vercel, ensayar la demo |
+| **Ulises** | Listas y puntaje | Calibrar reglas, revisar los datos de la demo, agregar listas de la fase 2 |
+| **Alan** | n8n + Firecrawl + IA | Clave de Firecrawl, flujos de n8n (monitoreo y alertas), proveedores demo con página web real |
+| **Axel** | Voz | Configurar el agente de ElevenLabs y Twilio según `voz/README.md` y ensayar llamadas |
+| **Samuel** | Interfaz | Pulir pantallas y textos, versión móvil, guion visual de la demo |
 
 ## Forma de trabajar
 
-1. Crea tu rama: `git checkout -b tu-nombre/tema` (ejemplo: `axel/voz`).
-2. Haz commits pequeños y abre un pull request hacia `main`.
-3. Vercel crea un enlace de prueba para cada pull request.
-4. Oswaldo revisa e integra a `main`, que se publica automáticamente.
-
-## Webhooks
-
-| Ruta | Quién llama | Cuerpo |
-|---|---|---|
-| `POST /api/webhooks/verificacion` | n8n (Alan) | `WebhookVerificacion` |
-| `POST /api/webhooks/llamada` | Flujo de voz (Axel) | `WebhookLlamada` |
-
-Ambos requieren el header `x-kyp-secret` con el valor de `WEBHOOK_SECRET`.
-
-## Alcance
-
-- **MVP (hackathon):** carga, verificación SAT/OFAC/Firecrawl, puntaje, bandeja, llamada de voz, PDF, ERP simulado y panel.
-- **Fase 2:** portal del proveedor, opinión 32-D, más listas, transferencia de prueba con CEP y monitoreo continuo.
-- **Enterprise:** e.firma, NOM-151 con PSC acreditado, red de conflictos de interés y conexión real con el ERP.
+1. Crea tu rama: `git checkout -b tu-nombre/tema`.
+2. Abre un pull request hacia `main`. Vercel genera un enlace de prueba.
+3. `main` se publica automáticamente.

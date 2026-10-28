@@ -1,14 +1,24 @@
 # n8n (Alan)
 
-Exporta aquí cada flujo de n8n como JSON (`alta-proveedor.json`, `cambio-clabe.json`, `monitoreo-sat.json`) para que quede versionado.
+La app ya hace la verificación completa por sí sola: listas SAT/OFAC, Firecrawl, dominio e IA. n8n sirve para **orquestar flujos alrededor** de la app y para mostrar los flujos de forma visual en la demo.
 
-## Flujo "Alta de proveedor"
+Exporta aquí cada flujo como JSON (`monitoreo-sat.json`, `alertas.json`, etc.) para que quede versionado.
 
-1. **Entrada:** webhook que recibe el proveedor desde `POST /api/proveedores`.
-2. **En paralelo:**
-   - Revisar SAT 69 / 69-B y OFAC (con los datos procesados por Ulises).
-   - **Firecrawl:** leer `sitio_web` y comparar el giro con `giro_declarado` → `giro_coincide` | `giro_no_coincide` | `sin_sitio`.
-   - **Firecrawl (búsqueda):** noticias negativas → `noticias_negativas` | `sin_noticias`.
-   - Antigüedad del dominio → `dominio_reciente` | `dominio_antiguo`.
-3. **Resumen:** el modelo de IA redacta 2–3 líneas explicando los hallazgos (no decide).
-4. **Salida:** `POST {APP_URL}/api/webhooks/verificacion` con header `x-kyp-secret` y cuerpo `WebhookVerificacion` (ver `src/lib/tipos.ts`).
+## API disponible
+
+| Acción | Llamada |
+|---|---|
+| Alta y verificación completa | `POST /api/proveedores` con el cuerpo de `EntradaAlta` (ver `src/lib/servicios-tipos.ts`) |
+| Carga por bloques (hasta 50) | `POST /api/proveedores/lote` `{ proveedores: [...], fuentesExternas: false }` |
+| Re-verificar un proveedor | `POST /api/proveedores/{id}/verificar` |
+| Agregar hallazgos externos | `POST /api/webhooks/verificacion` con header `x-kyp-secret` y `{ proveedor_id, hallazgos: Hallazgo[] }` |
+| Casos pendientes | `GET /api/casos` |
+| Estado e integraciones | `GET /api/estado` |
+
+Si la app tiene `APP_PASSWORD`, n8n debe usar autenticación básica en todo, excepto en `/api/webhooks/*`.
+
+## Flujos propuestos
+
+1. **Monitoreo SAT (fase 2):** un cron semanal ejecuta `npm run listas` (o descarga el CSV del 69-B), detecta RFC nuevos y llama a `/api/proveedores/{id}/verificar` solo para los proveedores afectados.
+2. **Alertas:** un cron cada hora consulta `GET /api/casos` y avisa por Slack o Teams cuando hay casos nuevos de "bloquear" o de "Cambio de CLABE".
+3. **Fuentes adicionales:** listas SFP, ONU o REPSE, enviadas como hallazgos a `/api/webhooks/verificacion` (requiere agregar sus reglas en `src/lib/puntaje/reglas.ts`).

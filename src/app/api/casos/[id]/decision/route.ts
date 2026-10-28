@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
-import type { EstadoCaso } from "@/lib/tipos.ts";
+import { listo } from "@/lib/demo.ts";
+import { actorDe, manejarError } from "@/lib/http.ts";
+import { decidirCaso } from "@/lib/servicios.ts";
 
-const ESTADOS: EstadoCaso[] = ["aprobado", "pausado", "bloqueado"];
+const ESTADOS = ["aprobado", "pausado", "bloqueado"] as const;
 
 // Decisión en un clic del gestor.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const { estado, motivo } = (await req.json()) as { estado: EstadoCaso; motivo?: string };
-  if (!ESTADOS.includes(estado)) {
-    return NextResponse.json({ error: "estado inválido" }, { status: 400 });
+  try {
+    await listo();
+    const { estado, comentario } = (await req.json()) as { estado: (typeof ESTADOS)[number]; comentario?: string };
+    if (!ESTADOS.includes(estado)) return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
+    return NextResponse.json(await decidirCaso((await params).id, estado, actorDe(req), comentario?.trim() || null));
+  } catch (error) {
+    return manejarError(error);
   }
-  // TODO(Oswaldo): actualizar `casos`, registrar en `bitacora` y notificar al ERP simulado.
-  return NextResponse.json({ id, estado, motivo: motivo ?? null });
 }

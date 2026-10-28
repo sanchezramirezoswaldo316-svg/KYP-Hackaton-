@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BannerModo } from "@/components/BannerModo";
 import { Navegacion } from "@/components/Navegacion";
 import "./globals.css";
 
@@ -12,7 +13,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="es">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <Navegacion />
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <BannerModo />
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
       </body>
     </html>
   );

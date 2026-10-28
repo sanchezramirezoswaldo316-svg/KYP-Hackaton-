@@ -1,13 +1,23 @@
-// n8n (Alan) llama aquí al terminar el flujo de alta.
+// n8n (u otro sistema) agrega hallazgos externos a un proveedor y se recalcula el puntaje.
 import { NextResponse } from "next/server";
-import { calcularPuntaje } from "@/lib/puntaje/reglas.ts";
-import { webhookAutorizado } from "@/lib/webhook.ts";
+import { almacen } from "@/lib/almacen/index.ts";
+import { listo } from "@/lib/demo.ts";
+import { manejarError, secretoValido } from "@/lib/http.ts";
+import { verificar } from "@/lib/servicios.ts";
 import type { WebhookVerificacion } from "@/lib/tipos.ts";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
-  if (!webhookAutorizado(req)) return NextResponse.json({ error: "no autorizado" }, { status: 401 });
-  const body = (await req.json()) as WebhookVerificacion;
-  const resultado = calcularPuntaje(body.hallazgos);
-  // TODO(Oswaldo): guardar verificación y hallazgos; crear caso si decision !== "liberar".
-  return NextResponse.json({ proveedor_id: body.proveedor_id, ...resultado });
+  if (!secretoValido(req)) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    await listo();
+    const body = (await req.json()) as WebhookVerificacion;
+    const p = await almacen().proveedores.obtener(body.proveedor_id);
+    if (!p) return NextResponse.json({ error: "Proveedor no encontrado" }, { status: 404 });
+    const r = await verificar(p, "n8n", false, body.hallazgos ?? []);
+    return NextResponse.json({ proveedor_id: p.id, puntaje: r.verificacion.puntaje, decision: r.verificacion.decision, motivos: r.verificacion.motivos });
+  } catch (error) {
+    return manejarError(error);
+  }
 }
