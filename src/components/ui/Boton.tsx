@@ -1,0 +1,4 @@
+export function Boton({ children, variante = "secundario", type = "button", disabled, onClick, className = "" }: { children: React.ReactNode; variante?: "primario" | "secundario" | "peligro" | "fantasma"; type?: "button" | "submit"; disabled?: boolean; onClick?: () => void; className?: string }) {
+  const estilos = { primario: "bg-marca text-white hover:bg-marca-2", secundario: "border border-borde-fuerte bg-panel text-tinta hover:bg-lienzo", peligro: "bg-alto text-white hover:bg-red-800", fantasma: "text-tinta-2 hover:bg-lienzo" };
+  return <button type={type} disabled={disabled} onClick={onClick} className={`min-h-9 rounded-control px-3 text-sm font-medium transition-transform duration-150 ease-out active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 ${estilos[variante]} ${className}`}>{children}</button>;
+}
