@@ -5,6 +5,7 @@ import { enmascararClabe } from "@/lib/validacion.ts";
 import { TranscripcionLlamada } from "./TranscripcionLlamada";
 import { AudioLlamada } from "./cliente/AudioLlamada";
 import { SimularLlamada } from "./cliente/SimularLlamada";
+import { Alerta } from "./ui/Alerta";
 
 type Paso = { icono: string; titulo: string; texto: string; estado: "hecho" | "actual" | "pendiente" | "fraude" | "ok" };
 
@@ -37,6 +38,7 @@ export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: {
   const llamando = s.estado === "en_llamada" && !llamada;
   return (
     <div className="space-y-4">
+      <Alerta tipo="medio">Pago en pausa hasta confirmar por llamada al teléfono registrado.</Alerta>
       <ol className="grid gap-2 sm:grid-cols-4">
         {ps.map((p, i) => (
           <li key={i} className={`animar-aparecer rounded-lg border-2 p-3 ${ESTILO[p.estado]}`} style={{ animationDelay: `${i * 150}ms` }}>
@@ -68,8 +70,9 @@ export function LineaTiempoClabe({ s, llamada, monto, simular, demo = false }: {
           </div>
           <AudioLlamada llamada={llamada} demo={demo} />
           <div className="mt-2">
-            <TranscripcionLlamada texto={llamada.transcripcion} />
+            <div className="max-w-prose"><TranscripcionLlamada texto={llamada.transcripcion} /></div>
           </div>
+          <p className="mt-2 text-xs text-tinta-3">Llamada grabada con aviso al proveedor.</p>
           {llamada.resumen && <p className="mt-2 text-xs text-slate-600">Resumen: {llamada.resumen}</p>}
         </div>
       )}

@@ -12,6 +12,7 @@ import { BotonAccion } from "@/components/cliente/BotonAccion";
 import { BotonesDecision } from "@/components/cliente/BotonesDecision";
 import { Reverificar } from "@/components/cliente/Reverificar";
 import { Velocimetro } from "@/components/cliente/Velocimetro";
+import { DatoClave } from "@/components/ui/DatoClave";
 import { almacen } from "@/lib/almacen/index.ts";
 import { listo } from "@/lib/demo.ts";
 import { explicarHallazgo, SEMAFORO } from "@/lib/explicar.ts";
@@ -37,9 +38,9 @@ function chipRiesgo(puntaje: number | undefined) {
 function SeccionDecision({ c, solicitud }: { c: Caso; solicitud?: SolicitudClabe }) {
   const clabe = c.tipo === "clabe";
   return (
-    <section data-tour="decision" className={`rounded-2xl border-2 p-5 ${clabe ? "border-orange-400 bg-orange-50" : "border-blue-300 bg-blue-50"}`}>
+    <section data-tour="decision" className={`rounded-panel border p-5 ${clabe ? "border-alto bg-alto-fondo" : "border-borde bg-panel"}`}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold">Tu decisión</h2>
+          <h2 className="text-sm font-semibold">Tu decisión</h2>
         {clabe && (
           <>
             <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">Cambio de CLABE</span>
@@ -78,10 +79,10 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-5">
       <AutoRefrescar activo={enLlamada} />
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="rounded-panel border border-borde bg-panel p-5 lg:flex lg:items-start lg:justify-between lg:gap-6">
         <div>
           <Link href="/bandeja" className="text-sm text-blue-800 hover:underline">← Bandeja</Link>
-          <h1 className="mt-1 text-2xl font-semibold">{p.razon_social}</h1>
+          <h1 className="mt-1 text-xl font-semibold">{p.razon_social}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span><Termino t="RFC" />: <span className="font-mono">{p.rfc}</span></span>
             <span className="text-slate-400">·</span>
@@ -89,6 +90,12 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${riesgo.clase}`}>{riesgo.texto}</span>
             {decisionActual ? <Semaforo decision={decisionActual} /> : <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-300">Sin decisión</span>}
             <EstadoSimple estado={p.estado} />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-borde pt-4 sm:grid-cols-4">
+            <DatoClave etiqueta="RFC" valor={<span className="font-mono text-sm">{p.rfc}</span>} />
+            <DatoClave etiqueta="Monto anual" valor={pesos(p.monto_anual)} />
+            <DatoClave etiqueta="Puntaje" valor={<span className="text-xl">{v?.puntaje ?? "—"}</span>} />
+            <DatoClave etiqueta="Tipo de caso" valor={e.solicitudes.length > 0 ? "Cambio de CLABE" : "Alta"} detalle={v ? `Verificado ${fecha(v.fecha)}` : "Sin verificación"} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -99,7 +106,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
       </header>
 
       {v && (
-        <section data-tour="velocimetro" className="grid items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-[auto_1fr]">
+        <section data-tour="velocimetro" className="grid items-center gap-6 rounded-panel border border-borde bg-panel p-5 md:grid-cols-[auto_1fr]">
           <Velocimetro valor={v.puntaje} />
           <div className="space-y-3">
             <Semaforo decision={v.decision} grande />
@@ -146,7 +153,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Tarjeta titulo="Qué encontramos">
+          <Tarjeta titulo="Hallazgos por fuente">
             {!v ? (
               <p className="text-sm text-slate-500">Aún no hay verificación para este proveedor.</p>
             ) : hallazgos.length === 0 ? (
