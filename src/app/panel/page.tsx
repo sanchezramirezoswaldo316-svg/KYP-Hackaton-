@@ -1,5 +1,6 @@
 // Panel de resultados: impacto en personas, horas y dinero.
 import Link from "next/link";
+import { Alertas } from "@/components/Alertas";
 import { Tarjeta } from "@/components/Tarjeta";
 import { BotonAccion } from "@/components/cliente/BotonAccion";
 import { Contador } from "@/components/cliente/Contador";
@@ -12,6 +13,7 @@ import { fecha } from "@/lib/formato.ts";
 import { HORAS_MANUAL_POR_REVISION, metricas, MINUTOS_POR_EXCEPCION } from "@/lib/servicios.ts";
 import type { EstadoProveedor } from "@/lib/tipos.ts";
 import { infoListas } from "@/lib/verificacion/listas.ts";
+import { generarResumen } from "@/lib/monitoreo.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ export default async function Panel() {
   await listo();
   const m = await metricas();
   const listas = infoListas();
+  const [alertas, resumen] = await Promise.all([almacen().alertas.listar(), generarResumen()]);
   const modo = almacen().modo;
 
   return (
@@ -39,6 +42,8 @@ export default async function Panel() {
         </div>
       </div>
 
+      <Alertas alertas={alertas} />
+
       <section data-tour="personas" className="rounded-2xl border border-slate-200 bg-white p-6">
         <Personas />
       </section>
@@ -47,7 +52,7 @@ export default async function Panel() {
         {[
           { icono: "🔍", titulo: "Proveedores revisados", valor: <Contador valor={m.verificados} />, detalle: `de ${m.proveedores.toLocaleString("es-MX")} registrados` },
           { icono: "⚡", titulo: "Aprobados solos", valor: <Contador valor={m.porcentajeAutomatico} formato="porcentaje" />, detalle: `${m.automaticos.toLocaleString("es-MX")} sin que nadie los revisara` },
-          { icono: "👩‍💼", titulo: "Esperan a una persona", valor: <Contador valor={m.pendientes} />, detalle: `${m.casosAtendidos} ya decididos` },
+          { icono: "👩‍💼", titulo: "Esperan a una persona", valor: <Contador valor={m.pendientes} />, detalle: `${m.casosAtendidos} decididos por la gestora · ${m.porPolitica} por políticas` },
           { icono: "🛡️", titulo: "Dinero protegido", valor: <Contador valor={m.montoProtegido} formato="millones" />, detalle: "compras anuales a proveedores con alerta" },
         ].map((t) => (
           <div key={t.titulo} className="rounded-xl border border-slate-200 bg-white p-4">
@@ -61,6 +66,10 @@ export default async function Panel() {
       <Tarjeta titulo="⏱️ Horas de trabajo: a mano vs. con KYP">
         <BarrasHoras manual={m.horasManual} kyp={m.horasKyp} />
         <p className="mt-2 text-xs text-slate-500">Supuestos: {HORAS_MANUAL_POR_REVISION} h por revisión a mano y {MINUTOS_POR_EXCEPCION} min por cada caso que llega a la bandeja.</p>
+      </Tarjeta>
+
+      <Tarjeta titulo="📬 Resumen de hoy" acciones={<Link href="/automatizacion" className="text-sm text-blue-800 underline">Automatización →</Link>}>
+        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700">{resumen.texto}</pre>
       </Tarjeta>
 
       <div className="grid gap-4 lg:grid-cols-2">

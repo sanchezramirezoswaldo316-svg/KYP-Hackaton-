@@ -32,3 +32,22 @@ Si la app tiene `APP_PASSWORD`, n8n debe usar autenticación básica en todo, ex
 1. **Monitoreo SAT (fase 2):** un cron semanal ejecuta `npm run listas` (o descarga el CSV del 69-B), detecta RFC nuevos y llama a `/api/proveedores/{id}/verificar` solo para los proveedores afectados.
 2. **Alertas:** un cron cada hora consulta `GET /api/casos` y avisa por Slack o Teams cuando hay casos nuevos de "bloquear" o de "Cambio de CLABE".
 3. **Fuentes adicionales:** listas SFP, ONU o REPSE, enviadas como hallazgos a `/api/webhooks/verificacion` (requiere agregar sus reglas en `src/lib/puntaje/reglas.ts`).
+
+## Flujo de avisos (pendiente de Alan)
+
+La app envía un `POST` a `N8N_WEBHOOK_NOTIFICACIONES`, con el header `x-kyp-secret`, cada vez que hay que avisar a alguien. El flujo decide el canal (correo, WhatsApp, Slack) según `tipo`:
+
+| `tipo` | Para quién | Campos |
+|---|---|---|
+| `solicitud_documentos` | Proveedor | `para: { razon_social, rfc, telefono }`, `enlace` (portal; `null` si la app no conoce su URL pública), `documento` |
+| `recordatorio_documentos` | Proveedor | lo mismo + `recordatorio` (1 o 2) |
+| `resumen_diario` | Gestora | `texto` (listo para enviar), `datos` (cifras) |
+| `alerta` | Gestora | `texto`, `proveedor_id` |
+
+Ejemplo:
+
+```json
+{ "tipo": "solicitud_documentos", "para": { "razon_social": "Transportes X SA de CV", "rfc": "TXX010101AB1", "telefono": "+525512345678" }, "enlace": "https://kyp-hackaton.vercel.app/portal/AbC123", "documento": "Opinión del cumplimiento de obligaciones fiscales (32-D)" }
+```
+
+Si n8n responde con un código distinto de 2xx, la app lo registra como "aviso no enviado" y muestra el enlace para compartirlo a mano.

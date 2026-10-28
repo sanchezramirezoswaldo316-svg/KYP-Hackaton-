@@ -1,0 +1,76 @@
+{
+  "rama": "ulises/puntaje",
+  "base": "cc67a9a",
+  "archivos": [
+    "datos/ENTREGA_ULISES.md",
+    "datos/PR_ULISES.md",
+    "datos/README.md",
+    "datos/auditoria-ulises.json",
+    "datos/demo-manifiesto.json",
+    "datos/fixtures/demo-presunto-giro-simulado.json",
+    "datos/fixtures/sat/69-latin1.csv",
+    "datos/fixtures/sat/69b.csv",
+    "datos/fixtures/sat/sha256.json",
+    "datos/ofac-comparacion.md",
+    "datos/ofac-medicion.json",
+    "datos/pendientes-integracion.md",
+    "datos/puntaje-etapa.md",
+    "datos/sat-importacion.md",
+    "public/demo/proveedores-demo.csv",
+    "scripts/actualizar-listas.mjs",
+    "scripts/generar-demo.mjs",
+    "scripts/ulises/demo.mjs",
+    "scripts/ulises/medir-ofac.mjs",
+    "scripts/ulises/publicacion.mjs",
+    "scripts/ulises/sat.mjs",
+    "src/data/demo-semilla.json",
+    "src/lib/puntaje/reglas.test.ts",
+    "src/lib/puntaje/reglas.ts",
+    "src/lib/verificacion/importacion-demo.test.ts",
+    "src/lib/verificacion/importacion-sat.test.ts",
+    "src/lib/verificacion/listas-core.ts",
+    "src/lib/verificacion/listas.ts",
+    "src/lib/verificacion/nombres.ts",
+    "src/lib/verificacion/ofac.test.ts"
+  ],
+  "fuera_perimetro": [],
+  "credenciales_detectadas_por_patrones": [],
+  "protegidos_identicos_a_base": [
+    "src/lib/tipos.ts",
+    "src/lib/servicios-tipos.ts",
+    "src/lib/verificacion/index.ts",
+    "src/lib/servicios.ts",
+    "package.json",
+    "package-lock.json",
+    "src/data/sat-69.json",
+    "src/data/sat-69b.json",
+    "src/data/ofac-sdn.json"
+  ],
+  "regeneracion_demo": {
+    "status": 0,
+    "archivos_alterados": [],
+    "resultado": "> kyp-hackaton@0.1.0 demo\n> node scripts/generar-demo.mjs\n\n{\"liberar\":470,\"revisar\":5,\"bloquear\":25,\"total\":500,\"excepciones\":30}"
+  },
+  "actualizacion_listas_offline": {
+    "status": 0,
+    "entorno": "directorio temporal, fetch sustituido por fixtures; sin red",
+    "workspace_alterado": [],
+    "resultado": "{\"sat69b\":{\"validos\":4,\"rechazados\":0,\"duplicados\":0},\"sat69\":[{\"supuesto\":\"no_localizado\",\"validos\":2,\"rechazados\":0,\"duplicados\":1},{\"supuesto\":\"exigible\",\"validos\":2,\"rechazados\":0,\"duplicados\":1},{\"supuesto\":\"sentencia\",\"validos\":2,\"rechazados\":0,\"duplicados\":1}],\"ofac\":1}"
+  },
+  "verificacion_cierre": {
+    "npm_test": {
+      "exit": 0,
+      "pasan": 83,
+      "fallan": 0
+    },
+    "npm_run_lint": 0,
+    "npm_run_build": 0,
+    "git_diff_check": 0,
+    "integracion_en_vivo": "no comprobada",
+    "hallazgo_pendiente": {
+      "area": "recuperacion marcador",
+      "reproduccion_offline": "tres JSON anteriores y marcador nueva tras recuperar",
+      "corregido": false
+    }
+  }
+}

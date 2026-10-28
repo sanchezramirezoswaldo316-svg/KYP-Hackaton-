@@ -12,6 +12,7 @@ const enlaces = [
   { href: "/carga", texto: "📥 Revisar muchos" },
   { href: "/clabe", texto: "🏦 Cambios de cuenta" },
   { href: "/erp", texto: "💳 Pagos" },
+  { href: "/automatizacion", texto: "⚙️ Automatización" },
 ];
 
 export function Navegacion() {

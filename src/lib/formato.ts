@@ -11,6 +11,14 @@ export const fecha = (iso: string | null) => {
   return new Date(iso).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Mexico_City" });
 };
 
+// "1 caso" / "3 casos"
+export const plural = (n: number, singular: string, varios = `${singular}s`) => `${n.toLocaleString("es-MX")} ${n === 1 ? singular : varios}`;
+
+// Días para un pago: "hoy", "mañana", "en 5 días".
+export const enDias = (d: number) => (d <= 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`);
+
+export const esSimulacion = (detalle: string) => detalle.startsWith("[SIMULACIÓN");
+
 export const NOMBRE_FUENTE: Record<Fuente, string> = {
   sat_69b: "SAT · Art. 69-B",
   sat_69: "SAT · Art. 69",

@@ -35,6 +35,28 @@ Plataforma de verificación de proveedores con **gestión por excepción**: un s
   - 30 auditores que se vuelven 1.
 - Las animaciones respetan la preferencia del sistema de "reducir movimiento".
 
+## Automatización (⚙️ en el menú)
+
+- **Políticas:** la gestora las activa y el sistema actúa solo, por ejemplo:
+  - "bloquear empresas fantasma confirmadas";
+  - "pedir la opinión 32-D a los que el SAT investiga".
+
+  Cada acción queda en la bitácora con el nombre de la política. Los casos dudosos siempre los decide una persona.
+- **Portal del proveedor** (`/portal/<token>`): un enlace único, sin contraseña, para que el proveedor suba su opinión 32-D en PDF.
+  - Con `ANTHROPIC_API_KEY`, Claude lee el PDF: si es una 32-D, su sentido, su RFC y su fecha. La decisión sigue siendo de la gestora.
+  - Si el proveedor no responde, recibe recordatorios cada 3 días; tras 2 recordatorios la solicitud vence y se avisa.
+- **Bandeja más rápida:**
+  - primero los cambios de cuenta, luego los proveedores **con un pago esta semana**;
+  - antigüedad visible: en rojo a las 48 h;
+  - estado del documento pedido;
+  - avisos nuevos arriba.
+- **Tarea diaria** (Vercel Cron a las 8:23 a. m. hora del centro, o botón "Ejecutar ahora"). Hace tres cosas:
+  1. **Monitoreo:** vuelve a revisar a todos contra las listas y avisa solo si alguien cambió, incluyendo cuánto se le debe pagar.
+  2. **Recordatorios** a proveedores.
+  3. **Resumen del día**, enviado por n8n.
+- **Demo:** el botón "Simular que el SAT publicó a un proveedor" marca a un proveedor aprobado como presunto. Aparece etiquetado como **simulación** en el expediente y en el aviso.
+- En el ERP simulado, si el archivo no trae la fecha de pago de la factura (`factura_vence`), se asigna una entre 1 y 30 días derivada del folio.
+
 ## Arrancar
 
 ```bash
@@ -54,12 +76,15 @@ Para la demo de 500 proveedores, sube `public/demo/proveedores-demo.csv` en **Ca
 
 | Variable | Qué activa |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Datos persistentes en Supabase. Primero ejecuta `supabase/migrations/0001_inicial.sql` |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Datos persistentes en Supabase. Primero ejecuta `supabase/migrations/0001_inicial.sql` y `0002_automatizacion.sql` |
 | `FIRECRAWL_API_KEY` | Análisis de la página web y búsqueda de noticias |
 | `ANTHROPIC_API_KEY` | Comparación de giro, evaluación de noticias y resúmenes con Claude |
 | `ELEVENLABS_*`, `EMPRESA_NOMBRE` | Llamadas reales de verificación (ver `voz/README.md`) |
 | `WEBHOOK_SECRET` | Webhooks para n8n (ver `n8n/README.md`) |
-| `APP_PASSWORD` | Contraseña para todo el sitio. Recomendado si la URL es pública |
+| `APP_PASSWORD` | Contraseña para todo el sitio. Recomendado si la URL es pública. El portal del proveedor y el cron quedan fuera |
+| `N8N_WEBHOOK_NOTIFICACIONES` | Avisos al proveedor, recordatorios y resumen diario a través de n8n |
+| `CRON_SECRET` | Permite a Vercel Cron ejecutar la tarea diaria |
+| `APP_URL` | URL pública para los enlaces del portal; en Vercel se detecta sola |
 
 ## Estructura
 

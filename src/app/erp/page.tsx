@@ -36,7 +36,7 @@ export default async function Erp() {
       </div>
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left text-slate-600"><tr><th className="p-3">Folio</th><th className="p-3">Proveedor</th><th className="p-3">Fecha</th><th className="p-3 text-right">Monto</th><th className="p-3">Pago</th></tr></thead>
+          <thead className="bg-slate-100 text-left text-slate-600"><tr><th className="p-3">Folio</th><th className="p-3">Proveedor</th><th className="p-3">Fecha</th><th className="p-3">Se paga</th><th className="p-3 text-right">Monto</th><th className="p-3">Pago</th></tr></thead>
           <tbody>
             {filas.sort((a, b) => b.f.monto - a.f.monto).slice(0, 300).map(({ f, p }) => {
               const e = estadoPago(p);
@@ -45,6 +45,7 @@ export default async function Erp() {
                   <td className="p-3 font-mono">{f.folio}</td>
                   <td className="p-3"><Link href={`/expediente/${p.id}`} className="text-blue-800 hover:underline">{p.razon_social}</Link></td>
                   <td className="p-3 text-slate-600">{fecha(f.fecha)}</td>
+                  <td className="p-3 text-slate-600">{f.vence ? fecha(f.vence) : "—"}</td>
                   <td className="p-3 text-right">{pesos(f.monto)}</td>
                   <td className="p-3"><Etiqueta tono={TONO[e]}>{TEXTO[e]}</Etiqueta></td>
                 </tr>
