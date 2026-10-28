@@ -3,7 +3,7 @@ import { integraciones } from "@/lib/integraciones.ts";
 
 export function BannerModo() {
   const i = integraciones();
-  const faltan = [!i.firecrawl && "Firecrawl", !i.ia && "IA (Claude)", !i.voz && "voz (ElevenLabs)"].filter(Boolean);
+  const faltan = [!i.firecrawl && "Firecrawl", !i.ia && "IA (Qwen)", !i.voz && "voz (ElevenLabs)"].filter(Boolean);
   if (almacen().modo === "supabase" && faltan.length === 0) return null;
   return (
     <div className="border-b border-acento bg-acento-fondo text-sm text-acento">

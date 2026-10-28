@@ -6,9 +6,11 @@ Exporta aquí cada flujo como JSON (`monitoreo-sat.json`, `alertas.json`, etc.) 
 
 ## Prototipo de alta de Alan
 
-`alta-proveedor-prototipo.json` es una copia exportada del flujo de n8n de Alan. Recibe `POST /kyp-alta`, usa una rama de datos ficticios solo con `modo_demo: true` y una rama real para Firecrawl, RDAP y Claude. El flujo está **inactivo** y el nodo que enviaría hallazgos a la app está **desactivado**.
+`alta-proveedor-prototipo.json` es una copia exportada del flujo de n8n de Alan. Recibe `POST /kyp-alta`, usa una rama de datos ficticios solo con `modo_demo: true` y una rama real para Firecrawl, RDAP y Qwen vía Groq. El flujo está **inactivo** y el nodo que enviaría hallazgos a la app está **desactivado**.
 
-La copia versionada no incluye referencias a las credenciales de la instancia de Alan. Después de importarla en otra instancia, hay que seleccionar las credenciales de Firecrawl y Claude antes de ejecutar la rama real. Tampoco incluye claves ni el valor de `WEBHOOK_SECRET`.
+La copia versionada no incluye referencias a las credenciales de la instancia de Alan. Después de importarla en n8n, hay que seleccionar la credencial de Firecrawl y crear una credencial **Header Auth** para Groq: `Name = Authorization`, `Value = Bearer <GROQ_API_KEY>`. El token se guarda en la credencial de n8n, nunca en el JSON. Tampoco incluye claves ni el valor de `WEBHOOK_SECRET`.
+
+Subir este JSON a GitHub no actualiza el workflow alojado en n8n Cloud. Hay que importar el archivo actualizado en n8n, elegir las credenciales y probar la rama real antes de publicar. La rama demo y el nodo de retorno a la app permanecen separados.
 
 Se ajustó la salida real a los tipos de esta app: `fuente` usa `web`, `noticias` y `dominio`; el dominio de menos de 182 días produce `dominio_reciente` y los demás `dominio_antiguo`. El nodo de retorno, todavía desactivado, está preparado para enviar solo `{ proveedor_id, hallazgos }`. `resumen_ia` permanece en la salida de n8n, pero `/api/webhooks/verificacion` no lo acepta actualmente.
 

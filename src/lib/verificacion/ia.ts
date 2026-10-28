@@ -1,41 +1,58 @@
-// Uso de Claude: comparar giro, evaluar noticias y redactar el resumen del caso.
+// Uso de Qwen vía Groq: comparar giro, evaluar noticias y redactar el resumen del caso.
 // La IA NUNCA calcula el puntaje ni decide; solo clasifica evidencia y redacta.
 
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 
-const MODELO = "claude-opus-5-5";
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODELO = "qwen/qwen3.8-27b";
 
 export function iaConfigurada(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.GROQ_API_KEY;
 }
 
-let cliente: Anthropic | null = null;
-function anthropic(): Anthropic {
-  cliente ??= new Anthropic();
-  return cliente;
-}
+type RespuestaGroq = { choices?: { message?: { content?: string | null } }[] };
 
 async function clasificar<T extends z.ZodType>(esquema: T, system: string, contenido: string): Promise<z.infer<T> | null> {
+  const clave = process.env.GROQ_API_KEY;
+  if (!clave) return null;
+
   try {
-    const res = await anthropic().beta.messages.parse({
-      model: MODELO,
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low", format: betaZodOutputFormat(esquema) },
-      system,
-      messages: [{ role: "user", content: contenido }],
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${clave}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODELO,
+        messages: [
+          { role: "system", content: `${system}\nResponde únicamente con un objeto JSON válido que cumpla este esquema: ${JSON.stringify(z.toJSONSchema(esquema))}` },
+          { role: "user", content: contenido },
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 1200,
+      }),
+      signal: AbortSignal.timeout(30_000),
     });
-    if (res.stop_reason === "refusal") return null;
-    return res.parsed_output ?? null;
-  } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      console.error(`Claude API ${error.status}: ${error.message}`);
+
+    if (!res.ok) {
+      console.error(`Groq API respondió ${res.status}`);
       return null;
     }
-    throw error;
+
+    const respuesta = (await res.json()) as RespuestaGroq;
+    const texto = respuesta.choices?.[0]?.message?.content;
+    if (!texto) return null;
+
+    const validado = esquema.safeParse(JSON.parse(texto));
+    if (!validado.success) {
+      console.error("Groq devolvió un JSON que no cumple el esquema esperado");
+      return null;
+    }
+    return validado.data;
+  } catch (error) {
+    console.error("No se pudo consultar Groq:", error);
+    return null;
   }
 }
 
