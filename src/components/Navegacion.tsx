@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BotonTour } from "./cliente/Tour";
 
 const enlaces = [
@@ -17,18 +18,29 @@ const enlaces = [
 
 export function Navegacion() {
   const ruta = usePathname();
+  const [pendientes, setPendientes] = useState<number | null>(null);
+
+  useEffect(() => {
+    let activo = true;
+    fetch("/api/casos").then((respuesta) => respuesta.json()).then((casos: unknown) => {
+      if (activo && Array.isArray(casos)) setPendientes(casos.length);
+    }).catch(() => { /* la navegación funciona aunque el contador no esté disponible */ });
+    return () => { activo = false; };
+  }, []);
+
   return (
-    <nav className="border-b border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-[232px] lg:flex-col lg:border-0 lg:bg-marca lg:text-white">
+    <nav className="border-b border-borde bg-superficie lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-[200px] lg:flex-col lg:border-b-0 lg:border-r lg:text-tinta-2">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:flex-nowrap lg:mx-0 lg:flex-col lg:items-stretch lg:gap-8 lg:px-4 lg:py-6">
-        <Link href="/" className="text-lg font-semibold lg:border-b lg:border-white/15 lg:pb-5">KYP <span className="hidden text-xs font-normal text-slate-500 lg:block lg:text-white/65">Know your provider</span></Link>
+        <Link href="/" className="text-lg font-semibold tracking-tight text-tinta lg:border-b lg:border-borde lg:pb-5">KYP</Link>
         <div className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-x-4 overflow-x-auto whitespace-nowrap px-4 pb-1 sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:flex-wrap sm:px-0 sm:pb-0 lg:order-none lg:mx-0 lg:block lg:w-auto lg:space-y-1 lg:overflow-visible">
           {enlaces.map((e) => (
-            <Link key={e.href} href={e.href} className={`block rounded-control px-3 py-2 text-sm transition-colors ${ruta.startsWith(e.href) ? "border-l-2 border-white bg-white/10 font-semibold text-marca lg:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:text-white/75 lg:hover:bg-white/10 lg:hover:text-white"}`}>
-              {e.texto}
+            <Link key={e.href} href={e.href} className={`flex items-center justify-between rounded-control px-3 py-2 text-sm transition-colors ${ruta.startsWith(e.href) ? "bg-seleccion font-medium text-tinta" : "text-tinta-2 hover:bg-hover hover:text-tinta"}`}>
+              <span>{e.texto}</span>
+              {e.href === "/bandeja" && <span className="tabular-nums text-xs text-tinta-3">{pendientes ?? "—"}</span>}
             </Link>
           ))}
         </div>
-        <div className="lg:border-t lg:border-white/15 lg:pt-4"><BotonTour /></div>
+        <div className="lg:border-t lg:border-borde lg:pt-4"><BotonTour /></div>
       </div>
     </nav>
   );

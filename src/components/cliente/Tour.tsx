@@ -67,8 +67,8 @@ export function iniciarTour() {
 
 export function BotonTour({ grande = false }: { grande?: boolean }) {
   return (
-    <button onClick={iniciarTour} className={grande ? "animar-latido rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow-lg hover:bg-blue-800" : "rounded-full bg-blue-700 px-3 py-1 text-sm font-medium text-white hover:bg-blue-800"}>
-      ▶ {grande ? "Ver demo guiada (2 min)" : "Demo guiada"}
+    <button onClick={iniciarTour} className={grande ? "animar-latido rounded-control bg-marca px-5 py-3 font-semibold text-white hover:bg-marca-2" : "rounded-control bg-marca px-3 py-1 text-sm font-medium text-white hover:bg-marca-2"}>
+      {grande ? "Ver demo guiada (2 min)" : "Demo guiada"}
     </button>
   );
 }

@@ -19,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Navegacion />
           <BannerModo />
         </ZonaInterna>
-        <main className="app-main min-h-screen px-4 py-6 sm:px-6 lg:ml-[232px] lg:px-8 lg:py-8">{children}</main>
+        <main className="app-main min-h-screen px-4 py-6 sm:px-6 lg:ml-[200px] lg:px-8 lg:py-8">{children}</main>
         <ZonaInterna>
           <Tour />
         </ZonaInterna>
