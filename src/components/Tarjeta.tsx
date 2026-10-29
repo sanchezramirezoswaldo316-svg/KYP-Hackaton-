@@ -1,4 +1,5 @@
-export function Tarjeta({ titulo, children, acciones }: { titulo?: string; children: React.ReactNode; acciones?: React.ReactNode }) {
+export function Tarjeta({ titulo, children, acciones, icono: _icono }: { titulo?: string; children: React.ReactNode; acciones?: React.ReactNode; icono?: string }) {
+  void _icono;
   return (
     <section className="rounded-panel border border-borde bg-panel p-4">
       {(titulo || acciones) && (

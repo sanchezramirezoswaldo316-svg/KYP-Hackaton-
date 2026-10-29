@@ -22,7 +22,7 @@ import { UMBRAL_LIBERAR, UMBRAL_REVISAR } from "@/lib/puntaje/reglas.ts";
 import { proximosPagos } from "@/lib/servicios.ts";
 import type { Caso, Decision, SolicitudClabe } from "@/lib/tipos.ts";
 import { enmascararClabe } from "@/lib/validacion.ts";
-import { vozConfigurada } from "@/lib/voz/elevenlabs.ts";
+import { simulacionPermitida } from "@/lib/voz/elevenlabs.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +64,7 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
   const { proveedor: p } = e;
   const v = e.verificaciones[0];
   const abiertos = e.casos.filter((c) => c.estado === "pendiente" || c.estado === "pausado");
-  const simular = !vozConfigurada();
+  const simular = simulacionPermitida();
   const demo = almacen().modo === "memoria";
   const montoFactura = e.facturas[0]?.monto ?? null;
   const documentos = (await almacen().documentos.listar({ proveedor_id: p.id })).sort((a, b) => b.enviada_en.localeCompare(a.enviada_en));
@@ -136,7 +136,10 @@ export default async function Expediente({ params }: { params: Promise<{ id: str
             <span className="rounded-control border border-acento px-2 py-0.5 text-xs font-semibold text-acento">Cambio de CLABE</span>
           </div>
           {e.solicitudes.map((s) => (
-            <div key={s.id} className="space-y-3"><Link href={`/clabe/${s.id}`} className="text-sm text-tinta underline">Ver monitor de llamada</Link><LineaTiempoClabe s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} /></div>
+            <div key={s.id} className="space-y-2">
+            <Link href={`/clabe/${s.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-acento underline">Abrir monitor de la llamada</Link>
+            <LineaTiempoClabe s={s} llamada={e.llamadas.find((l) => l.solicitud_id === s.id)} monto={montoFactura} simular={simular} demo={demo} fallo={e.bitacora.some((b) => b.entidad_id === s.id && b.accion === "llamada_fallida")} />
+            </div>
           ))}
         </section>
       )}

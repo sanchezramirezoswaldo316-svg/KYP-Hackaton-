@@ -17,7 +17,7 @@ export default async function EnVivo({ searchParams }: { searchParams: Promise<{
       <div>
         <h1 className="text-2xl font-semibold">Extracción en vivo</h1>
         <p className="text-tinta-3">
-          Mira cómo el sistema consulta cada fuente, qué datos extrae y cómo los convierte en una decisión. Los paquetes azules son consultas; los de color, datos que regresan.
+          Grafo de vínculos: cada fuente consultada y cada dato extraído aparece como una entidad unida al proveedor. Los halos marcan el riesgo; la línea de tiempo muestra cuándo llegó cada respuesta.
         </p>
         {(!i.firecrawl || !i.ia) && <p className="mt-1 text-xs text-tinta-3">Página web, noticias e IA aparecen como &quot;no revisado&quot; hasta que se configuren sus claves.</p>}
       </div>

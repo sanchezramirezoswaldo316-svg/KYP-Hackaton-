@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { enviar } from "./peticion.ts";
 
-export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario", cuerpo }: {
-  url: string; texto: string; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario"; cuerpo?: unknown;
+export function BotonAccion({ url, texto, textoOcupado, confirmar, variante = "secundario", cuerpo, icono: _icono }: {
+  url: string; texto: string; textoOcupado?: string; confirmar?: string; variante?: "primario" | "secundario"; cuerpo?: unknown; icono?: string;
 }) {
+  void _icono;
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
